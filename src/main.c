@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
             "\tflower\t[options] <filepath>\n\n"
 
             BLUE "Options:\n" RESET
-            "\t-help, -h\tShows this help message\n"
+            "\t-help,  -h\tShow this help message\n"
             "\t<filepath>\tSpecify the source code file to compile\n\n"
 
             BLUE "Example:\n" RESET
