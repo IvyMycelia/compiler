@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ANSI.h"
+
 #include "file.h"
 
 char* read_file(const char* path) {
     FILE* f = fopen(path, "r");
     if (!f) {
-        perror("Could not open file");
+        perror(RED "Could not open file");
         return NULL;
     }
 
@@ -16,12 +18,12 @@ char* read_file(const char* path) {
     char* buffer = malloc(length + 1);
     buffer[length] = '\0';
     if (!buffer) {
-        perror("Could not read file");
+        perror(RED "Could not read file");
         return NULL;
     }
 
     if (!fclose(f)) {
-        perror("Could not close file");
+        perror(RED "Could not close file");
         return NULL;
     }
 

@@ -3,12 +3,7 @@
 #include <ctype.h>
 
 #include "file.h"
-
-#define RED   "\033[0;31m"
-#define GREEN     "\033[0;32m"
-#define RESET   "\033[0m"
-#define BLUE    "\033[0;34m"
-#define BOLD    "\033[1m"
+#include "ANSI.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
