@@ -1,0 +1,53 @@
+// Token Types
+typedef enum {
+    /* Types & Identifiers */
+    TOKEN_INT,          // Integer
+    TOKEN_IDENTIFIER,   // Variable & Function names
+    TOKEN_NUMBER,       // Number
+
+    /* Keywords */
+    TOKEN_RETURN,   // Return from block
+    TOKEN_WHILE,    // While loop
+    TOKEN_END,      // Close block
+    
+    /* Operators */
+    TOKEN_PLUS,     // Addition
+    TOKEN_MINUS,    // Subtraction
+    TOKEN_STAR,     // Pointers & Multiplication
+    TOKEN_SLASH,    // Division
+    TOKEN_AMPERSAND,// Memory address
+    TOKEN_ASSIGN,   // Assign value
+    TOKEN_LT,       // Less than
+    TOKEN_GT,       // Greater than
+
+    /* Punctuation */
+    TOKEN_LPAREN,   // Function handling
+    TOKEN_RPAREN,   // Function handling
+    TOKEN_COLON,    // Start block
+    TOKEN_COMMA,    // Separate parameters
+
+    TOKEN_EOF   // End of File
+} TokenKind;
+
+typedef struct {
+    TokenKind kind;
+    int start;  // Index into source buffer
+    int length; // Length of token
+} Token;
+
+typedef struct {
+    Token* data;
+    int count;
+    int capacity;
+} TokenStream;
+
+
+void init_token_stream(TokenStream* ts);
+void add_token(TokenStream* ts, TokenKind kind, int start, int length);
+Token* current(TokenStream* ts, int pos);
+Token* peek(TokenStream* ts, int pos);
+void free_token_stream(TokenStream* ts);
+
+const char* token_kind_name(TokenKind kind);
+void print_token(Token* token, const char* src);
+void print_all_tokens(TokenStream* ts, const char* src);
