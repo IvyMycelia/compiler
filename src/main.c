@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
         *p = tolower(*p);
         p++;
     }
-    if (!strcmp(arg, "help") || !strcmp(arg, "h"))
+    if (!strcmp(arg, "help") || !strcmp(arg, "h")) {
         printf(
             GREEN "Welcome to Flower Compiler!\n\n" RESET
 
@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
             " - You can use any number of dashes before a flag, e.g., ---help\n"
             " - Flags are " BOLD "case-insensitive" RESET ": -HELP works too!\n"
         );
+        return 0;
+    }
 
     // printf("%s", argv[1]);
 
