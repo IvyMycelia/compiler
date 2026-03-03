@@ -2,6 +2,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "file.h"
+
 #define RED   "\033[0;31m"
 #define GREEN     "\033[0;32m"
 #define RESET   "\033[0m"
@@ -56,6 +58,12 @@ int main(int argc, char *argv[]) {
                 printf(RED "Unrecognized flag argument! Use -help for more information.\n" RESET);
         } else {
             printf("Compiling file: %s\n", argv[i]);
+            char* file = read_file(argv[i]);
+            if (!file) {
+                return -1;
+            }
+
+            printf("Compiled!!!!!!");
         }
 
     }
