@@ -44,6 +44,9 @@ int main(int argc, char *argv[]) {
             " - Flags are " BOLD "case-insensitive" RESET ": -HELP works too!\n"
         );
         return 0;
+    } else {
+        printf(RED "Unrecognized flag argument. Use -help for more information.\n" RESET);
+        return -1;
     }
 
     // printf("%s", argv[1]);
