@@ -46,7 +46,14 @@ int main(int argc, char *argv[]) {
             GREEN "Happy Compiling with Flower! 🌼\n" RESET
         );
         return 0;
-    } else {
+    } 
+    else if (!strcmp(arg, "version") || !strcmp(arg, "v")) {
+        printf(
+            "Version: 0.0.1\n"
+        );
+        return 0;
+    }
+    else {
         printf(RED "Unrecognized flag argument! Use -help for more information.\n" RESET);
         return -1;
     }
