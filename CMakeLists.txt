@@ -4,8 +4,8 @@ project(Flower C)
 
 
 # === SOURCES ===
-file(GLOB s "src/*.c")
-add_executable(Flower ${s})
+file(GLOB SOURCES "src/*.c")
+add_executable(Flower ${SOURCES})
 
 
 # === Include Headers ===
