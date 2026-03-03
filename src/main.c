@@ -10,10 +10,10 @@
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        printf("Not enough arguments flags provided. Use -help for more information.\n");
+        printf(RED "Not enough arguments flags provided. Use -help for more information.\n" RESET);
         return -1;
     } else if (argc > 2) {
-        printf("Too many argument flags provided. Use -help for more information.\n");
+        printf(RED "Too many argument flags provided. Use -help for more information.\n" RESET);
         return -1;
     }
 
