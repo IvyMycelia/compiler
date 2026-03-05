@@ -15,17 +15,32 @@ char* read_file(const char* path) {
     fseek(f, 0, SEEK_END);
     long length = ftell(f);
     fseek(f, 0, SEEK_SET);
-    char* buffer = malloc(length + 1);
-    buffer[length] = '\0';
-    if (!buffer) {
-        perror(RED "Could not read file");
+
+    if (length < 0) {
+        fclose(f);
         return NULL;
     }
 
-    if (!fclose(f)) {
+    char* buffer = malloc(length + 1);
+    if (!buffer) {
+        perror(RED "Memory allocation failed");
+        fclose(f);
+        return NULL;
+    }
+
+    size_t read = fread(buffer, 1, length, f);
+    if (read != length) {
+        perror(RED "Could not read file");
+        free(buffer);
+        fclose(f);
+        return NULL;
+    }
+    
+    buffer[length] = '\0';
+    if (fclose(f)) {
         perror(RED "Could not close file");
         return NULL;
     }
-
+    
     return buffer;
 }

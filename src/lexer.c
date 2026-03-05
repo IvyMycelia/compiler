@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "ANSI.h"
 
@@ -9,7 +11,64 @@
 void lex(const char* src, TokenStream* ts) {
     int i = 0;
 
-    while(src);
+    while(src[i] != '\0') {
+        if (isspace(src[i]) || src[i] == '\r') {
+            i++;
+            continue;
+        }
+
+        if (isalpha(src[i])) {
+            int start = i;
+
+            while (isalnum(src[i]))
+                i++;
+            
+            int length = i - start;
+
+            if (length == 3 && !strncmp(src + start, "int", 3))
+                add_token(ts, TOKEN_INT, start, length);
+            else if (length == 3 && !strncmp(src + start, "end", 3))
+                add_token(ts, TOKEN_END, start, length);
+            else if (length == 6 && !strncmp(src + start, "return", 6))
+                add_token(ts, TOKEN_RETURN, start, length);
+            else if (length == 5 && !strncmp(src + start, "while", 5))
+                add_token(ts, TOKEN_WHILE, start, length);
+            else
+                add_token(ts, TOKEN_IDENTIFIER, start, length);
+            continue;
+        }
+
+        if (isdigit(src[i])) {
+            int start = i;
+
+            while (isdigit(src[i]))
+                i++;
+
+            add_token(ts, TOKEN_NUMBER, start, i - start);
+            continue;
+        }
+
+        printf("CHAR: '%c' (%d)\n", src[i], src[i]);
+        switch (src[i]) {
+            case '+': add_token(ts, TOKEN_PLUS, i++, 1); break;
+            case '-': add_token(ts, TOKEN_MINUS, i++, 1); break;
+            case '*': add_token(ts, TOKEN_STAR, i++, 1); break;
+            case '/': add_token(ts, TOKEN_SLASH, i++, 1); break;
+            case '&': add_token(ts, TOKEN_AMPERSAND, i++, 1); break;
+            case '=': add_token(ts, TOKEN_ASSIGN, i++, 1); break;
+            case '<': add_token(ts, TOKEN_LT, i++, 1); break;
+            case '>': add_token(ts, TOKEN_GT, i++, 1); break;
+            case '(': add_token(ts, TOKEN_LPAREN, i++, 1); break;
+            case ')': add_token(ts, TOKEN_RPAREN, i++, 1); break;
+            case ':': add_token(ts, TOKEN_COLON, i++, 1); break;
+            case ',': add_token(ts, TOKEN_COMMA, i++, 1); break;
+            default:
+                printf(RED "Unknown character: %c\n", src[i]);
+                exit(1);
+        }
+    }
+
+    add_token(ts, TOKEN_EOF, i, 0);
 }
 
 void init_token_stream(TokenStream* ts) {

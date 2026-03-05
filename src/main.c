@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include "ANSI.h"
 
@@ -21,9 +22,9 @@ int main(int argc, char *argv[]) {
             while (*arg == '-') arg++;
 
             // Lowercase for case-insensitivity
-            for (char *p = arg; *p; p++) *p = tolower(*p);
+            for (char *p = arg; *p; p++) *p = tolower((unsigned char)*p);
     
-            if (!strcmp(arg, "help") || !strcmp(arg, "h"))
+            if (!strcmp(arg, "help") || !strcmp(arg, "h")) {
                 printf(
                     GREEN "🌸 Welcome to Flower Compiler!\n\n" RESET
         
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
         
                     BLUE "Options:\n" RESET
                     "\t-help,    -h\tShow this help message\n"
-                    "\t-version, -b\tShow the current version of FloC\n"
+                    "\t-version, -v\tShow the current version of FloC\n"
                     "\t<filepath>\tSpecify the source code file to compile\n\n"
         
                     BLUE "Example:\n" RESET
@@ -45,11 +46,15 @@ int main(int argc, char *argv[]) {
         
                     GREEN "Happy Compiling with Flower! 🌼\n" RESET
                 );
+                continue;
+            }
     
-            else if (!strcmp(arg, "version") || !strcmp(arg, "v"))
+            else if (!strcmp(arg, "version") || !strcmp(arg, "v")) {
                 printf(
                     "Version: 0.0.1\n"
                 );
+                continue;
+            }   
     
             else
                 printf(RED "Unrecognized flag argument! Use -help for more information.\n" RESET);
@@ -70,6 +75,7 @@ int main(int argc, char *argv[]) {
             free(file);
 
             printf("Compiled!!!!!!");
+            break;
         }
 
     }
