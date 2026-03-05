@@ -152,6 +152,7 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_RPAREN: return "TOKEN_RPAREN";
         case TOKEN_COLON: return "TOKEN_COLON";
         case TOKEN_COMMA: return "TOKEN_COMMA";
+        case TOKEN_SEMI: return "TOKEN_SEMI";
         case TOKEN_NEWLINE: return "TOKEN_NEWLINE";
         case TOKEN_EOF: return "TOKEN_EOF";
         default: return "UNKNOWN";
