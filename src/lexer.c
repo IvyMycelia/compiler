@@ -12,7 +12,21 @@ void lex(const char* src, TokenStream* ts) {
     int i = 0;
 
     while(src[i] != '\0') {
-        if (isspace(src[i]) || src[i] == '\r') {
+        if (src[i] == '/' && src[i+1] == '/') {
+            while (src[i] != '\n' && src[i] != '\0')
+                i++;
+            continue;
+        }
+        if (src[i] == '\n') {
+            add_token(ts, TOKEN_NEWLINE, i++, 1);
+            continue;
+        }
+        if (src[i] == ';') {
+            add_token(ts, TOKEN_SEMI, i++, 1);
+            continue;
+        }
+
+        if (src[i] == ' ' || src[i] == '\r') {
             i++;
             continue;
         }
@@ -33,6 +47,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_RETURN, start, length);
             else if (length == 5 && !strncmp(src + start, "while", 5))
                 add_token(ts, TOKEN_WHILE, start, length);
+            else if (length == 4 && !strncmp(src + start, "void", 4))
+                add_token(ts, TOKEN_VOID, start, length);
             else
                 add_token(ts, TOKEN_IDENTIFIER, start, length);
             continue;
@@ -48,14 +64,17 @@ void lex(const char* src, TokenStream* ts) {
             continue;
         }
 
-        printf("CHAR: '%c' (%d)\n", src[i], src[i]);
+        // printf("CHAR: '%c' (%d)\n", src[i], src[i]);
         switch (src[i]) {
             case '+': add_token(ts, TOKEN_PLUS, i++, 1); break;
             case '-': add_token(ts, TOKEN_MINUS, i++, 1); break;
             case '*': add_token(ts, TOKEN_STAR, i++, 1); break;
             case '/': add_token(ts, TOKEN_SLASH, i++, 1); break;
             case '&': add_token(ts, TOKEN_AMPERSAND, i++, 1); break;
-            case '=': add_token(ts, TOKEN_ASSIGN, i++, 1); break;
+            case '=': 
+                if (src[i+1] == '=') { add_token(ts, TOKEN_COMP, i, 2); i+=2; }
+                else add_token(ts, TOKEN_ASSIGN, i++, 1);
+                break;
             case '<': add_token(ts, TOKEN_LT, i++, 1); break;
             case '>': add_token(ts, TOKEN_GT, i++, 1); break;
             case '(': add_token(ts, TOKEN_LPAREN, i++, 1); break;
@@ -114,6 +133,7 @@ void free_token_stream(TokenStream* ts) {
 const char* token_kind_name(TokenKind kind) {
     switch (kind) {
         case TOKEN_INT: return "TOKEN_INT";
+        case TOKEN_VOID: return "TOKEN_VOID";
         case TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
         case TOKEN_NUMBER: return "TOKEN_NUMBER";
         case TOKEN_RETURN: return "TOKEN_RETURN";
@@ -127,10 +147,12 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_ASSIGN: return "TOKEN_ASSIGN";
         case TOKEN_LT: return "TOKEN_LT";
         case TOKEN_GT: return "TOKEN_GT";
+        case TOKEN_COMP: return "TOKEN_COMP";
         case TOKEN_LPAREN: return "TOKEN_LPAREN";
         case TOKEN_RPAREN: return "TOKEN_RPAREN";
         case TOKEN_COLON: return "TOKEN_COLON";
         case TOKEN_COMMA: return "TOKEN_COMMA";
+        case TOKEN_NEWLINE: return "TOKEN_NEWLINE";
         case TOKEN_EOF: return "TOKEN_EOF";
         default: return "UNKNOWN";
     }

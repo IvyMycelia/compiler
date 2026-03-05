@@ -4,6 +4,7 @@ typedef enum {
     TOKEN_INT,          // Integer
     TOKEN_IDENTIFIER,   // Variable & Function names
     TOKEN_NUMBER,       // Number
+    TOKEN_VOID,         // Void (empty)
 
     /* Keywords */
     TOKEN_RETURN,   // Return from block
@@ -19,12 +20,16 @@ typedef enum {
     TOKEN_ASSIGN,   // Assign value
     TOKEN_LT,       // Less than
     TOKEN_GT,       // Greater than
+    TOKEN_COMP,     // Comparison `==`
 
     /* Punctuation */
     TOKEN_LPAREN,   // Function handling
     TOKEN_RPAREN,   // Function handling
     TOKEN_COLON,    // Start block
     TOKEN_COMMA,    // Separate parameters
+    TOKEN_SEMI,     // Semicolon for starting a new statement
+
+    TOKEN_NEWLINE,  // For determining next statement
 
     TOKEN_EOF   // End of File
 } TokenKind;
