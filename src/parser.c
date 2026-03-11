@@ -119,7 +119,7 @@ AST* parse_primary(Parser* ps) {
             parser_advance(ps);
             return lit;
         default:
-            printf("Error parsing statement");
+            printf(RED "parse_primary: unexpected token kind: %d\n" RESET, parser_peek(ps)->kind);
             exit(1);
     }
 }
@@ -139,6 +139,8 @@ AST* parse_while(Parser* ps) {
     AST* body_head = NULL;
     AST* body_tail = NULL;
     while (parser_peek(ps)->kind != TOKEN_END) {
+        parser_skip_newline(ps);
+        if (parser_peek(ps)->kind == TOKEN_END) break;
         AST* statement = parse_statement(ps);
         if (body_head == NULL) body_head = statement;
         else body_tail->next = statement;
@@ -268,6 +270,8 @@ AST* parse_func_def(Parser* ps) {
     AST* body_head = NULL;
     AST* body_tail = NULL;
     while (parser_peek(ps)->kind != TOKEN_END) {
+        parser_skip_newline(ps);
+        if (parser_peek(ps)->kind == TOKEN_END) break;
         AST* statement = parse_statement(ps);
         if (body_head == NULL) body_head = statement;
         else body_tail->next = statement;

@@ -8,6 +8,7 @@
 #include "file.h"
 #include "lexer.h"
 #include "parser.h"
+#include "codegen.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -72,17 +73,28 @@ int main(int argc, char *argv[]) {
 
             // Lexer
             lex(file, &tokens);
-            print_all_tokens(&tokens, file);
+            // print_all_tokens(&tokens, file);
 
             // parser
             Parser tree;
             init_parser(&tree, &tokens, file);
             AST* ast = parse(&tree);
-            printf("Parsed Successfully!");
+            printf("Parsed Successfully: %p\n", ast);
+
+            // Codegen
+            FILE *output = fopen("output.c", "w");
+            if (!output) {
+                printf(RED "Failed to open output file\n" RESET);
+                return -1;
+            }
+            fprintf(output, "// TEST");
+            codegen(ast, output, file);
+            printf("Generated Code\n");
 
             // Cleanup
             free_token_stream(&tokens);
             free(file);
+            fclose(output);
 
             printf("Compiled!!!!!!");
             break;

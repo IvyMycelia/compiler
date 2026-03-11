@@ -1,4 +1,7 @@
 build
+fib
 bin
+output.c
 
 *.o
+.DS_Store
