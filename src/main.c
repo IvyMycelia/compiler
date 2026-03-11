@@ -96,7 +96,10 @@ int main(int argc, char *argv[]) {
             free(file);
             fclose(output);
 
-            printf("Compiled!!!!!!");
+            // Build
+            system("clang output.c -o fib && ./fib");
+
+            printf("Compiled!");
             break;
         }
 
