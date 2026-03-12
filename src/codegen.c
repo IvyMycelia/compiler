@@ -54,6 +54,13 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             gen_func_call(ast, out, src);
             break;
 
+        case AST_STRING_LIT:
+            fprintf(out, "%.*s",
+                ast->string.str_length,
+                src + ast->string.str_start
+            );
+            break;
+
         default:
             printf(RED "Could not generate expression: %d\n" RESET, ast->kind);
             exit(1);

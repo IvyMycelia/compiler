@@ -6,6 +6,7 @@
 typedef enum {
     AST_RETURN,     // return a number
     AST_LITERAL,    // A value
+    AST_STRING_LIT, // A string "Hello, World!"
     AST_BINARY_OP,  // 0 + 0
     AST_VAR_DECL,   // a: int
     AST_VAR_ASS,    // a = temp
@@ -28,6 +29,12 @@ typedef struct AST {
 
     union {
         int value;      // For literals
+        
+        struct {
+            int str_start;
+            int str_length;
+        } string;
+
         struct {
             struct AST* left;   // left binary-op
             struct AST* right;  // right bin-op

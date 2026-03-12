@@ -1,0 +1,7 @@
+void test():
+    x: string = "hello"
+end
+
+int main():
+    test()
+end

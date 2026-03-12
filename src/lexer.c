@@ -31,6 +31,15 @@ void lex(const char* src, TokenStream* ts) {
             continue;
         }
 
+        if (src[i] == '"') {
+            int start = i++;
+            while (src[i] != '"' && src[i] != '\0')
+                i++;
+            i++;
+            add_token(ts, TOKEN_STRING_LIT, start, i - start);
+            continue;
+        }
+
         if (isalpha(src[i])) {
             int start = i;
 

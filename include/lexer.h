@@ -11,6 +11,7 @@ typedef enum {
     TOKEN_STRING,       // Array of char (char*)
     TOKEN_IDENTIFIER,   // Variable & Function names
     TOKEN_NUMBER,       // Number
+    TOKEN_STRING_LIT,   // String literal "Hello, World!"
     TOKEN_VOID,         // Void (empty)
 
     /* Keywords */

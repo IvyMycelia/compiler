@@ -118,6 +118,12 @@ AST* parse_primary(Parser* ps) {
             lit->value = atoi(ps->src + parser_peek(ps)->start);
             parser_advance(ps);
             return lit;
+        case TOKEN_STRING_LIT:
+            AST* str = make_node(AST_STRING_LIT);
+            str->string.str_start = parser_peek(ps)->start;
+            str->string.str_length = parser_peek(ps)->length;
+            parser_advance(ps);
+            return str;
         default:
             printf(RED "parse_primary: unexpected token kind: %d\n" RESET, parser_peek(ps)->kind);
             exit(1);
