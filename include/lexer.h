@@ -8,6 +8,7 @@ typedef enum {
     TOKEN_FLOAT,        // Float-point value
     TOKEN_BOOL,         // true / false, 1 / 0
     TOKEN_CHAR,         // Characters (represented as integers)
+    TOKEN_STRING,       // Array of char (char*)
     TOKEN_IDENTIFIER,   // Variable & Function names
     TOKEN_NUMBER,       // Number
     TOKEN_VOID,         // Void (empty)

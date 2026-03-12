@@ -144,6 +144,7 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_VOID:        return "TOKEN_VOID";
         case TOKEN_BOOL:        return "TOKEN_BOOL";
         case TOKEN_CHAR:        return "TOKEN_CHAR";
+        case TOKEN_STRING:      return "TOKEN_STRING";
         case TOKEN_IDENTIFIER:  return "TOKEN_IDENTIFIER";
         case TOKEN_NUMBER:      return "TOKEN_NUMBER";
         case TOKEN_RETURN:      return "TOKEN_RETURN";

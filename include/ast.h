@@ -5,7 +5,7 @@
 
 typedef enum {
     AST_RETURN,     // return a number
-    AST_LITERAL,    // 
+    AST_LITERAL,    // A value
     AST_BINARY_OP,  // 0 + 0
     AST_VAR_DECL,   // a: int
     AST_VAR_ASS,    // a = temp

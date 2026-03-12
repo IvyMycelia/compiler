@@ -186,6 +186,7 @@ const char* token_to_string(TokenKind kind) {
         case TOKEN_WHILE:       return "while";
         case TOKEN_IF:          return "if";
         case TOKEN_ELSE:        return "else";
+        case TOKEN_STRING:      return "char*";
         case TOKEN_END:         return "}";
         case TOKEN_PLUS:        return "+";
         case TOKEN_MINUS:       return "-";
