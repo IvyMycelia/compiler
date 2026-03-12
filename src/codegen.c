@@ -180,13 +180,14 @@ void gen_return(AST* ast, FILE* out, const char* src) {
 const char* token_to_string(TokenKind kind) {
     switch (kind) {
         case TOKEN_INT:         return "int";
+        case TOKEN_BOOL:        return "bool";
         case TOKEN_CHAR:        return "char";
+        case TOKEN_STRING:      return "char*";
         case TOKEN_VOID:        return "void";
         case TOKEN_RETURN:      return "return";
         case TOKEN_WHILE:       return "while";
         case TOKEN_IF:          return "if";
         case TOKEN_ELSE:        return "else";
-        case TOKEN_STRING:      return "char*";
         case TOKEN_END:         return "}";
         case TOKEN_PLUS:        return "+";
         case TOKEN_MINUS:       return "-";
