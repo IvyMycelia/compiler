@@ -62,8 +62,9 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
 
 void gen_func_def(AST* ast, FILE* out, const char* src) {
     // Emit: int fib(
-    fprintf(out, "\n\n%s %.*s(",
-        token_to_string(ast->func_def.return_type.base),
+    fprintf(out, "\n\n");
+    typeinfo_to_string(ast->func_def.return_type, out);
+    fprintf(out, " %.*s(",
         ast->func_def.name_length,
         src + ast->func_def.name_start
     );
@@ -88,8 +89,8 @@ void gen_func_def(AST* ast, FILE* out, const char* src) {
 
 void gen_param(AST* param, FILE* out, const char* src) {
     // Emit: int v,
-    fprintf(out, "%s %.*s",
-        token_to_string(param->func_params.type.base),
+    typeinfo_to_string(param->func_params.type, out);
+    fprintf(out, " %.*s",
         param->func_params.name_length,
         src + param->func_params.name_start
     );
@@ -111,7 +112,8 @@ void gen_func_call(AST* ast, FILE* out, const char* src) {
 }
 
 void gen_var_decl(AST* ast, FILE* out, const char* src) {
-    fprintf(out, "int %.*s = ", 
+    typeinfo_to_string(ast->var_decl.type, out);
+    fprintf(out, " %.*s = ", 
         ast->var_decl.name_length,
         src + ast->var_decl.name_start
     );
@@ -201,4 +203,11 @@ const char* token_to_string(TokenKind kind) {
         case TOKEN_NEWLINE:     return "\n";
         default:                return "ERROR";
     }
+}
+
+void typeinfo_to_string(TypeInfo type, FILE* out) {
+    fprintf(out, "%s", token_to_string(type.base));
+    int i = 0;
+    while (i++ < type.pointer_depth)
+        fprintf(out, "*");
 }

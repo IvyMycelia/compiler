@@ -1,0 +1,3 @@
+void test(ptr: @int):
+    x: @int = ptr
+end

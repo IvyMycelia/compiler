@@ -29,6 +29,7 @@ AST*    parse_return(Parser* ps);
 AST*    parse_param(Parser* ps);
 AST*    parse(Parser* ps);
 int     get_precedence(TokenKind kind);
+TypeInfo parse_type(Parser* ps);
 
 
 #endif
