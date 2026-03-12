@@ -1,0 +1,15 @@
+struct Vector2:
+    x: int,
+    y: int
+end
+
+struct Vector3: x: int, y: int
+    z: int
+end
+
+int main():
+    point: Vector2
+    point.x = 5; point.y = 0
+
+    point2: Vector3 = {5, 0, 1}
+end

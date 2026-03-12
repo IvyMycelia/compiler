@@ -1,0 +1,8 @@
+void test(x: int, y: int):
+    return x + y;
+end
+
+int main():
+    x: int = test(1, 2)
+    test(3, 4)
+end

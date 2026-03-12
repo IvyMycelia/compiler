@@ -27,6 +27,7 @@ AST*    parse_while(Parser* ps);
 AST*    parse_if(Parser* ps, int is_else_if);
 AST*    parse_return(Parser* ps);
 AST*    parse_param(Parser* ps);
+AST*    parse_struct(Parser* ps);
 AST*    parse(Parser* ps);
 int     get_precedence(TokenKind kind);
 TypeInfo parse_type(Parser* ps);

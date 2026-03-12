@@ -30,7 +30,7 @@ void parser_expect(Parser* ps, TokenKind kind) {
     Token* curr_tok = parser_peek(ps);
 
     if (curr_tok->kind != kind) {
-        printf(RED "Expected token: %s", token_kind_name(kind));
+        printf(RED "Expected token: %s but got %s\n", token_kind_name(kind), token_kind_name(curr_tok->kind));
         exit(1);
     }
     parser_advance(ps);
@@ -146,7 +146,7 @@ AST* parse_primary(Parser* ps) {
             return arr;
 
         default:
-            printf(RED "parse_primary: unexpected token kind: %d\n" RESET, parser_peek(ps)->kind);
+            printf(RED "parse_primary: unexpected token kind: %s\n" RESET, token_kind_name(parser_peek(ps)->kind));
             exit(1);
     }
 }
@@ -288,7 +288,7 @@ AST* parse_func_def(Parser* ps) {
         if (param_head == NULL) param_head = param;
         else param_tail->next = param;
         param_tail = param;
-
+        
         if (parser_peek(ps)->kind == TOKEN_COMMA) parser_advance(ps);
     }
     parser_expect(ps, TOKEN_RPAREN);
@@ -309,6 +309,40 @@ AST* parse_func_def(Parser* ps) {
     }
     parser_expect(ps, TOKEN_END);
     node->func_def.body = body_head;
+
+    return node;
+}
+
+AST* parse_struct(Parser* ps) {
+    parser_expect(ps, TOKEN_STRUCT);
+
+    AST* node = make_node(AST_STRUCT_DEF);
+
+    Token* name = parser_advance(ps);
+    node->struct_def.name_start = name->start;
+    node->struct_def.name_length = name->length;
+
+    parser_expect(ps, TOKEN_COLON);
+
+    AST* field_head = NULL;
+    AST* field_tail = NULL;
+    while (parser_peek(ps)->kind != TOKEN_END) {
+        while ( parser_peek(ps)->kind == TOKEN_NEWLINE ||
+                parser_peek(ps)->kind == TOKEN_COMMA ||
+                parser_peek(ps)->kind == TOKEN_SEMI) parser_advance(ps);
+        if (parser_peek(ps)->kind == TOKEN_END) break;
+        AST* field = make_node(AST_STRUCT_FIELD);
+        Token* fname = parser_advance(ps);
+        field->struct_field.name_start = fname->start;
+        field->struct_field.name_length = fname->length;
+        parser_expect(ps, TOKEN_COLON);
+        field->struct_field.type = parse_type(ps);
+        if (field_head == NULL) field_head = field;
+        else field_tail->next = field;
+        field_tail = field;
+    }
+    parser_expect(ps, TOKEN_END);
+    node->struct_def.fields = field_head;
 
     return node;
 }
@@ -342,7 +376,12 @@ AST* parse(Parser* ps) {
     
     while (parser_peek(ps)->kind != TOKEN_EOF) {
         parser_skip_newline(ps);
-        AST* node = parse_func_def(ps);
+        AST* node;
+
+        if (parser_peek(ps)->kind == TOKEN_STRUCT)
+            node = parse_struct(ps);
+        else
+            node = parse_func_def(ps);
         if (head == NULL) head = node;
         else tail->next = node;
         tail = node;

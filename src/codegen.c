@@ -10,7 +10,9 @@
 void codegen(AST* ast, FILE* out, const char* src) {
     AST* curr = ast;
     while (curr != NULL) {
-        gen_func_def(curr, out, src);
+        if (curr->kind == AST_FUNC_DEF)
+            gen_func_def(curr, out, src);
+        else gen_struct(curr, out, src);
         curr = curr->next;
     }
 }
@@ -155,6 +157,23 @@ void gen_var_ass(AST* ast, FILE* out, const char* src) {
     );
     gen_expr(ast->var_ass.value, out, src);
     fprintf(out, ";\n");
+}
+
+void gen_struct(AST* ast, FILE* out, const char* src) {
+    fprintf(out, "\n\ntypedef struct {\n");
+    AST* field = ast->struct_def.fields;
+    while (field != NULL) {
+        typeinfo_to_string(field->struct_field.type, out);
+        fprintf(out, " %.*s;\n",
+            field->struct_field.name_length,
+            src + field->struct_field.name_start
+        );
+        field = field->next;
+    }
+    fprintf(out, "} %.*s;\n",
+        ast->struct_def.name_length,
+        src + ast->struct_def.name_start
+    );
 }
 
 void gen_while(AST* ast, FILE* out, const char* src) {
