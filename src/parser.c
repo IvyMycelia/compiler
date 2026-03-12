@@ -48,7 +48,7 @@ AST* parse_param(Parser* ps) {
     node->func_params.name_start = name->start;
     node->func_params.name_length = name->length;
     parser_expect(ps, TOKEN_COLON);
-    node->func_params.type = parser_advance(ps)->kind;
+    node->func_params.type = parse_type(ps);
     return node;
 }
 
@@ -198,7 +198,7 @@ AST* parse_var_decl(Parser* ps) {
     node->var_decl.name_start = tok->start;
     node->var_decl.name_length = tok->length;
     parser_expect(ps, TOKEN_COLON);
-    parser_expect(ps, TOKEN_INT);
+    node->var_decl.type = parse_type(ps);
     
     parser_expect(ps, TOKEN_ASSIGN);
     node->var_decl.value = parse_expr(ps, 0);
@@ -242,7 +242,7 @@ AST* parse_statement(Parser* ps) {
 
 AST* parse_func_def(Parser* ps) {
     AST* node = make_node(AST_FUNC_DEF);
-    node->func_def.return_type = parser_advance(ps)->kind;
+    node->func_def.return_type = parse_type(ps);
     
     Token* name = parser_advance(ps);
     node->func_def.name_start = name->start;
@@ -281,6 +281,17 @@ AST* parse_func_def(Parser* ps) {
     node->func_def.body = body_head;
 
     return node;
+}
+
+TypeInfo parse_type(Parser* ps) {
+    TypeInfo type;
+    type.pointer_depth = 0;
+    while (parser_peek(ps)->kind == TOKEN_AT) {
+        type.pointer_depth++;
+        parser_advance(ps);
+    }
+    type.base = parser_advance(ps)->kind;
+    return type;
 }
 
 AST* parse(Parser* ps) {
