@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     
             else if (!strcmp(arg, "version") || !strcmp(arg, "v")) {
                 printf(
-                    "Version: 0.0.1\n"
+                    "Version: 0.0.4\n"
                 );
                 continue;
             }   
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
             else
                 printf(RED "Unrecognized flag argument! Use -help for more information.\n" RESET);
         } else {
-            printf("Compiling file: %s\n", argv[i]);
+            printf(BLUE BOLD "Compiling file: %s\n" RESET, argv[i]);
             char* file = read_file(argv[i]);
             if (!file) {
                 return -1;
@@ -79,17 +79,17 @@ int main(int argc, char *argv[]) {
             Parser tree;
             init_parser(&tree, &tokens, file);
             AST* ast = parse(&tree);
-            printf("Parsed Successfully: %p\n", ast);
 
             // Codegen
-            FILE *output = fopen("output.c", "w");
+            char out_name[256];
+            snprintf(out_name, sizeof(out_name), "%s.c", argv[i+1] != NULL ? argv[i+1] : "output");
+            FILE *output = fopen(out_name, "w");
             if (!output) {
                 printf(RED "Failed to open output file\n" RESET);
                 return -1;
             }
             fprintf(output, "// TEST");
             codegen(ast, output, file);
-            printf("Generated Code\n");
 
             // Cleanup
             free_token_stream(&tokens);
@@ -97,9 +97,11 @@ int main(int argc, char *argv[]) {
             fclose(output);
 
             // Build
-            system("clang output.c -o fib && ./fib");
+            char build_cmd[512];
+            snprintf(build_cmd, sizeof(build_cmd), "clang %s -o output && ./output", out_name);
+            system(build_cmd);
 
-            printf("Compiled!");
+            printf(GREEN BOLD "Compiled /%s to ./output.c\n" RESET, argv[i]);
             break;
         }
 
