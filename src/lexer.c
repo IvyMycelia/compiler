@@ -105,6 +105,8 @@ void lex(const char* src, TokenStream* ts) {
             case ')': add_token(ts, TOKEN_RPAREN, i++, 1); break;
             case '[': add_token(ts, TOKEN_LBRACK, i++, 1); break;
             case ']': add_token(ts, TOKEN_RBRACK, i++, 1); break;
+            case '{': add_token(ts, TOKEN_LBRACE, i++, 1); break;
+            case '}': add_token(ts, TOKEN_RBRACE, i++, 1); break;
             case ':': add_token(ts, TOKEN_COLON, i++, 1); break;
             case ',': add_token(ts, TOKEN_COMMA, i++, 1); break;
             default:
@@ -158,6 +160,7 @@ void free_token_stream(TokenStream* ts) {
 
 const char* token_kind_name(TokenKind kind) {
     switch (kind) {
+        /* Types & Identifiers */
         case TOKEN_INT:         return "TOKEN_INT";
         case TOKEN_VOID:        return "TOKEN_VOID";
         case TOKEN_BOOL:        return "TOKEN_BOOL";
@@ -166,11 +169,15 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_STRUCT:      return "TOKEN_STRUCT";
         case TOKEN_IDENTIFIER:  return "TOKEN_IDENTIFIER";
         case TOKEN_NUMBER:      return "TOKEN_NUMBER";
+
+        /* Keywords */
         case TOKEN_RETURN:      return "TOKEN_RETURN";
         case TOKEN_WHILE:       return "TOKEN_WHILE";
         case TOKEN_IF:          return "TOKEN_IF";
         case TOKEN_ELSE:        return "TOKEN_ELSE";
         case TOKEN_END:         return "TOKEN_END";
+
+        /* Operators */
         case TOKEN_DOT:         return "TOKEN_DOT";
         case TOKEN_PLUS:        return "TOKEN_PLUS";
         case TOKEN_MINUS:       return "TOKEN_MINUS";
@@ -183,15 +190,22 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_LT:          return "TOKEN_LT";
         case TOKEN_GT:          return "TOKEN_GT";
         case TOKEN_COMP:        return "TOKEN_COMP";
+
+        /* Punctuation */
         case TOKEN_LPAREN:      return "TOKEN_LPAREN";
         case TOKEN_RPAREN:      return "TOKEN_RPAREN";
         case TOKEN_LBRACK:      return "TOKEN_LBRACK";
         case TOKEN_RBRACK:      return "TOKEN_RBRACK";
+        case TOKEN_LBRACE:      return "TOKEN_LBRACE";
+        case TOKEN_RBRACE:      return "TOKEN_RBRACE";
         case TOKEN_COLON:       return "TOKEN_COLON";
         case TOKEN_COMMA:       return "TOKEN_COMMA";
         case TOKEN_SEMI:        return "TOKEN_SEMI";
+
         case TOKEN_NEWLINE:     return "TOKEN_NEWLINE";
+
         case TOKEN_EOF:         return "TOKEN_EOF";
+
         default:                return "UNKNOWN";
     }
 }

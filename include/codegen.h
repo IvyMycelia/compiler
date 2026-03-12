@@ -15,7 +15,7 @@ void gen_struct(AST* ast, FILE* out, const char* src);
 void gen_while(AST* ast, FILE* out, const char* src);
 void gen_if(AST* ast, FILE* out, const char* src, int is_else_if);
 void gen_return(AST* ast, FILE* out, const char* src);
-void typeinfo_to_string(TypeInfo type, FILE* out);
+void typeinfo_to_string(TypeInfo type, FILE* out, const char* src);
 const char* token_to_string(TokenKind kind);
 
 #endif

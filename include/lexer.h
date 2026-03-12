@@ -41,6 +41,8 @@ typedef enum {
     TOKEN_RPAREN,   // Function handling
     TOKEN_LBRACK,   // Array handling
     TOKEN_RBRACK,   // Array handling
+    TOKEN_LBRACE,   // Struct handling
+    TOKEN_RBRACE,   // Struct handling
     TOKEN_COLON,    // Start block
     TOKEN_COMMA,    // Separate parameters
     TOKEN_SEMI,     // Semicolon for starting a new statement

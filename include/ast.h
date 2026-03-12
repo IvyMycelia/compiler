@@ -8,8 +8,10 @@ typedef enum {
     AST_LITERAL,    // A value
     AST_STRING_LIT, // A string "Hello, World!"
     AST_ARRAY_LIT,  // Array literal [0, 1, 2 ..]
+    AST_STRUCT_LIT, // Struct literal {0, 1, 2 ..}
     AST_STRUCT_DEF, // Struct declaration
     AST_STRUCT_FIELD, // Struct field
+    AST_DOT_ACCESS, // Struct access
     AST_BINARY_OP,  // 0 + 0
     AST_VAR_DECL,   // a: int
     AST_VAR_ASS,    // a = temp
@@ -25,6 +27,8 @@ typedef struct {
     TokenKind base;
     int pointer_depth;
     int array_size;
+    int name_start;
+    int name_length;
 } TypeInfo;
 
 typedef struct AST {
@@ -55,6 +59,17 @@ typedef struct AST {
             int name_length;
             TypeInfo type;
         } struct_field;
+
+        struct {
+            struct AST* elements;
+        } struct_lit;
+
+        struct {
+            struct AST* object;
+            int field_start;
+            int field_length;
+            struct AST* value;
+        } dot_access;
 
         struct {
             struct AST* left;   // left binary-op

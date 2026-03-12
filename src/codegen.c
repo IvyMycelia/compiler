@@ -25,6 +25,19 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_RETURN:    gen_return(ast, out, src);      break;
         case AST_FUNC_CALL: gen_func_call(ast, out, src);   break;
         case AST_IF:        gen_if(ast, out, src, 0);       break;
+        case AST_DOT_ACCESS:
+            gen_expr(ast->dot_access.object, out, src);
+            fprintf(out, ".%.*s",
+                ast->dot_access.field_length,
+                src + ast->dot_access.field_start
+            );
+            if (ast->dot_access.value != NULL) {
+                fprintf(out, " = ");
+                gen_expr(ast->dot_access.value, out, src);
+                fprintf(out, ";\n");
+            }
+            break;
+
         default:
             printf(RED "Unknown statement kind: %d\n" RESET, ast->kind);
             exit(1);
@@ -74,6 +87,25 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             fprintf(out, "}");
             break;
 
+        case AST_STRUCT_LIT:
+            fprintf(out, "{");
+            AST* struct_elem = ast->struct_lit.elements;
+            while (struct_elem != NULL) {
+                gen_expr(struct_elem, out, src);
+                if (struct_elem->next != NULL) fprintf(out, ", ");
+                struct_elem = struct_elem->next;
+            }
+            fprintf(out, "}");
+            break;
+
+        case AST_DOT_ACCESS:
+            gen_expr(ast->dot_access.object, out, src);
+            fprintf(out, ".%.*s",
+                ast->dot_access.field_length,
+                src + ast->dot_access.field_start
+            );
+            break;
+
         default:
             printf(RED "Could not generate expression: %d\n" RESET, ast->kind);
             exit(1);
@@ -83,7 +115,7 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
 void gen_func_def(AST* ast, FILE* out, const char* src) {
     // Emit: int fib(
     fprintf(out, "\n\n");
-    typeinfo_to_string(ast->func_def.return_type, out);
+    typeinfo_to_string(ast->func_def.return_type, out, src);
     fprintf(out, " %.*s(",
         ast->func_def.name_length,
         src + ast->func_def.name_start
@@ -109,7 +141,7 @@ void gen_func_def(AST* ast, FILE* out, const char* src) {
 
 void gen_param(AST* param, FILE* out, const char* src) {
     // Emit: int v,
-    typeinfo_to_string(param->func_params.type, out);
+    typeinfo_to_string(param->func_params.type, out, src);
     fprintf(out, " %.*s",
         param->func_params.name_length,
         src + param->func_params.name_start
@@ -132,8 +164,7 @@ void gen_func_call(AST* ast, FILE* out, const char* src) {
 }
 
 void gen_var_decl(AST* ast, FILE* out, const char* src) {
-    // printf("gen_var_decl: array_size = %d\n", ast->var_decl.type.array_size);
-    typeinfo_to_string(ast->var_decl.type, out);
+    typeinfo_to_string(ast->var_decl.type, out, src);
     fprintf(out, " %.*s", 
         ast->var_decl.name_length,
         src + ast->var_decl.name_start
@@ -163,7 +194,7 @@ void gen_struct(AST* ast, FILE* out, const char* src) {
     fprintf(out, "\n\ntypedef struct {\n");
     AST* field = ast->struct_def.fields;
     while (field != NULL) {
-        typeinfo_to_string(field->struct_field.type, out);
+        typeinfo_to_string(field->struct_field.type, out, src);
         fprintf(out, " %.*s;\n",
             field->struct_field.name_length,
             src + field->struct_field.name_start
@@ -225,16 +256,22 @@ void gen_return(AST* ast, FILE* out, const char* src) {
 
 const char* token_to_string(TokenKind kind) {
     switch (kind) {
+        /* Types & Identifiers */
         case TOKEN_INT:         return "int";
         case TOKEN_BOOL:        return "bool";
         case TOKEN_CHAR:        return "char";
         case TOKEN_STRING:      return "char*";
         case TOKEN_VOID:        return "void";
+
+        /* Keywords */
         case TOKEN_RETURN:      return "return";
         case TOKEN_WHILE:       return "while";
         case TOKEN_IF:          return "if";
         case TOKEN_ELSE:        return "else";
         case TOKEN_END:         return "}";
+
+        /* Operators */
+        case TOKEN_DOT:         return ".";
         case TOKEN_PLUS:        return "+";
         case TOKEN_MINUS:       return "-";
         case TOKEN_STAR:        return "*";
@@ -246,18 +283,26 @@ const char* token_to_string(TokenKind kind) {
         case TOKEN_LT:          return "<";
         case TOKEN_GT:          return ">";
         case TOKEN_COMP:        return "==";
+
+        /* Punctuation */
         case TOKEN_LPAREN:      return "(";
         case TOKEN_RPAREN:      return ")";
-        case TOKEN_COLON:       return "{";
+        case TOKEN_LBRACE:      return "{";
+        case TOKEN_RBRACE:      return "}";
+        case TOKEN_COLON:       return ":";
         case TOKEN_COMMA:       return ",";
         case TOKEN_SEMI:        return ";";
+
         case TOKEN_NEWLINE:     return "\n";
         default:                return "ERROR";
     }
 }
 
-void typeinfo_to_string(TypeInfo type, FILE* out) {
-    fprintf(out, "%s", token_to_string(type.base));
+void typeinfo_to_string(TypeInfo type, FILE* out, const char* src) {
+    if (type.base == TOKEN_IDENTIFIER)
+        fprintf(out, "%.*s", type.name_length, src + type.name_start);
+    else
+        fprintf(out, "%s", token_to_string(type.base));
     int i = 0;
     while (i++ < type.pointer_depth)
         fprintf(out, "*");
