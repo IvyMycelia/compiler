@@ -108,7 +108,7 @@ void gen_func_call(AST* ast, FILE* out, const char* src) {
         if (arg->next != NULL) fprintf(out, ", ");
         arg = arg->next;
     }
-    fprintf(out, ") ");
+    fprintf(out, ");\n");
 }
 
 void gen_var_decl(AST* ast, FILE* out, const char* src) {
@@ -180,6 +180,7 @@ void gen_return(AST* ast, FILE* out, const char* src) {
 const char* token_to_string(TokenKind kind) {
     switch (kind) {
         case TOKEN_INT:         return "int";
+        case TOKEN_CHAR:        return "char";
         case TOKEN_VOID:        return "void";
         case TOKEN_RETURN:      return "return";
         case TOKEN_WHILE:       return "while";
@@ -190,6 +191,8 @@ const char* token_to_string(TokenKind kind) {
         case TOKEN_MINUS:       return "-";
         case TOKEN_STAR:        return "*";
         case TOKEN_SLASH:       return "/";
+        case TOKEN_CARET:       return "^";
+        case TOKEN_AT:          return "@";
         case TOKEN_AMPERSAND:   return "&";
         case TOKEN_ASSIGN:      return "=";
         case TOKEN_LT:          return "<";

@@ -1,3 +1,8 @@
 void test(ptr: @int):
     x: @int = ptr
 end
+
+int main():
+    x: @int = 0;
+    test(x);
+end
