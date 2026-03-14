@@ -130,6 +130,11 @@ AST* parse_primary(Parser* ps) {
             parser_advance(ps);
             return lit;
 
+        case TOKEN_NULL:
+            AST* null = make_node(AST_NULL);
+            parser_advance(ps);
+            return null;
+
         case TOKEN_STRING_LIT:
             AST* str = make_node(AST_STRING_LIT);
             str->string.str_start = parser_peek(ps)->start;
@@ -433,12 +438,20 @@ TypeInfo parse_type(Parser* ps) {
     return type;
 }
 
+int token_stream_contains(TokenStream* ts, TokenKind kind) {
+    for (int i = 0; i < ts->count; i++)
+        if (ts->data[i].kind == kind)
+            return 1;
+    return 0;
+}
+
 AST* parse(Parser* ps) {
     AST* head = NULL;
     AST* tail = NULL;
     
     while (parser_peek(ps)->kind != TOKEN_EOF) {
         parser_skip_newline(ps);
+        if (parser_peek(ps)->kind == TOKEN_EOF) break;
         AST* node;
 
         if (parser_peek(ps)->kind == TOKEN_STRUCT)

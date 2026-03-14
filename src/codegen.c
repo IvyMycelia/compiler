@@ -9,6 +9,7 @@
 
 void codegen(AST* ast, FILE* out, const char* src) {
     AST* curr = ast;
+
     while (curr != NULL) {
         if (curr->kind == AST_FUNC_DEF)
             gen_func_def(curr, out, src);
@@ -57,6 +58,10 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             fprintf(out, "%d",
                 ast->value
             );
+            break;
+
+        case AST_NULL:
+            fprintf(out, "NULL");
             break;
 
         case AST_BINARY_OP: 

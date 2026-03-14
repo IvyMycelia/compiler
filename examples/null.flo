@@ -1,0 +1,5 @@
+int main():
+    x: int = null
+    ptr: @int = null
+    return 0
+end

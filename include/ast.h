@@ -6,6 +6,7 @@
 typedef enum {
     AST_RETURN,     // return a number
     AST_LITERAL,    // A value
+    AST_NULL,       // An empty value
     AST_STRING_LIT, // A string "Hello, World!"
     AST_ARRAY_LIT,  // Array literal [0, 1, 2 ..]
     AST_STRUCT_LIT, // Struct literal {0, 1, 2 ..}

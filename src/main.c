@@ -94,7 +94,10 @@ int main(int argc, char *argv[]) {
                 printf(RED "Failed to open output file\n" RESET);
                 return -1;
             }
-            fprintf(output, "// TEST\n");
+
+            if (token_stream_contains(&tokens, TOKEN_NULL))
+                fprintf(output, "#include <stdlib.h>\n");
+
             codegen(ast, output, file);
 
             free_token_stream(&tokens);

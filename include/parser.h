@@ -31,6 +31,7 @@ AST*    parse_struct(Parser* ps);
 AST*    parse_dot_ass(Parser* ps);
 AST*    parse(Parser* ps);
 int     get_precedence(TokenKind kind);
+int     token_stream_contains(TokenStream* ts, TokenKind kind);
 TypeInfo parse_type(Parser* ps);
 
 
