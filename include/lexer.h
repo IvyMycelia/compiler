@@ -23,6 +23,11 @@ typedef enum {
     TOKEN_IF,       // If statement
     TOKEN_ELSE,     // Else block
 
+    /* Import System */
+    TOKEN_IMPORT,   // .flo imports
+    TOKEN_AS,       // Alias for imports
+    TOKEN_PROP,     // Propagating functions (making them public)
+
     /* Memory Management */
     TOKEN_NEW,      // Automatically allocate memory
     TOKEN_PRUNE,    // Free memory

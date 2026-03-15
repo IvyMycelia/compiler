@@ -50,6 +50,8 @@ void lex(const char* src, TokenStream* ts) {
 
             if (length == 2 && !strncmp(src + start, "if", 2))
                 add_token(ts, TOKEN_IF, start, length);
+            else if (length == 2 && !strncmp(src + start, "as", 2))
+                add_token(ts, TOKEN_AS, start, length);
             else if (length == 3 && !strncmp(src + start, "int", 3))
                 add_token(ts, TOKEN_INT, start, length);
             else if (length == 3 && !strncmp(src + start, "end", 3))
@@ -66,6 +68,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_ELSE, start, length);
             else if (length == 4 && !strncmp(src + start, "void", 4))
                 add_token(ts, TOKEN_VOID, start, length);
+            else if (length == 4 && strncmp(src + length, "prop", 4))
+                add_token(ts, TOKEN_PROP, start, length);
             else if (length == 5 && !strncmp(src + start, "while", 5))
                 add_token(ts, TOKEN_WHILE, start, length);
             else if (length == 5 && !strncmp(src + start, "prune", 5))
@@ -76,6 +80,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_STRING, start, length);
             else if (length == 6 && !strncmp(src + start, "struct", 6))
                 add_token(ts, TOKEN_STRUCT, start, length);
+            else if (length == 6 && !strncmp(src + start, "import", 6))
+                add_token(ts, TOKEN_IMPORT, start, length);
             else
                 add_token(ts, TOKEN_IDENTIFIER, start, length);
             continue;
@@ -184,7 +190,12 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_ELSE:        return "TOKEN_ELSE";
         case TOKEN_END:         return "TOKEN_END";
 
+        /* Import System */
+        case TOKEN_IMPORT:      return "TOKEN_IMPORT";
+        case TOKEN_PROP:        return "TOKEN_PROP";
+
         /* Memory Management */
+        case TOKEN_AS:          return "TOKEN_AS";
         case TOKEN_NEW:         return "TOKEN_NEW";
         case TOKEN_PRUNE:       return "TOKEN_PRUNE";
 
