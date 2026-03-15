@@ -14,6 +14,11 @@ typedef enum {
     AST_STRUCT_FIELD, // Struct field
     AST_DOT_ACCESS, // Struct access
     AST_BINARY_OP,  // 0 + 0
+
+    /* Memory Management */
+    AST_NEW,        // malloc(sizeof(t))
+    AST_PRUNE,      // free(mem)
+
     AST_VAR_DECL,   // a: int
     AST_VAR_ASS,    // a = temp
     AST_VAR_REF,    // Reading a variable's value
@@ -39,16 +44,33 @@ typedef struct AST {
     union {
         int value;      // For literals
         
+
+
+        /* Strings */
         struct {
             int str_start;
             int str_length;
         } string;
 
+
+        /* Arrays */
         struct {
             struct AST* elements;
             int arr_length;
         } array;
 
+
+        /* Memory Management */
+        struct {
+            TypeInfo type;
+        } new_alloc;
+
+        struct {
+            struct AST* ptr;
+        } prune_free;
+
+
+        /* Structs */
         struct {
             int name_start;
             int name_length;
@@ -72,12 +94,18 @@ typedef struct AST {
             struct AST* value;
         } dot_access;
 
+
+
+        /* Operations */
         struct {
             struct AST* left;   // left binary-op
             struct AST* right;  // right bin-op
             int op;
         } binary;
 
+
+
+        /* Variables */
         struct {
             int name_start;
             int name_length;
@@ -96,7 +124,9 @@ typedef struct AST {
             int name_length;
         } var_ref;
 
-        // Function
+        
+        
+        /* Functions */
         struct {
             int name_start;
             int name_length;
@@ -117,11 +147,16 @@ typedef struct AST {
             struct AST* args;
         } func_call;
 
+
+
+        /* Return */
         struct {
             struct AST* value;
         } ret;
 
-        // While Loop
+        
+        
+        /* Conditionals */
         struct {
             struct AST* condition;
             struct AST* body;

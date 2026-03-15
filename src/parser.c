@@ -178,6 +178,12 @@ AST* parse_primary(Parser* ps) {
             struct_lit->struct_lit.elements = struct_head;
             return struct_lit;
 
+        case TOKEN_NEW:
+            parser_advance(ps);
+            AST* new_node = make_node(AST_NEW);
+            new_node->new_alloc.type = parse_type(ps);
+            return new_node;
+
         default:
             printf(RED "parse_primary: unexpected token kind: %s\n" RESET, token_kind_name(parser_peek(ps)->kind));
             exit(1);
@@ -323,6 +329,12 @@ AST* parse_statement(Parser* ps) {
             
         case TOKEN_IF:
             return parse_if(ps, 0);
+        
+        case TOKEN_PRUNE:
+            parser_advance(ps);
+            AST* node = make_node(AST_PRUNE);
+            node->prune_free.ptr = parse_expr(ps, 0);
+            return node;
 
             
         default:
