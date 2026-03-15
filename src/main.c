@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
                 return -1;
             }
 
-            if (token_stream_contains(&tokens, TOKEN_NULL))
+            if (token_stream_contains(&tokens, TOKEN_NULL) || token_stream_contains(&tokens, TOKEN_NEW))
                 fprintf(output, "#include <stdlib.h>\n");
 
             codegen(ast, output, file);

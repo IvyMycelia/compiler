@@ -22,6 +22,10 @@ typedef enum {
     TOKEN_END,      // Close block
     TOKEN_IF,       // If statement
     TOKEN_ELSE,     // Else block
+
+    /* Memory Management */
+    TOKEN_NEW,      // Automatically allocate memory
+    TOKEN_PRUNE,    // Free memory
     
     /* Operators */
     TOKEN_DOT,      // Dot access

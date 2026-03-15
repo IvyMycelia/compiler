@@ -54,6 +54,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_INT, start, length);
             else if (length == 3 && !strncmp(src + start, "end", 3))
                 add_token(ts, TOKEN_END, start, length);
+            else if (length == 3 && !strncmp(src + start, "new", 3))
+                add_token(ts, TOKEN_NEW, start, length);
             else if (length == 4 && !strncmp(src + start, "null", 4))
                 add_token(ts, TOKEN_NULL, start, length);
             else if (length == 4 && !strncmp(src + start, "char", 4))
@@ -66,6 +68,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_VOID, start, length);
             else if (length == 5 && !strncmp(src + start, "while", 5))
                 add_token(ts, TOKEN_WHILE, start, length);
+            else if (length == 5 && !strncmp(src + start, "prune", 5))
+                add_token(ts, TOKEN_PRUNE, start, length);
             else if (length == 6 && !strncmp(src + start, "return", 6))
                 add_token(ts, TOKEN_RETURN, start, length);
             else if (length == 6 && !strncmp(src + start, "string", 6))
@@ -179,6 +183,10 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_IF:          return "TOKEN_IF";
         case TOKEN_ELSE:        return "TOKEN_ELSE";
         case TOKEN_END:         return "TOKEN_END";
+
+        /* Memory Management */
+        case TOKEN_NEW:         return "TOKEN_NEW";
+        case TOKEN_PRUNE:       return "TOKEN_PRUNE";
 
         /* Operators */
         case TOKEN_DOT:         return "TOKEN_DOT";
