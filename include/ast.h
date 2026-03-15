@@ -19,6 +19,10 @@ typedef enum {
     AST_NEW,        // malloc(sizeof(t))
     AST_PRUNE,      // free(mem)
 
+    /* Import System */
+    AST_IMPORT,     // import "custom.flo"
+    AST_PROP,       // prop int test():
+
     AST_VAR_DECL,   // a: int
     AST_VAR_ASS,    // a = temp
     AST_VAR_REF,    // Reading a variable's value
@@ -68,6 +72,21 @@ typedef struct AST {
         struct {
             struct AST* ptr;
         } prune_free;
+
+
+        /* Import System */
+        struct {
+            int path_start;
+            int path_length;
+            int alias_start;
+            int alias_length;
+            int is_system;      // 1 if <stdlib>, 0 if "file.flo"
+            int has_alias;      // 1 if `as name` present
+        } import;
+
+        struct {
+            struct AST* func;
+        } prop;
 
 
         /* Structs */

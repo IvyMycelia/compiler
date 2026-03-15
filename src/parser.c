@@ -41,7 +41,6 @@ void parser_skip_newline(Parser* ps) {
         parser_advance(ps);
 }
 
-
 AST* parse_param(Parser* ps) {
     AST* node = make_node(AST_PARAM);
     Token* name = parser_advance(ps);
@@ -257,7 +256,6 @@ AST* parse_if(Parser* ps, int is_elf_if) {
     return node;
 }
 
-
 AST* parse_var_decl(Parser* ps) {
     AST* node = make_node(AST_VAR_DECL);
     Token* tok = parser_advance(ps);
@@ -419,6 +417,48 @@ AST* parse_struct(Parser* ps) {
     return node;
 }
 
+AST* parse_import(Parser* ps) {
+    parser_expect(ps, TOKEN_IMPORT);
+    AST* node = make_node(AST_IMPORT);
+
+    if (parser_peek(ps)->kind == TOKEN_LT) {
+        // system import: `import <stdlib>`
+        parser_advance(ps);
+        Token* path = parser_advance(ps);
+        node->import.path_start = path->start;
+        node->import.path_length = path->length;
+
+        parser_expect(ps, TOKEN_GT);
+        node->import.is_system = 1;
+        
+        if (parser_peek(ps)->kind == TOKEN_AS) {
+            parser_advance(ps);
+            Token* alias = parser_advance(ps);
+            node->import.alias_start = alias->start;
+            node->import.alias_length = alias->length;
+            node->import.has_alias = 1;
+        } else
+            node->import.has_alias = 0;
+    } else {
+        // file import: `import "file.flo"`
+        Token* path = parser_advance(ps);
+        node->import.path_start = path->start;
+        node->import.path_length = path->length;
+        node->import.is_system = 0;
+
+        if (parser_peek(ps)->kind == TOKEN_AS) {
+            parser_advance(ps);
+            Token* alias = parser_advance(ps);
+            node->import.alias_start = alias->start;
+            node->import.alias_length = alias->length;
+            node->import.has_alias = 1;
+        } else
+            node->import.has_alias = 0;
+    }
+
+    return node;
+}
+
 TypeInfo parse_type(Parser* ps) {
     TypeInfo type;
     type.pointer_depth = 0;
@@ -464,12 +504,20 @@ AST* parse(Parser* ps) {
     while (parser_peek(ps)->kind != TOKEN_EOF) {
         parser_skip_newline(ps);
         if (parser_peek(ps)->kind == TOKEN_EOF) break;
+        
         AST* node;
-
-        if (parser_peek(ps)->kind == TOKEN_STRUCT)
+        if (parser_peek(ps)->kind == TOKEN_IMPORT)
+            node = parse_import(ps);
+        else if (parser_peek(ps)->kind == TOKEN_STRUCT)
             node = parse_struct(ps);
-        else
-            node = parse_func_def(ps);
+        else if (parser_peek(ps)->kind == TOKEN_PROP) {
+            parser_advance(ps);
+            AST* func = parse_func_def(ps);
+            AST* prop_node = make_node(AST_PROP);
+            prop_node->prop.func = func;
+            node = prop_node;
+        } else node = parse_func_def(ps);
+
         if (head == NULL) head = node;
         else tail->next = node;
         tail = node;
