@@ -3,6 +3,9 @@
 #include "string.h"
 
 #include "lexer.h"
+#include "parser.h"
+#include "file.h"
+
 #include "ANSI.h"
 
 #include "codegen.h"
@@ -295,12 +298,37 @@ void gen_import(AST* ast, FILE* out, const char* src) {
             ast->import.path_length,
             src + ast->import.path_start
         );
-    else
-        // file imports - TBI
-        fprintf(out, "// import %.*s.flo\n",
-            ast->import.path_length,
-            src + ast->import.path_start
+    else {
+        char path[256];
+        snprintf(path, sizeof(path), "%.*s",
+            ast->import.path_length - 2,
+            src + ast->import.path_start + 1
         );
+
+        char* imported_src = read_file(path);
+        if (!imported_src) {
+            printf(RED "Couldn't improt file: %s\n" RESET, path);
+            exit(1);
+        }
+
+        TokenStream ts;
+        init_token_stream(&ts);
+        lex(imported_src, &ts);
+
+        Parser p;
+        init_parser(&p, &ts, imported_src);
+
+        AST* imported_ast = parse(&p);
+        AST* curr = imported_ast;
+        while (curr != NULL) {
+            if (curr->kind == AST_PROP)
+                gen_func_def(curr->prop.func, out, imported_src);
+            curr = curr->next;
+        }
+
+        free_token_stream(&ts);
+        free(imported_src);
+    }
 }
 
 const char* token_to_string(TokenKind kind) {
