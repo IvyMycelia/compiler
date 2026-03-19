@@ -97,6 +97,8 @@ int main(int argc, char *argv[]) {
 
             if (token_stream_contains(&tokens, TOKEN_NULL) || token_stream_contains(&tokens, TOKEN_NEW))
                 fprintf(output, "#include <stdlib.h>\n");
+            if (token_stream_contains(&tokens, TOKEN_PRINT))
+                fprintf(output, "#include <stdio.h>\n");
 
             codegen(ast, output, file);
 
@@ -109,9 +111,20 @@ int main(int argc, char *argv[]) {
             snprintf(bin_name, sizeof(bin_name), "%.*s", (int)(strlen(out_c) - 2), out_c);
 
             char build_cmd[1024];
-            snprintf(build_cmd, sizeof(build_cmd), "clang %s -o %s && ./%s", out_c, bin_name, bin_name);
+            snprintf(build_cmd, sizeof(build_cmd), 
+                "clang %s -o %s", 
+                out_c, bin_name
+            );
             system(build_cmd);
-            printf(GREEN BOLD "Compiled %s.c → %s\n" RESET, argv[i], bin_name);
+            printf(YELLOW "\nOUTPUT:\n");
+            fflush(stdout);
+            printf(RESET);
+            fflush(stdout);
+            snprintf(build_cmd, sizeof(build_cmd),
+                "./%s", bin_name
+            );
+            system(build_cmd);
+            printf(GREEN BOLD "\n\nCompiled %s.c → %s\n" RESET, argv[i], bin_name);
             break;
         }
 
