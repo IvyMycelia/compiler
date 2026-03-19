@@ -46,6 +46,12 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
                 fprintf(out, ";\n");
             }
             break;
+
+        case AST_PRINT:
+            fprintf(out, "printf(");
+            gen_expr(ast->print.value, out, src);
+            fprintf(out, ");\n");
+            break;
         
         case AST_PRUNE:
             fprintf(out, "free(");
