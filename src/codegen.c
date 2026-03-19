@@ -80,6 +80,13 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             );
             break;
 
+        case AST_FLOAT_LIT:
+            fprintf(out, "%.*s",
+                ast->float_lit.length,
+                src + ast->float_lit.start
+            );
+            break;
+
         case AST_NULL:
             fprintf(out, "NULL");
             break;
