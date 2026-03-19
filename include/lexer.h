@@ -3,14 +3,19 @@
 
 // Token Types
 typedef enum {
-    /* Types & Identifiers */
+    /* Primitives */
     TOKEN_INT,          // Integer
     TOKEN_FLOAT,        // Float-point value
+    TOKEN_DOUBLE,
     TOKEN_BOOL,         // true / false, 1 / 0
     TOKEN_CHAR,         // Characters (represented as integers)
+
+    /* Types */
     TOKEN_STRING,       // Array of char (char*)
     TOKEN_STRUCT,       // Struct keyword
     TOKEN_NULL,         // Empty value
+
+    /* Identifiers */
     TOKEN_IDENTIFIER,   // Variable & Function names
     TOKEN_NUMBER,       // Number
     TOKEN_STRING_LIT,   // String literal "Hello, World!"
