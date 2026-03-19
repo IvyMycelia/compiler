@@ -126,11 +126,20 @@ AST* parse_primary(Parser* ps) {
             }
             return node;
 
-        case TOKEN_NUMBER:
+        case TOKEN_NUMBER: {
             AST* lit = make_node(AST_LITERAL);
             lit->value = atoi(ps->src + parser_peek(ps)->start);
             parser_advance(ps);
             return lit;
+        }
+
+        case TOKEN_FLOAT_LIT: {
+            AST* lit = make_node(AST_FLOAT_LIT);
+            lit->float_lit.start = parser_peek(ps)->start;
+            lit->float_lit.length = parser_peek(ps)->length;
+            parser_advance(ps);
+            return lit;
+        }
 
         case TOKEN_NULL:
             AST* null = make_node(AST_NULL);
