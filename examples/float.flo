@@ -1,0 +1,5 @@
+int main():
+    x: float = 3.14
+    y: double = 3.14159265358979
+    return 0
+end

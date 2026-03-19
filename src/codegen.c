@@ -339,9 +339,11 @@ void gen_import(AST* ast, FILE* out, const char* src) {
 
 const char* token_to_string(TokenKind kind) {
     switch (kind) {
-        /* Types & Identifiers */
+        /* Primitives */
         case TOKEN_INT:         return "int";
         case TOKEN_BOOL:        return "bool";
+        case TOKEN_FLOAT:       return "float";
+        case TOKEN_DOUBLE:      return "double";
         case TOKEN_CHAR:        return "char";
         case TOKEN_STRING:      return "char*";
         case TOKEN_VOID:        return "void";
