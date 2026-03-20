@@ -208,7 +208,7 @@ AST* parse_primary(Parser* ps) {
             AST* operand = parse_primary(ps);
             AST* unary = make_node(AST_UNARY_NEG);
             unary->unary.operand = operand;
-            return operand;
+            return unary;
         }
 
         default:

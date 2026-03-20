@@ -358,7 +358,7 @@ const char* token_to_string(TokenKind kind) {
     switch (kind) {
         /* Primitives */
         case TOKEN_INT:         return "int";
-        case TOKEN_BOOL:        return "bool";
+        case TOKEN_BOOL:        return "int";
         case TOKEN_FLOAT:       return "float";
         case TOKEN_DOUBLE:      return "double";
         case TOKEN_CHAR:        return "char";
