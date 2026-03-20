@@ -195,6 +195,22 @@ AST* parse_primary(Parser* ps) {
             new_node->new_alloc.type = parse_type(ps);
             return new_node;
 
+        case TOKEN_NOT: {
+            parser_advance(ps);
+            AST* operand = parse_primary(ps);
+            AST* unary = make_node(AST_UNARY_NOT);
+            unary->unary.operand = operand;
+            return unary;
+        }
+
+        case TOKEN_MINUS: {
+            parser_advance(ps);
+            AST* operand = parse_primary(ps);
+            AST* unary = make_node(AST_UNARY_NEG);
+            unary->unary.operand = operand;
+            return operand;
+        }
+
         default:
             printf(RED "parse_primary: unexpected token kind: %s\n" RESET, token_kind_name(parser_peek(ps)->kind));
             exit(1);

@@ -16,6 +16,10 @@ typedef enum {
     AST_DOT_ACCESS, // Struct access
     AST_BINARY_OP,  // 0 + 0
 
+    /* Unary */
+    AST_UNARY_NOT,  // not x
+    AST_UNARY_NEG,  // *-1
+
     /* Memory Management */
     AST_NEW,        // malloc(sizeof(t))
     AST_PRUNE,      // free(mem)
@@ -73,6 +77,11 @@ typedef struct AST {
             int arr_length;
         } array;
 
+
+        /* Unary Operations */
+        struct {
+            struct AST* operand;
+        } unary;
 
         /* Memory Management */
         struct {
