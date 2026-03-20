@@ -254,6 +254,9 @@ AST* parse_if(Parser* ps, int is_elf_if) {
     AST* body_head = NULL;
     AST* body_tail = NULL;
     while (parser_peek(ps)->kind != TOKEN_END && parser_peek(ps)->kind != TOKEN_ELSE) {
+        parser_skip_newline(ps);
+        if (parser_peek(ps)->kind == TOKEN_END || 
+            parser_peek(ps)->kind == TOKEN_ELSE) break;
         AST* statement = parse_statement(ps);
         if (body_head == NULL) body_head = statement;
         else body_tail->next = statement;
@@ -271,6 +274,9 @@ AST* parse_if(Parser* ps, int is_elf_if) {
             AST* else_body_head = NULL;
             AST* else_body_tail = NULL;
             while (parser_peek(ps)->kind != TOKEN_END && parser_peek(ps)->kind != TOKEN_ELSE) {
+                parser_skip_newline(ps);
+                if (parser_peek(ps)->kind == TOKEN_END || 
+                    parser_peek(ps)->kind == TOKEN_ELSE) break;
                 AST* statement = parse_statement(ps);
                 if (else_body_head == NULL) else_body_head = statement;
                 else else_body_tail->next = statement;
