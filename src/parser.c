@@ -377,6 +377,17 @@ AST* parse_statement(Parser* ps) {
             node->prune_free.ptr = parse_expr(ps, 0);
             return node;
         }
+
+        case TOKEN_AT: {
+            parser_advance(ps);
+            AST* node = make_node(AST_DEREF_ASS);
+            Token* name = parser_advance(ps);
+            node->deref_ass.name_length = name->length;
+            node->deref_ass.name_start = name->start;
+            parser_expect(ps, TOKEN_ASSIGN);
+            node->deref_ass.value = parse_expr(ps, 0);
+            return node;
+        }
             
         default:
             // print error or smt

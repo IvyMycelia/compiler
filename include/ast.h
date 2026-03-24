@@ -23,6 +23,7 @@ typedef enum {
     /* Memory Management */
     AST_NEW,        // malloc(sizeof(t))
     AST_PRUNE,      // free(mem)
+    AST_DEREF_ASS,  // @ptr = 42
 
     /* Import System */
     AST_IMPORT,     // import "custom.flo"
@@ -91,6 +92,12 @@ typedef struct AST {
         struct {
             struct AST* ptr;
         } prune_free;
+
+        struct {
+            int name_start;
+            int name_length;
+            struct AST* value;
+        } deref_ass;
 
 
         /* stdio */
