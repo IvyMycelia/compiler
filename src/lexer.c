@@ -60,6 +60,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_NEW, start, length);
             else if (length == 3 && !strncmp(src + start, "not", 3))
                 add_token(ts, TOKEN_NOT, start, length);
+            else if (length == 3 && !strncmp(src + start, "for", 3))
+                add_token(ts, TOKEN_FOR, start, length);
             else if (length == 4 && !strncmp(src + start, "null", 4))
                 add_token(ts, TOKEN_NULL, start, length);
             else if (length == 4 && !strncmp(src + start, "char", 4))
@@ -112,7 +114,11 @@ void lex(const char* src, TokenStream* ts) {
 
         // printf("CHAR: '%c' (%d)\n", src[i], src[i]);
         switch (src[i]) {
-            case '.': add_token(ts, TOKEN_DOT, i++, 1); break;
+            case '.': 
+                if (src[i+1] == '.') {
+                    if (src[i+2] == '=') add_token(ts, TOKEN_DOTDOTEQ, i++, 3);
+                else add_token(ts, TOKEN_DOTDOT, i++, 2); break;
+                } else add_token(ts, TOKEN_DOT, i++, 1); break;
             case '+': add_token(ts, TOKEN_PLUS, i++, 1); break;
             case '-': add_token(ts, TOKEN_MINUS, i++, 1); break;
             case '~': add_token(ts, TOKEN_TILDE, i++, 1); break;

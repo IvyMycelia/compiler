@@ -28,6 +28,8 @@ typedef enum {
     /* Keywords */
     TOKEN_RETURN,   // Return from block
     TOKEN_WHILE,    // While loop
+    TOKEN_FOR,      // For loop
+    TOKEN_IN,       // in
     TOKEN_END,      // Close block
     TOKEN_IF,       // If statement
     TOKEN_ELSE,     // Else block
@@ -47,6 +49,8 @@ typedef enum {
 
     /* Operators */
     TOKEN_DOT,      // Dot access
+    TOKEN_DOTDOT,   // ..
+    TOKEN_DOTDOTEQ, // ..=
     TOKEN_PLUS,     // Addition
     TOKEN_MINUS,    // Subtraction
     TOKEN_STAR,     // Multiplication
