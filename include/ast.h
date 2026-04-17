@@ -39,6 +39,7 @@ typedef enum {
     AST_FUNC_DEF,   // int fib(n: int)
     AST_FUNC_CALL,  // fib(5)
     AST_WHILE,      // while i < n:
+    AST_FOR,        // for i in 0..=10
     AST_IF,         // if conidtion
     AST_PARAM,      // n: int in function signatures
 } ASTkind;
