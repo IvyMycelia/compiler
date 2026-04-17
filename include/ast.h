@@ -221,6 +221,16 @@ typedef struct AST {
             struct AST* body;
         } while_loop;
 
+
+        struct {
+            int var_start;
+            int var_length;
+            int from;
+            int to;
+            int inclusive;
+            struct AST* body;
+        } for_loop;
+
         struct {
             struct AST* condition;
             struct AST* body;
