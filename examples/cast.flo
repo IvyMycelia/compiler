@@ -2,5 +2,8 @@ int main():
     x: float = 3.14
     y: int = x as int
 
+    z: int = 0
+    z = z as float
+
     return y
 end

@@ -145,7 +145,7 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             typeinfo_to_string(ast->cast.type, out, src);
             fprintf(out, ")(");
             gen_expr(ast->cast.value, out, src);
-            fprintf(out, ");\n");
+            fprintf(out, ")");
             break;
 
         case AST_DOT_ACCESS:
