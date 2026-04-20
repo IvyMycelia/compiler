@@ -226,8 +226,8 @@ typedef struct AST {
         struct {
             int var_start;
             int var_length;
-            int from;
-            int to;
+            struct AST* from;
+            struct AST* to;
             int inclusive;
             struct AST* body;
         } for_loop;
