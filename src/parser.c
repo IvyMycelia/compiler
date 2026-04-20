@@ -203,6 +203,12 @@ AST* parse_primary(Parser* ps) {
             struct_lit->struct_lit.elements = struct_head;
             return struct_lit;
 
+        case TOKEN_LPAREN:
+            parser_advance(ps);
+            AST* expr = parse_expr(ps, 0);
+            parser_expect(ps, TOKEN_RPAREN);
+            return expr;
+
         case TOKEN_NEW:
             parser_advance(ps);
             AST* new_node = make_node(AST_NEW);
