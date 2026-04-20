@@ -140,6 +140,14 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             fprintf(out, "}");
             break;
 
+        case AST_CAST:
+            fprintf(out, "(");
+            typeinfo_to_string(ast->cast.type, out, src);
+            fprintf(out, ")(");
+            gen_expr(ast->cast.value, out, src);
+            fprintf(out, ");\n");
+            break;
+
         case AST_DOT_ACCESS:
             gen_expr(ast->dot_access.object, out, src);
             fprintf(out, ".%.*s",
