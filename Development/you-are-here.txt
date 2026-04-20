@@ -1,9 +1,21 @@
 FINISHED:
 * `for` loops
+* Type-casting (v0.0.11)
 
 STARTED:
 * README
 
 NEXT:
-* Type-casting (v0.0.11)
 * Bootstrapping (v0.1.0)
+
+
+ADDITIONAL INFORMATION:
+What's missing / needs improving:
+
+Dynamic arrays — TokenStream uses realloc for growing — no realloc in yet
+String literals in expressions — DONE
+fprintf — writing to files, needed for codegen output — not a built-in, need via import <stdio>
+Pointer arithmetic — src + i style indexing — not sure if this works yet
+sizeof — used in malloc — currently only inside new, not standalone
+No != operator — only have ==, need not-equal (could get away with De Morgan's Law)
+No <=/>= — only have < and > (Again, De Morgan's Law)
