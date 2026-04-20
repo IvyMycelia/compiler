@@ -82,6 +82,9 @@ int get_precedence(TokenKind kind) {
         case TOKEN_MINUS: return 2;
         case TOKEN_GT:
         case TOKEN_LT:
+        case TOKEN_NEQ:
+        case TOKEN_LEQ:
+        case TOKEN_GEQ:
         case TOKEN_COMP: return 1;
         case TOKEN_DOTDOT: return 0;
         case TOKEN_DOTDOTEQ: return 0;
