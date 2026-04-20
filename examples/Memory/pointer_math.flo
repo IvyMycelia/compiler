@@ -1,5 +1,4 @@
-int main():
+prop void test():
     arr: @int = new int
     x: @int = arr + 1
-    return 0
 end

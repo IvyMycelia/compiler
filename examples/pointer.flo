@@ -1,0 +1,11 @@
+import "./examples/Memory/pointer_deref.flo" as deref
+import "./examples/Memory/pointer_math.flo" as pmath
+import "./examples/Memory/ptr.flo" as ptr
+
+int main():
+    deref.test()
+    pmath.test()
+    ptr.test()
+
+    return 0
+end
