@@ -31,6 +31,7 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_VAR_DECL:  gen_var_decl(ast, out, src);    break;
         case AST_VAR_ASS:   gen_var_ass(ast, out, src);     break;
         case AST_WHILE:     gen_while(ast, out, src);       break;
+        case AST_FOR:       gen_for(ast, out, src);         break;
         case AST_RETURN:    gen_return(ast, out, src);      break;
         case AST_FUNC_CALL: gen_func_call(ast, out, src);   break;
         case AST_IF:        gen_if(ast, out, src, 0);       break;
@@ -285,6 +286,33 @@ void gen_while(AST* ast, FILE* out, const char* src) {
     fprintf(out, ") {\n");
     
     AST* statement = ast->while_loop.body;
+    while (statement != NULL) {
+        gen_statement(statement, out, src);
+        statement = statement->next;
+    }
+    fprintf(out, "}\n");
+}
+
+void gen_for(AST* ast, FILE* out, const char* src) {
+    fprintf(out, "for (int %.*s = ", 
+        ast->for_loop.var_length,
+        ast->for_loop.var_start + src
+    );
+    gen_expr(ast->for_loop.from, out, src);
+
+    fprintf(out, "; %.*s %s ",
+        ast->for_loop.var_length,
+        ast->for_loop.var_start + src,
+        ast->for_loop.inclusive ? "<=" : "<"
+    );
+    gen_expr(ast->for_loop.to, out, src);
+
+    fprintf(out, "; %.*s++) {\n",
+        ast->for_loop.var_length,
+        ast->for_loop.var_start + src
+    );
+    
+    AST* statement = ast->for_loop.body;
     while (statement != NULL) {
         gen_statement(statement, out, src);
         statement = statement->next;
