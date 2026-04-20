@@ -1,0 +1,26 @@
+int main():
+    x: int = 5
+    y: int = 3
+
+    if x != y:
+        print("x != y works\n")
+    end
+
+    if x >= y:
+        print("x >= y works\n")
+    end
+
+    if y <= x:
+        print("y <= x works\n")
+    end
+
+    if not (x == y):
+        print("not equal works\n")
+    end
+
+    if !(x == y):
+        print("! equal works\n")
+    end
+
+    return 0
+end
