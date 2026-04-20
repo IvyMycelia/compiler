@@ -83,6 +83,8 @@ int get_precedence(TokenKind kind) {
         case TOKEN_GT:
         case TOKEN_LT:
         case TOKEN_COMP: return 1;
+        case TOKEN_DOTDOT: return 0;
+        case TOKEN_DOTDOTEQ: return 0;
         default: return 0;
     }
 }
@@ -290,6 +292,50 @@ AST* parse_if(Parser* ps, int is_elf_if) {
     return node;
 }
 
+AST* parse_for(Parser* ps) {
+    AST* node = make_node(AST_FOR);
+    parser_expect(ps, TOKEN_FOR);
+
+    Token* var = parser_advance(ps);
+    if (var->kind != TOKEN_IDENTIFIER) {
+        printf(RED "Expected loop variable after for, got %s\n" RESET, token_kind_name(var->kind));
+        exit(1);
+    }
+    node->for_loop.var_start = var->start;
+    node->for_loop.var_length = var->length;
+
+    parser_expect(ps, TOKEN_IN);
+    AST* from = parse_expr(ps, 0);
+    node->for_loop.from = from;
+
+    Token* op_range = parser_advance(ps);
+    if (op_range->kind != TOKEN_DOTDOT && op_range->kind != TOKEN_DOTDOTEQ) {
+        printf(RED "Expected range operator `..` OR `..=`, got %s\n" RESET, token_kind_name(op_range->kind));
+        exit(1);
+    }
+    node->for_loop.inclusive = op_range->kind == TOKEN_DOTDOTEQ;
+
+    AST* to = parse_expr(ps, 0);
+    node->for_loop.to = to;
+
+    parser_expect(ps, TOKEN_COLON);
+
+    AST* body_head = NULL;
+    AST* body_tail = NULL;
+    while (parser_peek(ps)->kind != TOKEN_END) {
+        parser_skip_newline(ps);
+        if (parser_peek(ps)->kind == TOKEN_END) break;
+        AST* statement = parse_statement(ps);
+        if (body_head == NULL) body_head = statement;
+        else body_tail->next = statement;
+        body_tail = statement;
+    }
+    parser_expect(ps, TOKEN_END);
+    node->for_loop.body = body_head;
+    
+    return node;
+}
+
 AST* parse_var_decl(Parser* ps) {
     AST* node = make_node(AST_VAR_DECL);
     Token* tok = parser_advance(ps);
@@ -361,6 +407,9 @@ AST* parse_statement(Parser* ps) {
             
         case TOKEN_IF:
             return parse_if(ps, 0);
+
+        case TOKEN_FOR:
+            return parse_for(ps);
 
         case TOKEN_PRINT: {
             parser_advance(ps);
