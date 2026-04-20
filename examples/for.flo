@@ -18,4 +18,12 @@ int main():
     for i in 10..=0:     // reverse, 10 to 1
         print("i\n")
     end
+
+    let x: int = 1;
+    let y: int = 5;
+
+    print("\nx..y\n")
+    for i in x..y:      // exclusive, x to y
+        print("i\n")
+    end
 end
