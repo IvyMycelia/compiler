@@ -1,11 +1,23 @@
+import <stdio>
+import <stdlib>
+
 import "./examples/Memory/pointer_deref.flo" as deref
 import "./examples/Memory/pointer_math.flo" as pmath
 import "./examples/Memory/ptr.flo" as ptr
 
 int main():
-    deref.test()
-    pmath.test()
-    ptr.test()
+    print("deref.test\n")
+    x: int = deref.test1()
+    print("pmath.test\n")
+    y: int = pmath.test2()
+    print("ptr.test\n")
+    z: int = ptr.test3()
+    pass: int = x + y + z
 
-    return 0
+    if not (pass == 3):
+        print("Didn't work..")
+    else:
+        print("Worked!")
+    end
+    return pass
 end

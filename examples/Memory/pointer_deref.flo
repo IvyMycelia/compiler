@@ -1,4 +1,6 @@
-prop void test():
+prop int test1():
     arr: @int = new int
     y: int = @(arr + 1)
+
+    return 1
 end

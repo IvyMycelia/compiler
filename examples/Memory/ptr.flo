@@ -1,12 +1,14 @@
-void inner_test(ptr: @int):
+prop void innerTest(ptr: @int):
     x: @int = ptr
 end
 
-prop void test():
+prop int test3():
     x: @int = 0;
-    inner_test(x);
+    innerTest(x);
 
     ptr: @int = new int
     @ptr = 42
     prune ptr
+
+    return 1
 end

@@ -73,6 +73,7 @@ int main(int argc, char *argv[]) {
 
             // Lexer
             lex(file, &tokens);
+            // printf("lexed %d tokens\n", tokens.count);
             // print_all_tokens(&tokens, file);
 
             // parser

@@ -402,7 +402,12 @@ AST* parse_dot_ass(Parser* ps) {
     node->dot_access.field_start = field->start;
     node->dot_access.field_length = field->length;
 
+    printf("Before: %.*s",
+        node->dot_access.object->var_ref.name_length,
+        node->dot_access.object->var_ref.name_start + ps->src
+    );
     parser_expect(ps, TOKEN_ASSIGN);
+    printf("After");
     node->dot_access.value = parse_expr(ps, 0);
 
     return node;

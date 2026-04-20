@@ -11,7 +11,13 @@
 void lex(const char* src, TokenStream* ts) {
     int i = 0;
 
+    int token_count = 0;
     while(src[i] != '\0') {
+        if (token_count++ > 100000) {
+            printf("INFINITE LOOP at i=%d, char='%c', context='%.*s'\n", 
+                i, src[i], 20, src + i - 10);
+            exit(1);
+        }
         if (src[i] == '/' && src[i+1] == '/') {
             while (src[i] != '\n' && src[i] != '\0')
                 i++;
@@ -125,7 +131,7 @@ void lex(const char* src, TokenStream* ts) {
                         add_token(ts, TOKEN_DOTDOT, i, 2); 
                         i += 2;
                     }
-                } else add_token(ts, TOKEN_DOT, i, 1); break;
+                } else add_token(ts, TOKEN_DOT, i++, 1); break;
             case '+': add_token(ts, TOKEN_PLUS, i++, 1); break;
             case '-': add_token(ts, TOKEN_MINUS, i++, 1); break;
             case '~': add_token(ts, TOKEN_TILDE, i++, 1); break;
