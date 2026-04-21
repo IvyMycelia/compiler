@@ -166,7 +166,9 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             break;
 
         case AST_ALIAS_CALL:
-            fprintf(out, "%.*s(",
+            fprintf(out, "%.*s_%.*s(",
+                ast->alias_call.alias_length,
+                ast->alias_call.alias_start + src,
                 ast->alias_call.func_length,
                 src + ast->alias_call.func_start
             );
@@ -207,6 +209,34 @@ void gen_func_def(AST* ast, FILE* out, const char* src) {
     fprintf(out, "\n\n");
     typeinfo_to_string(ast->func_def.return_type, out, src);
     fprintf(out, " %.*s(",
+        ast->func_def.name_length,
+        src + ast->func_def.name_start
+    );
+    
+    // Emit: params
+    AST* param = ast->func_def.params;
+    while (param != NULL) {
+        gen_param(param, out, src);
+        if (param->next != NULL) fprintf(out, ", ");
+        param = param->next;
+    }
+    fprintf(out, ") {\n");
+
+    // Emit: body
+    AST* statement = ast->func_def.body;
+    while (statement != NULL) {
+        gen_statement(statement, out, src);
+        statement = statement->next;
+    }
+    fprintf(out, "}\n");
+}
+
+void gen_func_def_aliased(AST* ast, FILE* out, const char* src, const char* alias, int alias_len) {
+    // Emit: int fib(
+    fprintf(out, "\n\n");
+    typeinfo_to_string(ast->func_def.return_type, out, src);
+    fprintf(out, " %.*s_%.*s(",
+        alias_len, alias,
         ast->func_def.name_length,
         src + ast->func_def.name_start
     );
@@ -465,7 +495,10 @@ void gen_import(AST* ast, FILE* out, const char* src) {
         AST* curr = imported_ast;
         while (curr != NULL) {
             if (curr->kind == AST_PROP)
-                gen_func_def(curr->prop.func, out, imported_src);
+                gen_func_def_aliased(curr->prop.func, out, imported_src,
+                    ast->import.alias_start + src,
+                    ast->import.alias_length
+                );
             else if (curr->kind == AST_FUNC_DEF)
                 gen_func_def(curr, out, imported_src);
             curr = curr->next;

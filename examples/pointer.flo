@@ -7,11 +7,11 @@ import "./examples/Memory/ptr.flo" as ptr
 
 int main():
     print("deref.test\n")
-    x: int = deref.test1()
+    x: int = deref.test()
     print("pmath.test\n")
-    y: int = pmath.test2()
+    y: int = pmath.test()
     print("ptr.test\n")
-    z: int = ptr.test3()
+    z: int = ptr.test()
     pass: int = x + y + z
 
     if not (pass == 3):

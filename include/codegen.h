@@ -10,6 +10,7 @@ void codegen(AST* ast, FILE* out, const char* src);
 void gen_statement(AST* ast, FILE* out, const char* src);
 void gen_expr(AST* ast, FILE* out, const char* src);
 void gen_func_def(AST* ast, FILE* out, const char* src);
+void gen_func_def_aliased(AST* ast, FILE* out, const char* src, const char* alias, int alias_len);
 void gen_param(AST* param, FILE* out, const char* src);
 void gen_func_call(AST* ast, FILE* out, const char* src);
 void gen_var_decl(AST* ast, FILE* out, const char* src);
