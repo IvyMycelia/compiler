@@ -452,6 +452,8 @@ void gen_import(AST* ast, FILE* out, const char* src) {
         while (curr != NULL) {
             if (curr->kind == AST_PROP)
                 gen_func_def(curr->prop.func, out, imported_src);
+            else if (curr->kind == AST_FUNC_DEF)
+                gen_func_def(curr, out, imported_src);
             curr = curr->next;
         }
 

@@ -1,4 +1,4 @@
-prop void inner_test(ptr: @int):
+void inner_test(ptr: @int):
     x: @int = ptr
 end
 
