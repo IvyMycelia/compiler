@@ -12,6 +12,7 @@ typedef enum {
     AST_STRING_LIT, // A string "Hello, World!"
     AST_ARRAY_LIT,  // Array literal [0, 1, 2 ..]
     AST_STRUCT_LIT, // Struct literal {0, 1, 2 ..}
+    AST_CHAR_LIT,   // char literal 'a' 'B'
     AST_STRUCT_DEF, // Struct declaration
     AST_STRUCT_FIELD, // Struct field
     AST_DOT_ACCESS, // Struct access
@@ -74,6 +75,12 @@ typedef struct AST {
             int start;
             int length;
         } float_lit;
+
+
+        struct {
+            int start;
+            int length;
+        } char_lit;
 
 
         /* Strings */

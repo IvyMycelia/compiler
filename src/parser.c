@@ -248,6 +248,14 @@ AST* parse_primary(Parser* ps) {
             return node;
         }
 
+        case TOKEN_CHAR_LIT: {
+            AST* node = make_node(AST_CHAR_LIT);
+            node->char_lit.start = parser_peek(ps)->start;
+            node->char_lit.length = parser_peek(ps)->length;
+            parser_advance(ps);
+            return node;
+        }
+
         default:
             printf(RED "parse_primary: unexpected token kind: %s\n" RESET, token_kind_name(parser_peek(ps)->kind));
             exit(1);
