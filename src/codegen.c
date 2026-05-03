@@ -458,8 +458,8 @@ void gen_return(AST* ast, FILE* out, const char* src) {
     fprintf(out, ";\n");
 }
 
-static const char* open_imports[64];
-static int open_import_count = 0;
+static const char* visited_imports[64];
+static int visited_count = 0;
 
 void gen_import(AST* ast, FILE* out, const char* src) {
     if (ast->import.is_system) {
@@ -486,13 +486,12 @@ void gen_import(AST* ast, FILE* out, const char* src) {
         );
 
         // Check for circular imports
-        for (int i = 0; i < open_import_count; i++) {
-            if (!strcmp(open_imports[i], path)) {
-                printf(RED "Circular import detected: %s\n" RESET, path);
-                exit(1);
+        for (int i = 0; i < visited_count; i++) {
+            if (!strcmp(visited_imports[i], path)) {
+                continue;
             }
         }
-        open_imports[open_import_count++] = path;
+        visited_imports[visited_count++] = path;
         
         printf("attempting to import: %s\n", path);
         char* imported_src = read_file(path);
@@ -525,8 +524,6 @@ void gen_import(AST* ast, FILE* out, const char* src) {
 
         free_token_stream(&ts);
         free(imported_src);
-
-        open_import_count--;
     }
 }
 
