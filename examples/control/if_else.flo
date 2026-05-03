@@ -1,0 +1,10 @@
+import <stdio>
+
+prop int test():
+    x: int = 5
+    if x == 5:
+        return 1
+    else:
+        return 0
+    end
+end

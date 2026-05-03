@@ -1,0 +1,75 @@
+import <stdio>
+
+import "./examples/control/if_else.flo" as if_else
+import "./examples/control/while.flo" as while_test
+import "./examples/control/for.flo" as for_test
+import "./examples/control/not.flo" as not_test
+import "./examples/control/unary_neg.flo" as unary_neg
+import "./examples/control/binary_ops.flo" as binary_ops
+
+prop int test():
+    total: int = 0
+    pass: int = 0
+
+    print("  if/else... ")
+    total = total + 1
+    if if_else.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  while... ")
+    total = total + 1
+    if while_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  for... ")
+    total = total + 1
+    if for_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  not... ")
+    total = total + 1
+    if not_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  unary neg... ")
+    total = total + 1
+    if unary_neg.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  binary ops... ")
+    total = total + 1
+    if binary_ops.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    if pass == total:
+        print("  Control: All Passed!\n")
+    else:
+        print("  Control: Some Failed!\n")
+    end
+
+    return pass == total
+end

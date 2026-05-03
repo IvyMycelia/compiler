@@ -1,0 +1,12 @@
+import <stdio>
+
+prop int test():
+    i: int = 0
+    while i < 5:
+        i = i + 1
+    end
+    if i == 5:
+        return 1
+    end
+    return 0
+end

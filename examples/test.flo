@@ -1,0 +1,32 @@
+import <stdio>
+import <stdlib>
+
+import "./examples/memory/memory.flo" as memory
+import "./examples/types/types.flo" as types
+import "./examples/control/control.flo" as control
+
+int main():
+    total: int = 0
+    pass: int = 0
+
+    print("\n=== Memory ===\n")
+    total = total + 1
+    pass = pass + memory.test()
+
+    print("\n=== Types ===\n")
+    total = total + 1
+    pass = pass + types.test()
+
+    print("\n=== Control ===\n")
+    total = total + 1
+    pass = pass + control.test()
+
+    print("\n=== Results ===\n")
+    if pass == total:
+        print("All Passed!\n")
+    else:
+        print("Some Failed!\n")
+    end
+
+    return 0
+end
