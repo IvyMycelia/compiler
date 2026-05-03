@@ -458,74 +458,150 @@ void gen_return(AST* ast, FILE* out, const char* src) {
     fprintf(out, ";\n");
 }
 
-static char* open_imports[64];
-static int open_import_count = 0;
+/* Import Cache */
+typedef struct {
+    char* path;
+    AST* ast;
+    char* src;
+} ImportCache;
+
+static ImportCache import_cache[64];
+static int cache_count = 0;
+
+// Track emitted alias+file combos to prevent duplicates
+typedef struct {
+    char* path;
+    char* alias;
+} EmittedImport;
+
+static EmittedImport emitted_imports[256];
+static int emitted_count = 0;
+
+// Currently processing (for circular detection)
+static char* in_progress[64];
+static int in_progress_count = 0;
 
 void gen_import(AST* ast, FILE* out, const char* src) {
     if (ast->import.is_system) {
         char name[64];
         snprintf(name, sizeof(name), "%.*s",
             ast->import.path_length,
-            ast->import.path_start + src
+            src + ast->import.path_start
         );
-
         if (!strcmp(name, "stdio") && !has_stdio) {
             fprintf(out, "#include <stdio.h>\n");
             has_stdio = 1;
         } else if (!strcmp(name, "stdlib") && !has_stdlib) {
             fprintf(out, "#include <stdlib.h>\n");
             has_stdlib = 1;
-        } else if (!strcmp(name, "stdio") && !strcmp(name, "stdlib")) {
+        } else if (strcmp(name, "stdio") && strcmp(name, "stdlib")) {
             fprintf(out, "#include <%s.h>\n", name);
         }
-    } else {
-        char path[256];
-        snprintf(path, sizeof(path), "%.*s",
-            ast->import.path_length - 2,
-            src + ast->import.path_start + 1
-        );
+        return;
+    }
 
-        // Check for circular imports
-        for (int i = 0; i < open_import_count; i++) {
-            if (!strcmp(open_imports[i], path)) {
-                printf(RED "Circular import detected: %s\n" RESET, path);
-                exit(1);
-            }
+    char path[256];
+    snprintf(path, sizeof(path), "%.*s",
+        ast->import.path_length - 2,
+        src + ast->import.path_start + 1
+    );
+
+    char alias[64] = "";
+    if (ast->import.has_alias) {
+        snprintf(alias, sizeof(alias), "%.*s",
+            ast->import.alias_length,
+            src + ast->import.alias_start
+        );
+    }
+
+    // Check if this exact path+alias combo already emitted
+    for (int i = 0; i < emitted_count; i++) {
+        if (!strcmp(emitted_imports[i].path, path) &&
+            !strcmp(emitted_imports[i].alias, alias)) {
+            return;
         }
-        open_imports[open_import_count++] = strdup(path);
-        
-        printf("attempting to import: %s\n", path);
-        char* imported_src = read_file(path);
-        if (!imported_src) {
-            printf(RED "Couldn't import file: %s\n" RESET, path);
+    }
+
+    // Check for circular imports
+    for (int i = 0; i < in_progress_count; i++) {
+        if (!strcmp(in_progress[i], path)) {
+            printf(RED "Circular import detected: %s\n" RESET, path);
             exit(1);
         }
+    }
 
-        TokenStream ts;
-        init_token_stream(&ts);
-        lex(imported_src, &ts);
+    // Mark as in progress
+    in_progress[in_progress_count++] = strdup(path);
 
-        Parser p;
-        init_parser(&p, &ts, imported_src);
+    // Check cache for already-parsed AST
+    AST* imported_ast = NULL;
+    char* imported_src = NULL;
+    TokenStream* cached_ts = NULL;
 
-        AST* imported_ast = parse(&p);
-        AST* curr = imported_ast;
-        while (curr != NULL) {
-            if (curr->kind == AST_PROP)
-                gen_func_def_aliased(curr->prop.func, out, imported_src,
-                    ast->import.alias_start + src,
-                    ast->import.alias_length
-                );
-            else if (curr->kind == AST_FUNC_DEF)
-                gen_func_def(curr, out, imported_src);
-            curr = curr->next;
+    for (int i = 0; i < cache_count; i++) {
+        if (!strcmp(import_cache[i].path, path)) {
+            imported_ast = import_cache[i].ast;
+            imported_src = import_cache[i].src;
+            break;
+        }
+    }
+
+    // If not cached, read and parse
+    if (imported_ast == NULL) {
+        imported_src = read_file(path);
+        if (!imported_src) {
+            printf(RED "Could not import file: %s\n" RESET, path);
+            exit(1);
+        }
+        TokenStream* ts = malloc(sizeof(TokenStream));
+        init_token_stream(ts);
+        lex(imported_src, ts);
+
+        if (!has_stdlib && (token_stream_contains(ts, TOKEN_NEW) ||
+            token_stream_contains(ts, TOKEN_NULL))) {
+            fprintf(out, "#include <stdlib.h>\n");
+            has_stdlib = 1;
+        }
+        if (!has_stdio && token_stream_contains(ts, TOKEN_PRINT)) {
+            fprintf(out, "#include <stdio.h>\n");
+            has_stdio = 1;
         }
 
-        free_token_stream(&ts);
-        free(imported_src);
+        Parser p;
+        init_parser(&p, ts, imported_src);
+        imported_ast = parse(&p);
 
-        open_import_count--;
+        // Store in cache
+        import_cache[cache_count].path = strdup(path);
+        import_cache[cache_count].ast = imported_ast;
+        import_cache[cache_count].src = imported_src;
+        cache_count++;
     }
+
+    // Record this path+alias as emitted
+    emitted_imports[emitted_count].path = strdup(path);
+    emitted_imports[emitted_count].alias = strdup(alias);
+    emitted_count++;
+
+    // Emit functions
+    AST* curr = imported_ast;
+    while (curr != NULL) {
+        if (curr->kind == AST_IMPORT)
+            gen_import(curr, out, imported_src);
+        else if (curr->kind == AST_PROP) {
+            if (ast->import.has_alias)
+                gen_func_def_aliased(curr->prop.func, out, imported_src,
+                    alias, strlen(alias));
+            else
+                gen_func_def(curr->prop.func, out, imported_src);
+        } else if (curr->kind == AST_FUNC_DEF)
+            gen_func_def(curr, out, imported_src);
+        curr = curr->next;
+    }
+
+    // Remove from in_progress
+    in_progress_count--;
+    free(in_progress[in_progress_count]);
 }
 
 void emit_includes(AST* ast, FILE* out, const char* src, TokenStream* ts) {
