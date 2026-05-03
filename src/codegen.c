@@ -511,7 +511,9 @@ void gen_import(AST* ast, FILE* out, const char* src) {
         AST* imported_ast = parse(&p);
         AST* curr = imported_ast;
         while (curr != NULL) {
-            if (curr->kind == AST_PROP)
+            if (curr->kind == AST_IMPORT)
+                gen_import(ast, out, src);
+            else if (curr->kind == AST_PROP)
                 gen_func_def_aliased(curr->prop.func, out, imported_src,
                     ast->import.alias_start + src,
                     ast->import.alias_length
