@@ -3,32 +3,29 @@
 ```txt
 examples/
   memory/
-    ptr.flo
-    pointer_math.flo
     pointer_deref.flo
-    memory.flo          // test runner
+    pointer_math.flo
+    ptr.flo
+    new_prune.flo
+    sizeof.flo
+    realloc.flo
+    memory.flo        // imports and runs all memory tests
   types/
+    int.flo
     float.flo
+    double.flo
     char.flo
     null.flo
-    arr.flo
-    struct.flo
     cast.flo
+    string.flo
+    types.flo         // imports and runs all type tests
   control/
+    if_else.flo
+    while.flo
     for.flo
     not.flo
-    binary_op.flo
-    functions.flo
-    fib.flo
-    src.flo
-  io/
-    print.flo
-  imports/
-    import.flo
-    math.flo
-  misc/
-    sizeof.flo
-    mem.flo
-    pointer.flo
-  test.flo              // master test runner that imports all modules
+    unary_neg.flo
+    binary_ops.flo
+    control.flo       // imports and runs all control tests
+  test.flo            // master test runner that imports all modules
 ```

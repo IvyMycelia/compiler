@@ -1,0 +1,13 @@
+import <stdio>
+import <stdlib>
+
+prop int test():
+    arr: @int = new int
+    arr = realloc(arr, 10 * sizeof(int))
+    if arr != null:
+        prune arr
+        return 1
+    end
+    prune arr
+    return 0
+end

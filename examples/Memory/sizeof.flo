@@ -1,0 +1,10 @@
+import <stdio>
+import <stdlib>
+
+prop int test():
+    s: int = sizeof(int)
+    if s == 4:
+        return 1
+    end
+    return 0
+end

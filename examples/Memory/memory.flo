@@ -1,0 +1,76 @@
+import <stdio>
+import <stdlib>
+
+import "./examples/memory/pointer_deref.flo" as deref
+import "./examples/memory/pointer_math.flo" as pmath
+import "./examples/memory/ptr.flo" as ptr
+import "./examples/memory/new_prune.flo" as new_prune
+import "./examples/memory/sizeof.flo" as size_of
+import "./examples/memory/realloc.flo" as realloc_test
+
+prop int test():
+    total: int = 0
+    pass: int = 0
+
+    print("  pointer dereference... ")
+    total = total + 1
+    if deref.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  pointer math... ")
+    total = total + 1
+    if pmath.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  ptr alloc/deref/free... ")
+    total = total + 1
+    if ptr.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  new/prune... ")
+    total = total + 1
+    if new_prune.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  sizeof... ")
+    total = total + 1
+    if size_of.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  realloc... ")
+    total = total + 1
+    if realloc_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    if pass == total:
+        print("  Memory: All Passed!\n")
+    else:
+        print("  Memory: Some Failed!\n")
+    end
+
+    return pass == total
+end

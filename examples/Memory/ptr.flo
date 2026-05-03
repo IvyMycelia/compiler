@@ -1,14 +1,16 @@
+import <stdio>
+import <stdlib>
+
 void inner_test(ptr: @int):
     x: @int = ptr
 end
 
 prop int test():
-    x: @int = 0;
-    inner_test(x);
+    x: @int = null
+    inner_test(x)
 
     ptr: @int = new int
     @ptr = 42
     prune ptr
-
     return 1
 end

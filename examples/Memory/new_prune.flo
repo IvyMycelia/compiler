@@ -1,0 +1,13 @@
+import <stdio>
+import <stdlib>
+
+prop int test():
+    p: @int = new int
+    @p = 42
+    if @p == 42:
+        prune p
+        return 1
+    end
+    prune p
+    return 0
+end

@@ -1,6 +1,9 @@
+import <stdio>
+import <stdlib>
+
 prop int test():
     arr: @int = new int
     y: int = @(arr + 1)
-
+    prune arr
     return 1
 end
