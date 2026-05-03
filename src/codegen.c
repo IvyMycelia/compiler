@@ -458,7 +458,7 @@ void gen_return(AST* ast, FILE* out, const char* src) {
     fprintf(out, ";\n");
 }
 
-static const char* open_imports[64];
+static char* open_imports[64];
 static int open_import_count = 0;
 
 void gen_import(AST* ast, FILE* out, const char* src) {
@@ -492,7 +492,7 @@ void gen_import(AST* ast, FILE* out, const char* src) {
                 exit(1);
             }
         }
-        open_imports[open_import_count++] = path;
+        open_imports[open_import_count++] = strdup(path);
         
         printf("attempting to import: %s\n", path);
         char* imported_src = read_file(path);
