@@ -1,0 +1,10 @@
+import <stdio>
+import <stdlib>
+
+prop int test():
+    ptr: @int = null
+    if ptr == null:
+        return 1
+    end
+    return 0
+end

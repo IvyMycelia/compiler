@@ -1,0 +1,9 @@
+import <stdio>
+
+prop int test():
+    x: int = 42
+    if x == 42:
+        return 1
+    end
+    return 0
+end

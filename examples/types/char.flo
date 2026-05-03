@@ -1,0 +1,9 @@
+import <stdio>
+
+prop int test():
+    c: char = 'a'
+    if c == 'a':
+        return 1
+    end
+    return 0
+end

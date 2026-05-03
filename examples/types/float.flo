@@ -1,0 +1,9 @@
+import <stdio>
+
+prop int test():
+    x: float = 3.14
+    if x > 3.0:
+        return 1
+    end
+    return 0
+end

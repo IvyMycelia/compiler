@@ -1,0 +1,10 @@
+import <stdio>
+
+prop int test():
+    x: float = 3.14
+    y: int = x as int
+    if y == 3:
+        return 1
+    end
+    return 0
+end

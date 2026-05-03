@@ -1,0 +1,9 @@
+import <stdio>
+
+prop int test():
+    s: string = "hello"
+    if s != null:
+        return 1
+    end
+    return 0
+end

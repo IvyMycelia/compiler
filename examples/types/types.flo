@@ -1,0 +1,86 @@
+import <stdio>
+import <stdlib>
+
+import "./examples/types/int.flo" as int_test
+import "./examples/types/float.flo" as float_test
+import "./examples/types/double.flo" as double_test
+import "./examples/types/char.flo" as char_test
+import "./examples/types/null.flo" as null_test
+import "./examples/types/cast.flo" as cast_test
+import "./examples/types/string.flo" as string_test
+
+prop int test():
+    total: int = 0
+    pass: int = 0
+
+    print("  int... ")
+    total = total + 1
+    if int_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  float... ")
+    total = total + 1
+    if float_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  double... ")
+    total = total + 1
+    if double_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  char... ")
+    total = total + 1
+    if char_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  null... ")
+    total = total + 1
+    if null_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  cast... ")
+    total = total + 1
+    if cast_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  string... ")
+    total = total + 1
+    if string_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    if pass == total:
+        print("  Types: All Passed!\n")
+    else:
+        print("  Types: Some Failed!\n")
+    end
+
+    return pass == total
+end
