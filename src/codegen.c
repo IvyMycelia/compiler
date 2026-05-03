@@ -286,7 +286,7 @@ void gen_func_call(AST* ast, FILE* out, const char* src) {
         if (arg->next != NULL) fprintf(out, ", ");
         arg = arg->next;
     }
-    fprintf(out, ");\n");
+    fprintf(out, ")");
 }
 
 void gen_var_decl(AST* ast, FILE* out, const char* src) {
