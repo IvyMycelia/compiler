@@ -36,7 +36,11 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_WHILE:     gen_while(ast, out, src);       break;
         case AST_FOR:       gen_for(ast, out, src);         break;
         case AST_RETURN:    gen_return(ast, out, src);      break;
-        case AST_FUNC_CALL: gen_func_call(ast, out, src);   break;
+        case AST_FUNC_CALL: 
+            { 
+                gen_func_call(ast, out, src);   
+                fprint(out, ";\n");
+                break;
         case AST_IF:        gen_if(ast, out, src, 0);       break;
         case AST_DOT_ACCESS:
             gen_expr(ast->dot_access.object, out, src);
