@@ -46,6 +46,15 @@ void lex(const char* src, TokenStream* ts) {
             continue;
         }
 
+        if (src[i] == '\'') {
+            int start = i++;
+            while (src[i] != '\'' && src[i] != '\0')
+                i++;
+            i++;
+            add_token(ts, TOKEN_CHAR_LIT, start, i - start);
+            continue;
+        }
+
         if (isalpha(src[i]) || src[i] == '_') {
             int start = i;
 
@@ -226,6 +235,9 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_BOOL:        return "TOKEN_BOOL";
         case TOKEN_CHAR:        return "TOKEN_CHAR";
         case TOKEN_STRING:      return "TOKEN_STRING";
+
+        case TOKEN_STRING_LIT:  return "TOKEN_STRING_LIT";
+        case TOKEN_CHAR_LIT:    return "TOKEN_CHAR_LIT";
 
         /* Identifiers */
         case TOKEN_STRUCT:      return "TOKEN_STRUCT";

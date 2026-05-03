@@ -23,6 +23,7 @@ typedef enum {
     TOKEN_NUMBER,       // Number
     TOKEN_FLOAT_LIT,    // Decimal number
     TOKEN_STRING_LIT,   // String literal "Hello, World!"
+    TOKEN_CHAR_LIT,     // Char literal 'a'
     TOKEN_VOID,         // Void (empty)
     
     /* Keywords */
