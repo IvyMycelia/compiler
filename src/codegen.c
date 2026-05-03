@@ -209,6 +209,12 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             fprintf(out, ")");
             break;
 
+        case AST_CHAR_LIT:
+            fprintf(out, "%.*s",
+                ast->char_lit.length,
+                ast->char_lit.start + src
+            );
+            break;
         default:
             printf("gen_expr received node addr: %p, kind: %d\n", ast, ast->kind);
             exit(1);
