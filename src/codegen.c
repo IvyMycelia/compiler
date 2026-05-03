@@ -39,7 +39,7 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_FUNC_CALL: 
             { 
                 gen_func_call(ast, out, src);   
-                fprint(out, ";\n");
+                fprintf(out, ";\n");
                 break;
             }
         case AST_IF:        gen_if(ast, out, src, 0);       break;
