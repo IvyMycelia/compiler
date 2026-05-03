@@ -94,6 +94,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_RETURN, start, length);
             else if (length == 6 && !strncmp(src + start, "string", 6))
                 add_token(ts, TOKEN_STRING, start, length);
+            else if (length == 6 && !strncmp(src + start, "sizeof", 6))
+                add_token(ts, TOKEN_SIZEOF, start, length);
             else if (length == 6 && !strncmp(src + start, "struct", 6))
                 add_token(ts, TOKEN_STRUCT, start, length);
             else if (length == 6 && !strncmp(src + start, "import", 6))
@@ -248,6 +250,7 @@ const char* token_kind_name(TokenKind kind) {
         case TOKEN_AS:          return "TOKEN_AS";
         case TOKEN_NEW:         return "TOKEN_NEW";
         case TOKEN_PRUNE:       return "TOKEN_PRUNE";
+        case TOKEN_SIZEOF:      return "TOKEN_SIZEOF";
 
         /* stdio */
         case TOKEN_PRINT:       return "TOKEN_PRINT";

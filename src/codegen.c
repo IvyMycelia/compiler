@@ -198,6 +198,12 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             fprintf(out, ")");
             break;
 
+        case AST_SIZEOF:
+            fprintf(out, "sizeof(");
+            typeinfo_to_string(ast->size_of.type, out, src);
+            fprintf(out, ")");
+            break;
+
         default:
             printf("gen_expr received node addr: %p, kind: %d\n", ast, ast->kind);
             exit(1);

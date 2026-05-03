@@ -24,6 +24,7 @@ typedef enum {
     /* Memory Management */
     AST_NEW,        // malloc(sizeof(t))
     AST_PRUNE,      // free(mem)
+    AST_SIZEOF,     // sizeof(x)
     AST_DEREF_ASS,  // @ptr = 42
     AST_DEREF,      // @ptr
 
@@ -102,6 +103,10 @@ typedef struct AST {
         struct {
             struct AST* ptr;
         } prune_free;
+
+        struct {
+            TypeInfo type;
+        } size_of;
 
         struct {
             int name_start;

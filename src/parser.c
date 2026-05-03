@@ -239,6 +239,15 @@ AST* parse_primary(Parser* ps) {
             return deref;
         }
 
+        case TOKEN_SIZEOF: {
+            parser_advance(ps);
+            parser_expect(ps, TOKEN_LPAREN);
+            AST* node = make_node(AST_SIZEOF);
+            node->size_of.type = parse_type(ps);
+            parser_expect(ps, TOKEN_RPAREN);
+            return node;
+        }
+
         default:
             printf(RED "parse_primary: unexpected token kind: %s\n" RESET, token_kind_name(parser_peek(ps)->kind));
             exit(1);

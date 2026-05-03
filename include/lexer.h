@@ -43,6 +43,7 @@ typedef enum {
     /* Memory Management */
     TOKEN_NEW,      // Automatically allocate memory
     TOKEN_PRUNE,    // Free memory
+    TOKEN_SIZEOF,   // sizeof(x)
     
     /* stdio */
     TOKEN_PRINT,    // Prints out to console
