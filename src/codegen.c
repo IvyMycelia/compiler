@@ -588,6 +588,8 @@ void gen_import(AST* ast, FILE* out, const char* src) {
     while (curr != NULL) {
         if (curr->kind == AST_IMPORT)
             gen_import(curr, out, imported_src);
+        else if (curr->kind == AST_STRUCT_DEF)
+            gen_struct(curr, out, imported_src);
         else if (curr->kind == AST_PROP) {
             if (ast->import.has_alias)
                 gen_func_def_aliased(curr->prop.func, out, imported_src,
