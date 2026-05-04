@@ -8,7 +8,9 @@ prop int test():
 
     print("  print... ")
     total = total + 1
+    print("\'")
     if prints.test() == 1:
+        print("\' ")
         pass = pass + 1
         print("OK\n")
     else:
@@ -16,9 +18,9 @@ prop int test():
     end
 
     if pass == total:
-        print("  Control: All Passed!\n")
+        print("  IO: All Passed!\n")
     else:
-        print("  Control: Some Failed!\n")
+        print("  IO: Some Failed!\n")
     end
 
     return pass == total

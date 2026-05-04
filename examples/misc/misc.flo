@@ -16,9 +16,9 @@ prop int test():
     end
 
     if pass == total:
-        print("  Control: All Passed!\n")
+        print("  Misc: All Passed!\n")
     else:
-        print("  Control: Some Failed!\n")
+        print("  Misc: Some Failed!\n")
     end
 
     return pass == total

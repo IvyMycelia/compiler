@@ -9,7 +9,7 @@ prop int test():
 
     print("  math.. ")
     total = total + 1
-    if math.add(1, 2) == 2:
+    if math.add(1, 2) == 3:
         pass = pass + 1
         print("OK\n")
     else:
@@ -17,9 +17,9 @@ prop int test():
     end
 
     if pass == total:
-        print("  Control: All Passed!\n")
+        print("  Import: All Passed!\n")
     else:
-        print("  Control: Some Failed!\n")
+        print("  Import: Some Failed!\n")
     end
 
     return pass == total
