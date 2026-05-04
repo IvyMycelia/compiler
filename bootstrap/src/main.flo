@@ -1,0 +1,5 @@
+import <stdio>
+
+int main(argc: int, argv: @char[]):
+    printf("%s", argv[1])
+end

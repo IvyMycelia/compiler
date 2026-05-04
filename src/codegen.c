@@ -77,6 +77,19 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
             fprintf(out, ";\n");
             break;
 
+        case AST_SUBSCRIPT:
+            gen_expr(ast->subscript.array, out, src);
+            fprintf(out, "[");
+            gen_expr(ast->subscript.index, out, src);
+            fprintf(out, "]");
+
+            if (ast->subscript.value != NULL) {
+                fprintf(out, " = ");
+                gen_expr(ast->subscript.value, out, src);
+            }
+            fprintf(out, ";\n");
+            break;
+
         default:
             printf(RED "Unknown statement kind: %d\n" RESET, ast->kind);
             exit(1);
@@ -215,6 +228,14 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
                 ast->char_lit.start + src
             );
             break;
+
+        case AST_SUBSCRIPT:
+            gen_expr(ast->subscript.array, out, src);
+            fprintf(out, "[");
+            gen_expr(ast->subscript.index, out, src);
+            fprintf(out, "]");
+            break;
+
         default:
             printf("gen_expr received node addr: %p, kind: %d\n", ast, ast->kind);
             exit(1);
@@ -283,6 +304,11 @@ void gen_param(AST* param, FILE* out, const char* src) {
         param->func_params.name_length,
         src + param->func_params.name_start
     );
+
+    if (param->func_params.type.array_size == -1)
+        fprintf(out, "[]");
+    else if (param->func_params.type.array_size != 0)
+        fprintf(out, "[%d]", param->func_params.type.array_size);
 }
 
 void gen_func_call(AST* ast, FILE* out, const char* src) {

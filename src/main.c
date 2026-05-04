@@ -72,6 +72,7 @@ int main(int argc, char *argv[]) {
             init_token_stream(&tokens);
 
             // Lexer
+            printf("Lexing...\n"); fflush(stdout);
             lex(file, &tokens);
             // printf("lexed %d tokens\n", tokens.count);
             // print_all_tokens(&tokens, file);
@@ -79,6 +80,7 @@ int main(int argc, char *argv[]) {
             // parser
             Parser tree;
             init_parser(&tree, &tokens, file);
+            printf("Parsing...\n"); fflush(stdout);
             AST* ast = parse(&tree);
 
             // Determine output name
@@ -102,6 +104,7 @@ int main(int argc, char *argv[]) {
             }
 
             emit_includes(ast, output, file, &tokens);
+            printf("Codegen...\n"); fflush(stdout);
             codegen(ast, output, file);
 
             free_token_stream(&tokens);

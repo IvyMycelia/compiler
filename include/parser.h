@@ -33,6 +33,7 @@ AST*    parse_return(Parser* ps);
 AST*    parse_param(Parser* ps);
 AST*    parse_struct(Parser* ps);
 AST*    parse_dot_ass(Parser* ps);
+AST*    parse_subscript_ass(Parser* ps);
 AST*    parse_import(Parser* ps);
 AST*    parse_alias_call(Parser* ps);
 

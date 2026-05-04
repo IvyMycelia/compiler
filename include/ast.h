@@ -11,6 +11,7 @@ typedef enum {
     AST_NULL,       // An empty value
     AST_STRING_LIT, // A string "Hello, World!"
     AST_ARRAY_LIT,  // Array literal [0, 1, 2 ..]
+    AST_SUBSCRIPT,  // arr[1]
     AST_STRUCT_LIT, // Struct literal {0, 1, 2 ..}
     AST_CHAR_LIT,   // char literal 'a' 'B'
     AST_STRUCT_DEF, // Struct declaration
@@ -95,6 +96,13 @@ typedef struct AST {
             struct AST* elements;
             int arr_length;
         } array;
+
+
+        struct {
+            struct AST* array;
+            struct AST* index;
+            struct AST* value;
+        } subscript;
 
 
         /* Unary Operations */

@@ -1,0 +1,12 @@
+import <stdio>
+@char test(argv: @char):
+    argv[0] = 'a'
+    return argv
+end
+
+int main():
+    buf: @char = new char
+    buf = test(buf)
+    printf("%c", buf[0])
+    prune buf
+end
