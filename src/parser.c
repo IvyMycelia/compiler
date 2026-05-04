@@ -142,6 +142,14 @@ AST* parse_primary(Parser* ps) {
                 return dot;
             }
 
+            if (parser_peek(ps)->kind == TOKEN_AT) {
+                parser_advance(ps);
+                AST* operand = parse_primary(ps);
+                AST* deref = make_node(AST_DEREF);
+                deref->unary.operand = operand;
+                return deref;
+            }
+
             if (parser_peek(ps)->kind == TOKEN_LBRACK) {
                 parser_advance(ps);
                 AST* idx = parse_expr(ps, 0);

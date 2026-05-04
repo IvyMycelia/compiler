@@ -178,9 +178,15 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
             break;
 
         case AST_NEW:
-            fprintf(out, "malloc(sizeof(");
-            typeinfo_to_string(ast->new_alloc.type, out, src);
-            fprintf(out, "))");
+            if (ast->new_alloc.type.array_size > 0) {
+                fprintf(out, "malloc(sizeof(");
+                typeinfo_to_string(ast->new_alloc.type, out, src);
+                fprintf(out, ") * %d", ast->new_alloc.type.array_size);
+            } else {
+                fprintf(out, "malloc(sizeof(");
+                typeinfo_to_string(ast->new_alloc.type, out, src);
+                fprintf(out, "))");
+            }
             break;
 
         case AST_ALIAS_CALL:
