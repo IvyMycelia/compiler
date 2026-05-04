@@ -1,5 +1,0 @@
-int main():
-    ptr: @int = new int
-    prune ptr
-    return 0
-end

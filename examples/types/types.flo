@@ -8,6 +8,8 @@ import "./examples/types/char.flo" as char_test
 import "./examples/types/null.flo" as null_test
 import "./examples/types/cast.flo" as cast_test
 import "./examples/types/string.flo" as string_test
+import "./examples/types/array.flo" as array_test
+import "./examples/types/struct.flo" as struct_test
 
 prop int test():
     total: int = 0
@@ -70,6 +72,24 @@ prop int test():
     print("  string... ")
     total = total + 1
     if string_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  array... ")
+    total = total + 1
+    if array_test.test() == 1:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    print("  struct... ")
+    total = total + 1
+    if struct_test.test() == 1:
         pass = pass + 1
         print("OK\n")
     else:

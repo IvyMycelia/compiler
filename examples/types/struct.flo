@@ -1,0 +1,27 @@
+import <stdio>
+
+struct Vector2 {
+    x: int,
+    y: int
+}
+
+struct Vector3 {
+    x: int,
+    y: int,
+    z: int
+}
+
+prop int test():
+    p: Vector2
+    p.x = 5
+    p.y = 10
+    if p.x == 5:
+        if p.y == 10:
+            p2: Vector3 = {1, 2, 3}
+            if p2.z == 3:
+                return 1
+            end
+        end
+    end
+    return 0
+end

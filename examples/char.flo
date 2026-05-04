@@ -1,4 +1,0 @@
-int main():
-    c: char = 'a'
-    return 0
-end

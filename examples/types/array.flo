@@ -1,0 +1,8 @@
+import <stdio>
+import <stdlib>
+
+prop int test():
+    arr: int[5]
+    arr3: int[3] = [1, 2, 3]
+    return 1
+end
