@@ -6,7 +6,7 @@ prop int test():
     total: int = 0
     pass: int = 0
 
-    print("  fibnoacci... ")
+    print("  fibonacci... ")
     total = total + 1
     if fibonacci.test() == 55:
         pass = pass + 1
