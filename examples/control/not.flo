@@ -2,7 +2,7 @@ import <stdio>
 
 prop int test():
     x: int = 0
-    if not x == 1:
+    if not (x == 1):
         return 1
     end
     return 0
