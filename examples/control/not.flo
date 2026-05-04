@@ -1,9 +1,16 @@
 import <stdio>
 
 prop int test():
+    pass: int = 0
     x: int = 0
     if not (x == 1):
-        return 1
+        pass = pass + 1
     end
-    return 0
+    if x != 1:
+        pass = pass + 1
+    end
+    if x != 1 and not (x == 1):
+        pass = pass + 1
+    end
+    return pass == 3
 end

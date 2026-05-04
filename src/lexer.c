@@ -69,6 +69,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_AS, start, length);
             else if (length == 2 && !strncmp(src + start, "in", 2))
                 add_token(ts, TOKEN_IN, start, length);
+            else if (length == 2 && !strncmp(src + start, "or", 2))
+                add_token(ts, TOKEN_OR, start, length);
             else if (length == 3 && !strncmp(src + start, "int", 3))
                 add_token(ts, TOKEN_INT, start, length);
             else if (length == 3 && !strncmp(src + start, "end", 3))
@@ -77,6 +79,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_NEW, start, length);
             else if (length == 3 && !strncmp(src + start, "not", 3))
                 add_token(ts, TOKEN_NOT, start, length);
+            else if (length == 3 && !strncmp(src + start, "and", 3))
+                add_token(ts, TOKEN_AND, start, length);
             else if (length == 3 && !strncmp(src + start, "for", 3))
                 add_token(ts, TOKEN_FOR, start, length);
             else if (length == 4 && !strncmp(src + start, "null", 4))

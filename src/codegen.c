@@ -668,6 +668,9 @@ const char* token_to_string(TokenKind kind) {
         case TOKEN_ELSE:        return "else";
         case TOKEN_END:         return "}";
 
+        case TOKEN_OR:          return " || ";
+        case TOKEN_AND:         return " && ";
+
         /* Operators */
         case TOKEN_DOT:         return ".";
         case TOKEN_PLUS:        return "+";

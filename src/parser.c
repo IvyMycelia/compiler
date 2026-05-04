@@ -81,10 +81,12 @@ int get_precedence(TokenKind kind) {
     switch (kind) {
         case TOKEN_STAR:
         case TOKEN_SLASH: return 3;
+        case TOKEN_AND:
         case TOKEN_PLUS:
         case TOKEN_MINUS: return 2;
         case TOKEN_GT:
         case TOKEN_LT:
+        case TOKEN_OR:
         case TOKEN_NEQ:
         case TOKEN_LEQ:
         case TOKEN_GEQ:

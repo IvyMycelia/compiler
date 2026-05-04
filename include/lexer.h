@@ -35,6 +35,8 @@ typedef enum {
     TOKEN_IF,       // If statement
     TOKEN_ELSE,     // Else block
     TOKEN_NOT,      // opposite of a value
+    TOKEN_AND,      // logical and
+    TOKEN_OR,       // logical or
 
     /* Import System */
     TOKEN_IMPORT,   // .flo imports
