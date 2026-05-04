@@ -1,5 +1,0 @@
-int main():
-    arr:        int[5]
-    emptyArr:   int[]
-    fullArr:    int[2] = [0, 1];
-end

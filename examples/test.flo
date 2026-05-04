@@ -4,6 +4,9 @@ import <stdlib>
 import "./examples/memory/memory.flo" as memory
 import "./examples/types/types.flo" as types
 import "./examples/control/control.flo" as control
+import "./examples/io/io.flo" as io
+import "./examples/misc/misc.flo" as misc
+import "./examples/import/import.flo" as imports
 
 int main():
     total: int = 0
@@ -20,6 +23,18 @@ int main():
     print("\n=== Control ===\n")
     total = total + 1
     pass = pass + control.test()
+
+    print("\n=== IO ===\n")
+    total = total + 1
+    pass = pass + io.test()
+
+    print("\n=== Misc ===\n")
+    total = total + 1
+    pass = pass + misc.test()
+
+    print("\n=== Import ===\n")
+    total = total + 1
+    pass = pass + imports.test()
 
     print("\n=== Results ===\n")
     if pass == total:

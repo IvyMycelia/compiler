@@ -1,0 +1,26 @@
+import <stdio>
+import <stdlib>
+
+import "./examples/import/math.flo" as math
+
+prop int test():    
+    total: int = 0
+    pass: int = 0
+
+    print("  math.. ")
+    total = total + 1
+    if math.add(1, 2) == 2:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    if pass == total:
+        print("  Control: All Passed!\n")
+    else:
+        print("  Control: Some Failed!\n")
+    end
+
+    return pass == total
+end

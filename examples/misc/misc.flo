@@ -1,0 +1,25 @@
+import <stdio>
+
+import "./examples/misc/fibonacci.flo" as fibonacci
+
+prop int test():
+    total: int = 0
+    pass: int = 0
+
+    print("  fibnoacci... ")
+    total = total + 1
+    if fibonacci.test() == 55:
+        pass = pass + 1
+        print("OK\n")
+    else:
+        print("FAIL\n")
+    end
+
+    if pass == total:
+        print("  Control: All Passed!\n")
+    else:
+        print("  Control: Some Failed!\n")
+    end
+
+    return pass == total
+end

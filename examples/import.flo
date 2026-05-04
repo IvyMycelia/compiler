@@ -1,9 +1,0 @@
-import <stdio>
-import <stdlib>
-
-import "./examples/math.flo" as math
-
-int main():
-    x: int = math.add(1, 2)
-    return x
-end

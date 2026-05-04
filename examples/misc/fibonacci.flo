@@ -14,6 +14,6 @@ int fib(n: int):
     return a
 end
 
-int main():
-    return fib(10)
+prop int test():
+    return fib(10)    
 end
