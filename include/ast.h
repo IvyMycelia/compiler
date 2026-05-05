@@ -53,6 +53,7 @@ typedef struct {
     TokenKind base;
     int pointer_depth;
     int array_size;
+    struct AST* arr_size_expr;
     int name_start;
     int name_length;
 } TypeInfo;

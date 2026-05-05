@@ -45,7 +45,7 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_IF:        gen_if(ast, out, src, 0);       break;
         case AST_DOT_ACCESS:
             gen_expr(ast->dot_access.object, out, src);
-            fprintf(out, ".%.*s",
+            fprintf(out, "->%.*s",
                 ast->dot_access.field_length,
                 src + ast->dot_access.field_start
             );
@@ -87,6 +87,11 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
                 fprintf(out, " = ");
                 gen_expr(ast->subscript.value, out, src);
             }
+            fprintf(out, ";\n");
+            break;
+
+        case AST_ALIAS_CALL:
+            gen_expr(ast, out, src);
             fprintf(out, ";\n");
             break;
 
@@ -171,22 +176,24 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
 
         case AST_DOT_ACCESS:
             gen_expr(ast->dot_access.object, out, src);
-            fprintf(out, ".%.*s",
+            fprintf(out, "->%.*s",
                 ast->dot_access.field_length,
                 src + ast->dot_access.field_start
             );
             break;
 
         case AST_NEW:
-            if (ast->new_alloc.type.array_size > 0) {
-                fprintf(out, "malloc(sizeof(");
-                typeinfo_to_string(ast->new_alloc.type, out, src);
-                fprintf(out, ") * %d", ast->new_alloc.type.array_size);
-            } else {
-                fprintf(out, "malloc(sizeof(");
-                typeinfo_to_string(ast->new_alloc.type, out, src);
-                fprintf(out, "))");
-            }
+            fprintf(out, "malloc(sizeof(");
+            typeinfo_to_string(ast->new_alloc.type, out, src);
+            fprintf(out, ")");
+            
+            if (ast->new_alloc.type.arr_size_expr != NULL) {
+                fprintf(out, " * (");
+                gen_expr(ast->new_alloc.type.arr_size_expr, out, src);
+                fprintf(out, ")");
+            } else if (ast->new_alloc.type.array_size > 0)
+                fprintf(out, " * %d", ast->new_alloc.type.array_size);
+            fprintf(out, ")");
             break;
 
         case AST_ALIAS_CALL:

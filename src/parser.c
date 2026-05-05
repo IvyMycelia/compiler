@@ -31,10 +31,11 @@ void parser_expect(Parser* ps, TokenKind kind) {
     Token* curr_tok = parser_peek(ps);
 
     if (curr_tok->kind != kind) {
-        printf(RED "Expected token: %s but got %s at src pos %d\n", 
+        printf(RED "Expected token: %s but got `%.*s` (%s) at line %d\n", 
             token_kind_name(kind), 
+            curr_tok->length, curr_tok->start + ps->src,
             token_kind_name(curr_tok->kind),
-            curr_tok->start);
+            get_line(ps->src, curr_tok->start));
         exit(1);
     }
     parser_advance(ps);
@@ -281,7 +282,8 @@ AST* parse_primary(Parser* ps) {
         }
 
         default:
-            printf(RED "parse_primary: unexpected token kind: %s\n" RESET, token_kind_name(parser_peek(ps)->kind));
+            printf(RED "parse_primary: unexpected token kind: %s at line %d\n" RESET,
+                token_kind_name(parser_peek(ps)->kind), get_line(ps->src, parser_peek(ps)->start));
             exit(1);
     }
 }
@@ -480,7 +482,10 @@ AST* parse_statement(Parser* ps) {
                 case TOKEN_LPAREN:
                     return parse_func_call(ps);
                 case TOKEN_DOT:
-                    return parse_dot_ass(ps);
+                    if (is_alias(ps, parser_peek(ps)))
+                        return parse_alias_call(ps);
+                    else
+                        return parse_dot_ass(ps);
                 case TOKEN_LBRACK:
                     return parse_subscript_ass(ps);
                 default:
@@ -697,6 +702,7 @@ TypeInfo parse_type(Parser* ps) {
     TypeInfo type;
     type.pointer_depth = 0;
     type.array_size = 0;
+    type.arr_size_expr = NULL;
 
     
     while (parser_peek(ps)->kind == TOKEN_AT) {
@@ -714,10 +720,13 @@ TypeInfo parse_type(Parser* ps) {
 
     if (parser_peek(ps)->kind == TOKEN_LBRACK) {
         parser_advance(ps);
-        if (parser_peek(ps)->kind == TOKEN_NUMBER) {
+        if (parser_peek(ps)->kind == TOKEN_RBRACK)
+            type.array_size = -1;
+        else if (parser_peek(ps)->kind == TOKEN_NUMBER) {
             type.array_size = atoi(ps->src + parser_peek(ps)->start);
             parser_advance(ps);
-        } else type.array_size = -1; // Unsized
+        } else 
+            type.arr_size_expr = parse_expr(ps, 0);
         parser_expect(ps, TOKEN_RBRACK);
     }
 
@@ -769,4 +778,12 @@ AST* parse(Parser* ps) {
     }
 
     return head;
+}
+
+
+int get_line(const char* src, int pos) {
+    int line = 1;
+    for (int i = 0; i < pos; i++)
+        if (src[i] == '\n') line++;
+    return line;
 }

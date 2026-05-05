@@ -42,6 +42,7 @@ AST*    parse(Parser* ps);
 int     get_precedence(TokenKind kind);
 int     token_stream_contains(TokenStream* ts, TokenKind kind);
 int     is_alias(Parser* ps, Token* tok);
+int     get_line(const char* src, int pos);
 
 TypeInfo parse_type(Parser* ps);
 
