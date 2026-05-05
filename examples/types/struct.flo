@@ -12,16 +12,22 @@ struct Vector3 {
 }
 
 prop int test():
-    p: Vector2
+    p: @Vector2 = new Vector2
     p.x = 5
     p.y = 10
     if p.x == 5:
         if p.y == 10:
-            p2: Vector3 = {1, 2, 3}
+            p2: @Vector3 = new Vector3
+            p2.x = 1
+            p2.y = 2
+            p2.z = 3
             if p2.z == 3:
                 return 1
             end
+            prune p2
         end
     end
+
+    prune p
     return 0
 end

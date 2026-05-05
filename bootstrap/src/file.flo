@@ -1,0 +1,17 @@
+prop @char read_file(path: @char):
+    f: @FILE = fopen(path, "r")
+    if f == null:
+        return null
+    end
+
+    fseek(f, 0, 2)      // SEEK_END = 2
+    length: int = ftell(f)
+    fseek(f, 0, 0)      // SEEK_SET = 0
+
+    buffer: @char = new char[length + 1]
+    fread(buffer, 1, length, f)
+    buffer[length] = '\0'
+
+    fclose(f)
+    return buffer
+end

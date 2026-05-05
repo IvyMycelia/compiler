@@ -1,5 +1,70 @@
 import <stdio>
+import <string>
+import <ctype>
+import <stdlib>
+
+import "./bootstrap/src/lexer.flo" as lexer
+import "./bootstrap/src/file.flo" as file
 
 int main(argc: int, argv: @char[]):
-    printf("%s", argv[1])
+    if argc < 2:
+        printf("Missing arguments! Use -help for usage instructions.\n")
+        return -1
+    end
+
+    for i in 0..argc:
+        arg: @char = argv[i]
+
+        if arg[0] == '-':
+            // Skip all leading dashes
+            while arg[0] == '-':
+                arg = arg + 1
+            end
+
+            for i in 0..strlen(arg):
+                arg[i]= tolower(arg[i] as char)
+            end
+
+            if not strcmp(arg, "help") or not strcmp(arg, "h"):
+                print("🌸 Welcome to Flower Compiler!\n\n")
+        
+                print("Usage:\n")
+                print("\tflower\t[options] <filepath>\n\n")
+
+                print("Options:\n")
+                print("\t-help,    -h\tShow this help message\n")
+                print("\t-version, -v\tShow the current version of FloC\n")
+                print("\t<filepath>\tSpecify the source code file to compile\n\n")
+        
+                print("Example:\n")
+                print("\tflower -help\n")
+                print("\tflower main.flo\n\n")
+        
+                print("Tips:\n")
+                print(" - You can use any number of dashes before a flag, e.g., ---help\n")
+                print(" - Flags are case-insensitive: -HELP works too!\n\n")
+        
+                print("Happy Compiling with Flower! 🌼\n")
+            else if not strcmp(arg, "version") or not strcmp(arg, "v"):
+                print("Version: 0.0.4\n")
+            else:
+                print("Unrecognized flag argument! Use -help for more information.\n")
+            end
+        else:
+            printf("Compiling file: %s\n", argv[i])
+            
+            file: @char = file.read_file(argv[i])
+            if not file:
+                return -1
+            end
+
+            // Initialize token handling
+            tokens: @TokenStream = new TokenStream
+            lexer.init_token_stream(tokens)
+
+            // Lexer
+            print("Lexing...\n")
+            //lexer.lex(file, tokens)
+        end
+    end
 end
