@@ -770,7 +770,10 @@ AST* parse(Parser* ps) {
             AST* prop_node = make_node(AST_PROP);
             prop_node->prop.func = func;
             node = prop_node;
-        } else node = parse_func_def(ps);
+        } else if (parser_peek(ps)->kind == TOKEN_IDENTIFIER &&
+                   peek(ps->ts, ps->pos + 1)->kind == TOKEN_COLON)
+            node = parse_var_decl(ps);
+        else node = parse_func_def(ps);
 
         if (head == NULL) head = node;
         else tail->next = node;

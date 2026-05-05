@@ -25,6 +25,8 @@ void codegen(AST* ast, FILE* out, const char* src) {
             gen_struct(curr, out, src);
         else if (curr->kind == AST_PROP)
             gen_func_def(curr->prop.func, out, src);
+        else if (curr->kind == AST_VAR_DECL)
+            gen_var_decl(curr, out, src);
         curr = curr->next;
     }
 }
@@ -637,6 +639,8 @@ void gen_import(AST* ast, FILE* out, const char* src) {
                 gen_func_def(curr->prop.func, out, imported_src);
         } else if (curr->kind == AST_FUNC_DEF)
             gen_func_def(curr, out, imported_src);
+        else if (curr->kind == AST_VAR_DECL)
+            gen_var_decl(curr, out, imported_src);
         curr = curr->next;
     }
 
