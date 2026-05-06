@@ -6,10 +6,6 @@ prop void init_token_stream(ts: @TokenStream):
     ts.capacity = 0
 end
 
-prop void lex(f: @char, ts: @TokenStream):
-
-end
-
 void add_token(ts: @TokenStream, kind: int, start: int, length: int):
     if ts.count >= ts.capacity:
         if ts.capacity == 0:
@@ -31,4 +27,23 @@ void add_token(ts: @TokenStream, kind: int, start: int, length: int):
     t.start = start
     t.length = length
     ts.count = ts.count + 1
+end
+
+prop void lex(src: @char, ts: @TokenStream):
+    i: int = 0
+    
+    while src[i] != '\0':
+        // Skip whitespace
+        if src[i] == ' ' or src[i] == '\r':
+            i = i + 1
+        else if src[i] == '\n':
+            add_token(ts, TOKEN_NEWLINE, i, 1)
+        else if src[i] == ';':
+            add_token(ts, TOKEN_SEMI, i, 1)
+        end
+
+        i = i + 1
+    end
+
+    add_token(ts, TOKEN_EOF, i, 0)
 end

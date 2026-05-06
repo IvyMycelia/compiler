@@ -441,9 +441,7 @@ AST* parse_var_ass(Parser* ps) {
 
 AST* parse_dot_ass(Parser* ps) {
     AST* expr = parse_expr(ps, 0);
-    printf("parse_dot_ass: expr kind=%d, next token=%s\n", 
-        expr->kind,
-        token_kind_name(parser_peek(ps)->kind));
+    // printf("parse_dot_ass: expr kind=%d, next token=%s\n", expr->kind, token_kind_name(parser_peek(ps)->kind));
     if (parser_peek(ps)->kind == TOKEN_ASSIGN) {
         parser_advance(ps);
         AST* val = parse_expr(ps, 0);

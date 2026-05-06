@@ -13,7 +13,13 @@ void lex(const char* src, TokenStream* ts) {
 
     int token_count = 0;
     while(src[i] != '\0') {
-        if (src[i] == '"') {
+        if (token_count++ > 100000) {
+            printf("INFINITE LOOP at i=%d, char='%c', context='%.*s'\n", 
+                i, src[i], 20, src + i - 10);
+            exit(1);
+        }
+
+        if (src[i] == '\"') {
             int start = i++;
             while (src[i] != '"' && src[i] != '\0')
                 i++;
@@ -31,11 +37,6 @@ void lex(const char* src, TokenStream* ts) {
             continue;
         }
         
-        if (token_count++ > 100000) {
-            printf("INFINITE LOOP at i=%d, char='%c', context='%.*s'\n", 
-                i, src[i], 20, src + i - 10);
-            exit(1);
-        }
         if (src[i] == '/' && src[i+1] == '/') {
             while (src[i] != '\n' && src[i] != '\0')
                 i++;
@@ -181,7 +182,8 @@ void lex(const char* src, TokenStream* ts) {
             case ':': add_token(ts, TOKEN_COLON, i++, 1); break;
             case ',': add_token(ts, TOKEN_COMMA, i++, 1); break;
             default:
-                printf(RED "Unknown character: %c\n", src[i]);
+                printf("Unknown char '%c' (%d) at i=%d\n", src[i], src[i], i);
+
                 exit(1);
         }
     }
