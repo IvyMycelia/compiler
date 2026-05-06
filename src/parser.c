@@ -135,16 +135,6 @@ AST* parse_primary(Parser* ps) {
             node->var_ref.name_start = tok->start;
             node->var_ref.name_length = tok->length;
 
-            if (parser_peek(ps)->kind == TOKEN_DOT) {
-                parser_advance(ps);
-                Token* field = parser_advance(ps);
-                AST* dot = make_node(AST_DOT_ACCESS);
-                dot->dot_access.object = node;
-                dot->dot_access.field_start = field->start;
-                dot->dot_access.field_length = field->length;
-                return dot;
-            }
-
             if (parser_peek(ps)->kind == TOKEN_AT) {
                 parser_advance(ps);
                 AST* operand = parse_primary(ps);
@@ -153,14 +143,25 @@ AST* parse_primary(Parser* ps) {
                 return deref;
             }
 
-            if (parser_peek(ps)->kind == TOKEN_LBRACK) {
-                parser_advance(ps);
-                AST* idx = parse_expr(ps, 0);
-                parser_expect(ps, TOKEN_RBRACK);
-                AST* sub = make_node(AST_SUBSCRIPT);
-                sub->subscript.array = node;
-                sub->subscript.index = idx;
-                return sub;
+            while (parser_peek(ps)->kind == TOKEN_DOT ||
+                   parser_peek(ps)->kind == TOKEN_LBRACK){
+                if (parser_peek(ps)->kind == TOKEN_DOT) {
+                    parser_advance(ps);
+                    Token* field = parser_advance(ps);
+                    AST* dot = make_node(AST_DOT_ACCESS);
+                    dot->dot_access.object = node;
+                    dot->dot_access.field_start = field->start;
+                    dot->dot_access.field_length = field->length;
+                    node = dot;
+                } else if (parser_peek(ps)->kind == TOKEN_LBRACK) {
+                    parser_advance(ps);
+                    AST* idx = parse_expr(ps, 0);
+                    parser_expect(ps, TOKEN_RBRACK);
+                    AST* sub = make_node(AST_SUBSCRIPT);
+                    sub->subscript.array = node;
+                    sub->subscript.index = idx;
+                    node = sub;
+                }
             }
 
             return node;
@@ -431,24 +432,24 @@ AST* parse_var_ass(Parser* ps) {
 }
 
 AST* parse_dot_ass(Parser* ps) {
-    AST* node = make_node(AST_DOT_ACCESS);
-    Token* tok = parser_advance(ps);
-
-    AST* object = make_node(AST_VAR_REF);
-    object->var_ref.name_start = tok->start;
-    object->var_ref.name_length = tok->length;
-    node->dot_access.object = object;
-
-    parser_expect(ps, TOKEN_DOT);
-
-    Token* field = parser_advance(ps);
-    node->dot_access.field_start = field->start;
-    node->dot_access.field_length = field->length;
-
-    parser_expect(ps, TOKEN_ASSIGN);
-    node->dot_access.value = parse_expr(ps, 0);
-
-    return node;
+    AST* expr = parse_expr(ps, 0);
+    printf("parse_dot_ass: expr kind=%d, next token=%s\n", 
+        expr->kind,
+        token_kind_name(parser_peek(ps)->kind));
+    if (parser_peek(ps)->kind == TOKEN_ASSIGN) {
+        parser_advance(ps);
+        AST* val = parse_expr(ps, 0);
+        if (expr->kind == AST_DOT_ACCESS)
+            expr->dot_access.value = val;
+        else if (expr->kind == AST_SUBSCRIPT)
+            expr->subscript.value = val;
+        else {
+            printf(RED "Invalid assignment target at line: %d\n" RESET, 
+                get_line(ps->src, parser_peek(ps)->start));
+            exit(1);
+        }
+    }
+    return expr;
 }
 
 AST* parse_subscript_ass(Parser* ps) {
@@ -481,13 +482,15 @@ AST* parse_statement(Parser* ps) {
                     return parse_var_ass(ps);
                 case TOKEN_LPAREN:
                     return parse_func_call(ps);
-                case TOKEN_DOT:
+                    case TOKEN_LBRACK:
+                    return parse_subscript_ass(ps);
+                case TOKEN_DOT: {
                     if (is_alias(ps, parser_peek(ps)))
                         return parse_alias_call(ps);
-                    else
+                    else {
                         return parse_dot_ass(ps);
-                case TOKEN_LBRACK:
-                    return parse_subscript_ass(ps);
+                    }
+                }
                 default:
                     printf(RED "parse_statement: unexpected token after identifier: %s\n" RESET,
                         token_kind_name(peek(ps->ts, ps->pos + 1)->kind));
@@ -535,8 +538,8 @@ AST* parse_statement(Parser* ps) {
         }
             
         default:
-            printf(RED "parse_statement: unexpected token: %s at pos %d\n" RESET,
-                token_kind_name(parser_peek(ps)->kind), ps->pos);
+            printf(RED "parse_statement: unexpected token: %s at line %d\n" RESET,
+                token_kind_name(parser_peek(ps)->kind), get_line(ps->src, parser_peek(ps)->start));
             exit(1);
     }
 }

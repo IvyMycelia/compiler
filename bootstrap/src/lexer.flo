@@ -9,3 +9,12 @@ end
 prop void lex(f: @char, ts: @TokenStream):
 
 end
+
+void add_token(ts: @TokenStream, kind: int, start: int, length: int):
+    // realloc logic
+    t: @Token = ts.data + ts.count
+    t.kind = kind
+    t.start = start
+    t.length = length
+    ts.count = ts.count + 1
+end

@@ -12,7 +12,7 @@ int main(argc: int, argv: @char[]):
         return -1
     end
 
-    for i in 0..argc:
+    for i in 1..argc:
         arg: @char = argv[i]
 
         if arg[0] == '-':
@@ -64,7 +64,7 @@ int main(argc: int, argv: @char[]):
 
             // Lexer
             print("Lexing...\n")
-            //lexer.lex(file, tokens)
+            lexer.lex(file, tokens)
         end
     end
 end
