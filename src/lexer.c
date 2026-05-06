@@ -13,30 +13,6 @@ void lex(const char* src, TokenStream* ts) {
 
     int token_count = 0;
     while(src[i] != '\0') {
-        if (token_count++ > 100000) {
-            printf("INFINITE LOOP at i=%d, char='%c', context='%.*s'\n", 
-                i, src[i], 20, src + i - 10);
-            exit(1);
-        }
-        if (src[i] == '/' && src[i+1] == '/') {
-            while (src[i] != '\n' && src[i] != '\0')
-                i++;
-            continue;
-        }
-        if (src[i] == '\n') {
-            add_token(ts, TOKEN_NEWLINE, i++, 1);
-            continue;
-        }
-        if (src[i] == ';') {
-            add_token(ts, TOKEN_SEMI, i++, 1);
-            continue;
-        }
-
-        if (src[i] == ' ' || src[i] == '\r') {
-            i++;
-            continue;
-        }
-
         if (src[i] == '"') {
             int start = i++;
             while (src[i] != '"' && src[i] != '\0')
@@ -52,6 +28,31 @@ void lex(const char* src, TokenStream* ts) {
                 i++;
             i++;
             add_token(ts, TOKEN_CHAR_LIT, start, i - start);
+            continue;
+        }
+        
+        if (token_count++ > 100000) {
+            printf("INFINITE LOOP at i=%d, char='%c', context='%.*s'\n", 
+                i, src[i], 20, src + i - 10);
+            exit(1);
+        }
+        if (src[i] == '/' && src[i+1] == '/') {
+            while (src[i] != '\n' && src[i] != '\0')
+                i++;
+            continue;
+        }
+        if (src[i] == '\n') {
+            add_token(ts, TOKEN_NEWLINE, i++, 1);
+            continue;
+        }
+        
+        if (src[i] == ';') {
+            add_token(ts, TOKEN_SEMI, i++, 1);
+            continue;
+        }
+
+        if (src[i] == ' ' || src[i] == '\r') {
+            i++;
             continue;
         }
 
