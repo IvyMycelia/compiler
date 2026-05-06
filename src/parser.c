@@ -292,6 +292,14 @@ AST* parse_primary(Parser* ps) {
 AST* parse_return(Parser* ps) {
     AST* node = make_node(AST_RETURN);
     parser_advance(ps);
+
+    if (parser_peek(ps)->kind == TOKEN_NEWLINE ||
+        parser_peek(ps)->kind == TOKEN_SEMI ||
+        parser_peek(ps)->kind == TOKEN_EOF) {
+        node->ret.value = NULL;
+        return node;
+    }
+
     node->ret.value = parse_expr(ps, 0);
     return node;
 }

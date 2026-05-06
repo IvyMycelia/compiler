@@ -494,9 +494,13 @@ void gen_if(AST* ast, FILE* out, const char* src, int is_else_if) {
 
 void gen_return(AST* ast, FILE* out, const char* src) {
     // Emit: return n
-    fprintf(out, "return ");
-    gen_expr(ast->ret.value, out, src);
-    fprintf(out, ";\n");
+    if (ast->ret.value == NULL) 
+        fprintf(out, "return;");
+    else {
+        fprintf(out, "return ");
+        gen_expr(ast->ret.value, out, src);
+        fprintf(out, ";\n");
+    }
 }
 
 /* Import Cache */

@@ -11,7 +11,21 @@ prop void lex(f: @char, ts: @TokenStream):
 end
 
 void add_token(ts: @TokenStream, kind: int, start: int, length: int):
-    // realloc logic
+    if ts.count >= ts.capacity:
+        if ts.capacity == 0:
+            ts.capacity = 64
+        else:
+            ts.capacity = ts.capacity * 2
+        end
+
+        ts.data = realloc(ts.data, ts.capacity * sizeof(Token))
+        
+        if (ts.data == null):
+            print("Memory allocation failed\n")
+            return
+        end
+    end
+
     t: @Token = ts.data + ts.count
     t.kind = kind
     t.start = start
