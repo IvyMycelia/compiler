@@ -104,3 +104,13 @@ struct TokenStream {
     count: int,
     capacity: int
 }
+
+prop int get_line(src: @char, pos: int):
+    line: int = 1;
+    for i in 0..pos:
+        if src[i] == '\n':
+            line = line + 1;
+        end
+    end
+    return line;
+end

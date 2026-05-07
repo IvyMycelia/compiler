@@ -44,7 +44,7 @@ prop void lex(ts: @TokenStream, src: @char):
 
         // comments
         if src[i] == '/' and src[i+1] == '/':
-            while src[i+1] != '\n' and src[i+1] != '\0':
+            while src[i] != '\n' and src[i] != '\0':
                 i = i + 1
             end
             continue
@@ -87,16 +87,34 @@ prop void lex(ts: @TokenStream, src: @char):
             i = i + 1
             continue
         end
-
-
+        
         // numbers
-        if isalpha(src[i] or src[i] == '_'):
-            start: int = i
+        if isdigit(src[i]):
+            start: int = i;
 
-            while (isalnum(src[i] or src[i] == '_')):
+            while isdigit(src[i]):
                 i = i + 1
             end
 
+            if src[i] == '.' and isdigit(src[i+1]):
+                i = i + 1
+                while isdigit(src[i]):
+                    i = i + 1
+                end
+                add_token(ts, TOKEN_FLOAT_LIT, start, i - start)
+            else: add_token(ts, TOKEN_NUMBER, start, i - start)
+            end
+            continue
+        end
+        
+        // identifiers / keywords
+        if isalpha(src[i]) or src[i] == '_':
+            start: int = i
+
+            while isalnum(src[i]) or src[i] == '_':
+                i = i + 1
+            end
+            
             length: int = i - start
 
             if length == 2 and not strncmp(src + start, "if", 2):
@@ -158,24 +176,115 @@ prop void lex(ts: @TokenStream, src: @char):
             else if length == 6 and not strncmp(src + start, "double", 6):
                 add_token(ts, TOKEN_DOUBLE, start, length)
 
-            else if length == 6 and not strncmp(src + start, "continue", 8):
+            else if length == 8 and not strncmp(src + start, "continue", 8):
                 add_token(ts, TOKEN_CONTINUE, start, length)
 
             else:
                 add_token(ts, TOKEN_IDENTIFIER, start, length)
             end
             continue
-
-            
         end
 
-        // identifiers / keywords
 
-
-        // operators
-
-
+        
         // single char tokens
+        if src[i] == '.':
+            if src[i+1] == '.':
+                if src[i+2] == '=':
+                    add_token(ts, TOKEN_DOTDOTEQ, i, 3)
+                    i = i + 3; continue
+                else:
+                    add_token(ts, TOKEN_DOTDOT, i, 2)
+                    i = i + 2; continue
+                end
+            else:
+                add_token(ts, TOKEN_DOT, i, 1);
+                i = i + 1; continue
+            end
+        else if src[i] == '+':
+            add_token(ts, TOKEN_PLUS, i, 1)
+            i = i + 1; continue
+        else if src[i] == '-':
+            add_token(ts, TOKEN_MINUS, i, 1)
+            i = i + 1; continue
+        else if src[i] == '~':
+            add_token(ts, TOKEN_TILDE, i, 1)
+            i = i + 1; continue
+        else if src[i] == '*':
+            add_token(ts, TOKEN_STAR, i, 1)
+            i = i + 1; continue
+        else if src[i] == '/':
+            add_token(ts, TOKEN_SLASH, i, 1)
+            i = i + 1; continue
+        else if src[i] == '^':
+            add_token(ts, TOKEN_CARET, i, 1)
+            i = i + 1; continue
+        else if src[i] == '&':
+            add_token(ts, TOKEN_AMPERSAND, i, 1)
+            i = i + 1; continue
+        else if src[i] == '@':
+            add_token(ts, TOKEN_AT, i, 1)
+            i = i + 1; continue
+        else if src[i] == '=':
+            if src[i+1] == '=':
+                add_token(ts, TOKEN_COMP, i, 2)
+                i = i + 2; continue
+            else:
+                add_token(ts, TOKEN_ASSIGN, i, 1);
+                i = i + 1; continue
+            end
+        else if src[i] == '<':
+            if src[i+1] == '=':
+                add_token(ts, TOKEN_LEQ, i, 2)
+                i = i + 2; continue
+            else:
+                add_token(ts, TOKEN_LT, i, 1);
+                i = i + 1; continue
+            end
+        else if src[i] == '>':
+            if src[i+1] == '=':
+                add_token(ts, TOKEN_GEQ, i, 2)
+                i = i + 2; continue
+            else:
+                add_token(ts, TOKEN_GT, i, 1);
+                i = i + 1; continue
+            end
+        else if src[i] == '!':
+            if src[i+1] == '=':
+                add_token(ts, TOKEN_NEQ, i, 2)
+                i = i + 2; continue
+            else:
+                add_token(ts, TOKEN_NOT, i, 1);
+                i = i + 1; continue
+            end
+        else if src[i] == '(':
+            add_token(ts, TOKEN_LPAREN, i, 1)
+            i = i + 1; continue
+        else if src[i] == ')':
+            add_token(ts, TOKEN_RPAREN, i, 1)
+            i = i + 1; continue
+        else if src[i] == '[':
+            add_token(ts, TOKEN_LBRACK, i, 1)
+            i = i + 1; continue
+        else if src[i] == ']':
+            add_token(ts, TOKEN_RBRACK, i, 1)
+            i = i + 1; continue
+        else if src[i] == '{':
+            add_token(ts, TOKEN_LBRACE, i, 1)
+            i = i + 1; continue
+        else if src[i] == '}':
+            add_token(ts, TOKEN_RBRACE, i, 1)
+            i = i + 1; continue
+        else if src[i] == ':':
+            add_token(ts, TOKEN_COLON, i, 1)
+            i = i + 1; continue
+        else if src[i] == ',':
+            add_token(ts, TOKEN_COMMA, i, 1)
+            i = i + 1; continue
+        else:
+            printf("Unknown char '%c' (%d) at i=%d, line %d\n", src[i], src[i], i, get_line(src, i))
+            exit(1)
+        end
 
 
         i = i + 1
@@ -214,6 +323,7 @@ end
     else if kind == TOKEN_NOT:          return "TOKEN_NOT";
     else if kind == TOKEN_FOR:          return "TOKEN_FOR";
     else if kind == TOKEN_IN:           return "TOKEN_IN";
+    else if kind == TOKEN_OR:           return "TOKEN_OR";
 
         // Import System 
     else if kind == TOKEN_IMPORT:       return "TOKEN_IMPORT";
