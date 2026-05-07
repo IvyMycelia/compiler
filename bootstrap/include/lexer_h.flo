@@ -29,6 +29,8 @@ TOKEN_VOID:         int = 15    // Void (empty)
     // === Keywords ===
 
 TOKEN_RETURN:       int = 16    // Return from block
+TOKEN_CONTINUE:     int = 61    // Skip a loop iteration
+TOKEN_BREAK:        int = 62    // Stop a loop
 TOKEN_WHILE:        int = 17    // While loop
 TOKEN_FOR:          int = 18    // For loop
 TOKEN_IN:           int = 19    // in

@@ -64,7 +64,8 @@ int main(argc: int, argv: @char[]):
 
             // Lexer
             print("Lexing...\n")
-            lexer.lex(file, tokens)
+            lexer.lex(tokens, file)
+            lexer.print_all_tokens(tokens, file)
         end
     end
 end

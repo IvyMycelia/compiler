@@ -29,21 +29,256 @@ void add_token(ts: @TokenStream, kind: int, start: int, length: int):
     ts.count = ts.count + 1
 end
 
-prop void lex(src: @char, ts: @TokenStream):
+prop void lex(ts: @TokenStream, src: @char):
     i: int = 0
     
     while src[i] != '\0':
         // Skip whitespace
+        // printf("DEBUG: char literal at i=%d, next='%c'\n", i, src[i+1]);
+
+        // whitespace
         if src[i] == ' ' or src[i] == '\r':
             i = i + 1
-        else if src[i] == '\n':
-            add_token(ts, TOKEN_NEWLINE, i, 1)
-        else if src[i] == ';':
-            add_token(ts, TOKEN_SEMI, i, 1)
+            continue
         end
+
+        // comments
+        if src[i] == '/' and src[i+1] == '/':
+            while src[i+1] != '\n' and src[i+1] != '\0':
+                i = i + 1
+            end
+            continue
+        end
+        
+        // newlines
+        if src[i] == '\n':
+            add_token(ts, TOKEN_NEWLINE, i, 1)
+            i = i + 1
+            continue
+        end
+
+        // string literals
+        if src[i] == '"':
+            start: int = i
+            i = i + 1
+            while src[i] != '"' and src[i] != '\0':
+                i = i + 1
+            end
+            i = i + 1
+            add_token(ts, TOKEN_STRING_LIT, start, i - start)
+            continue
+        end
+
+        // char literals
+        if src[i] == '\'':
+            start: int = i
+            i = i + 1
+            while src[i] != '\'' and src[i] != '\0':
+                i = i + 1
+            end
+            i = i + 1
+            add_token(ts, TOKEN_CHAR_LIT, start, i - start)
+            continue
+        end
+
+        // semicolon
+        if src[i] == ';':
+            add_token(ts, TOKEN_SEMI, i, 1)
+            i = i + 1
+            continue
+        end
+
+
+        // numbers
+        if isalpha(src[i] or src[i] == '_'):
+            start: int = i
+
+            while (isalnum(src[i] or src[i] == '_')):
+                i = i + 1
+            end
+
+            length: int = i - start
+
+            if length == 2 and not strncmp(src + start, "if", 2):
+                add_token(ts, TOKEN_IF, start, length)
+            else if length == 2 and not strncmp(src + start, "as", 2):
+                add_token(ts, TOKEN_AS, start, length)
+            else if length == 2 and not strncmp(src + start, "in", 2):
+                add_token(ts, TOKEN_IN, start, length)
+            else if length == 2 and not strncmp(src + start, "or", 2):
+                add_token(ts, TOKEN_OR, start, length)
+
+            else if length == 3 and not strncmp(src + start, "int", 3):
+                add_token(ts, TOKEN_INT, start, length)
+            else if length == 3 and not strncmp(src + start, "end", 3):
+                add_token(ts, TOKEN_END, start, length)
+            else if length == 3 and not strncmp(src + start, "new", 3):
+                add_token(ts, TOKEN_NEW, start, length)
+            else if length == 3 and not strncmp(src + start, "not", 3):
+                add_token(ts, TOKEN_NOT, start, length)
+            else if length == 3 and not strncmp(src + start, "and", 3):
+                add_token(ts, TOKEN_AND, start, length)
+            else if length == 3 and not strncmp(src + start, "for", 3):
+                add_token(ts, TOKEN_FOR, start, length)
+
+            else if length == 4 and not strncmp(src + start, "null", 4):
+                add_token(ts, TOKEN_NULL, start, length)
+            else if length == 4 and not strncmp(src + start, "char", 4):
+                add_token(ts, TOKEN_CHAR, start, length)
+            else if length == 4 and not strncmp(src + start, "bool", 4):
+                add_token(ts, TOKEN_BOOL, start, length)
+            else if length == 4 and not strncmp(src + start, "else", 4):
+                add_token(ts, TOKEN_ELSE, start, length)
+            else if length == 4 and not strncmp(src + start, "void", 4):
+                add_token(ts, TOKEN_VOID, start, length)
+            else if length == 4 and not strncmp(src + start, "prop", 4):
+                add_token(ts, TOKEN_PROP, start, length)
+
+            else if length == 5 and not strncmp(src + start, "while", 5):
+                add_token(ts, TOKEN_WHILE, start, length)
+            else if length == 5 and not strncmp(src + start, "prune", 5):
+                add_token(ts, TOKEN_PRUNE, start, length)
+            else if length == 5 and not strncmp(src + start, "print", 5):
+                add_token(ts, TOKEN_PRINT, start, length)
+            else if length == 5 and not strncmp(src + start, "float", 5):
+                add_token(ts, TOKEN_FLOAT, start, length)
+            else if length == 5 and not strncmp(src + start, "break", 5):
+                add_token(ts, TOKEN_BREAK, start, length)
+
+            else if length == 6 and not strncmp(src + start, "return", 6):
+                add_token(ts, TOKEN_RETURN, start, length)
+            else if length == 6 and not strncmp(src + start, "string", 6):
+                add_token(ts, TOKEN_STRING, start, length)
+            else if length == 6 and not strncmp(src + start, "sizeof", 6):
+                add_token(ts, TOKEN_SIZEOF, start, length)
+            else if length == 6 and not strncmp(src + start, "struct", 6):
+                add_token(ts, TOKEN_STRUCT, start, length)
+            else if length == 6 and not strncmp(src + start, "import", 6):
+                add_token(ts, TOKEN_IMPORT, start, length)
+            else if length == 6 and not strncmp(src + start, "double", 6):
+                add_token(ts, TOKEN_DOUBLE, start, length)
+
+            else if length == 6 and not strncmp(src + start, "continue", 8):
+                add_token(ts, TOKEN_CONTINUE, start, length)
+
+            else:
+                add_token(ts, TOKEN_IDENTIFIER, start, length)
+            end
+            continue
+
+            
+        end
+
+        // identifiers / keywords
+
+
+        // operators
+
+
+        // single char tokens
+
 
         i = i + 1
     end
 
     add_token(ts, TOKEN_EOF, i, 0)
+end
+
+
+@char token_kind_name(kind: int):
+    if kind == TOKEN_INT:               return "TOKEN_INT"
+    else if kind == TOKEN_FLOAT:        return "TOKEN_FLOAT";
+    else if kind == TOKEN_DOUBLE:       return "TOKEN_DOUBLE";
+    else if kind == TOKEN_VOID:         return "TOKEN_VOID";
+    else if kind == TOKEN_NULL:         return "TOKEN_NULL";
+    else if kind == TOKEN_BOOL:         return "TOKEN_BOOL";
+    else if kind == TOKEN_CHAR:         return "TOKEN_CHAR";
+    else if kind == TOKEN_STRING:       return "TOKEN_STRING";
+
+    else if kind == TOKEN_STRING_LIT:   return "TOKEN_STRING_LIT";
+    else if kind == TOKEN_CHAR_LIT:     return "TOKEN_CHAR_LIT";
+
+        // Identifiers 
+    else if kind == TOKEN_STRUCT:       return "TOKEN_STRUCT";
+    else if kind == TOKEN_IDENTIFIER:   return "TOKEN_IDENTIFIER";
+    else if kind == TOKEN_NUMBER:       return "TOKEN_NUMBER";
+
+        // Keywords 
+    else if kind == TOKEN_RETURN:       return "TOKEN_RETURN";
+    else if kind == TOKEN_CONTINUE:     return "TOKEN_CONTINUE";
+    else if kind == TOKEN_BREAK:        return "TOKEN_BREAK";
+    else if kind == TOKEN_WHILE:        return "TOKEN_WHILE";
+    else if kind == TOKEN_IF:           return "TOKEN_IF";
+    else if kind == TOKEN_ELSE:         return "TOKEN_ELSE";
+    else if kind == TOKEN_END:          return "TOKEN_END";
+    else if kind == TOKEN_NOT:          return "TOKEN_NOT";
+    else if kind == TOKEN_FOR:          return "TOKEN_FOR";
+    else if kind == TOKEN_IN:           return "TOKEN_IN";
+
+        // Import System 
+    else if kind == TOKEN_IMPORT:       return "TOKEN_IMPORT";
+    else if kind == TOKEN_PROP:         return "TOKEN_PROP";
+
+        // Memory Management 
+    else if kind == TOKEN_AS:           return "TOKEN_AS";
+    else if kind == TOKEN_NEW:          return "TOKEN_NEW";
+    else if kind == TOKEN_PRUNE:        return "TOKEN_PRUNE";
+    else if kind == TOKEN_SIZEOF:       return "TOKEN_SIZEOF";
+
+        // stdio 
+    else if kind == TOKEN_PRINT:        return "TOKEN_PRINT";
+
+        // Operators 
+    else if kind == TOKEN_DOT:          return "TOKEN_DOT";
+    else if kind == TOKEN_DOTDOT:       return "TOKEN_DOTDOT";
+    else if kind == TOKEN_DOTDOTEQ:     return "TOKEN_DOTDOTEQ";
+    else if kind == TOKEN_PLUS:         return "TOKEN_PLUS";
+    else if kind == TOKEN_MINUS:        return "TOKEN_MINUS";
+    else if kind == TOKEN_TILDE:        return "TOKEN_TILDE";
+    else if kind == TOKEN_STAR:         return "TOKEN_STAR";
+    else if kind == TOKEN_SLASH:        return "TOKEN_SLASH";
+    else if kind == TOKEN_CARET:        return "TOKEN_CARET";
+    else if kind == TOKEN_AMPERSAND:    return "TOKEN_AMPERSAND";
+    else if kind == TOKEN_AT:           return "TOKEN_AT";
+    else if kind == TOKEN_ASSIGN:       return "TOKEN_ASSIGN";
+    else if kind == TOKEN_LT:           return "TOKEN_LT";
+    else if kind == TOKEN_GT:           return "TOKEN_GT";
+    else if kind == TOKEN_NEQ:          return "TOKEN_NEQ";
+    else if kind == TOKEN_GEQ:          return "TOKEN_GEQ";
+    else if kind == TOKEN_LEQ:          return "TOKEN_LEQ";
+    else if kind == TOKEN_COMP:         return "TOKEN_COMP";
+
+        // Punctuation 
+    else if kind == TOKEN_LPAREN:       return "TOKEN_LPAREN";
+    else if kind == TOKEN_RPAREN:       return "TOKEN_RPAREN";
+    else if kind == TOKEN_LBRACK:       return "TOKEN_LBRACK";
+    else if kind == TOKEN_RBRACK:       return "TOKEN_RBRACK";
+    else if kind == TOKEN_LBRACE:       return "TOKEN_LBRACE";
+    else if kind == TOKEN_RBRACE:       return "TOKEN_RBRACE";
+    else if kind == TOKEN_COLON:        return "TOKEN_COLON";
+    else if kind == TOKEN_COMMA:        return "TOKEN_COMMA";
+    else if kind == TOKEN_SEMI:         return "TOKEN_SEMI";
+
+    else if kind == TOKEN_NEWLINE:      return "TOKEN_NEWLINE";
+
+    else if kind == TOKEN_EOF:          return "TOKEN_EOF";
+
+    else:                               return "UNKNOWN";
+    end
+end
+
+void print_token(token: @Token, src: @char):
+    printf("%-18s\t", token_kind_name(token.kind))
+
+    if token.kind == TOKEN_IDENTIFIER or token.kind == TOKEN_NUMBER:
+       printf("\"%.*s\"", token.length, src + token.start)
+    end
+
+    print("\n")
+end
+
+prop void print_all_tokens(ts: @TokenStream, src: @char):
+    for i in 0..ts.count:
+        print_token(&ts.data[i], src)
+    end
 end
