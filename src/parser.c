@@ -265,6 +265,14 @@ AST* parse_primary(Parser* ps) {
             return deref;
         }
 
+        case TOKEN_AMPERSAND: {
+            parser_advance(ps);
+            AST* operand = parse_primary(ps);
+            AST* get = make_node(AST_GET_ADDR);
+            get->get_addr.operand = operand;
+            return get;
+        }
+
         case TOKEN_SIZEOF: {
             parser_advance(ps);
             parser_expect(ps, TOKEN_LPAREN);
@@ -290,17 +298,36 @@ AST* parse_primary(Parser* ps) {
 }
 
 AST* parse_return(Parser* ps) {
-    AST* node = make_node(AST_RETURN);
+    AST* node = make_node(AST_FLOW_CONTROL);
+    node->flow_ctrl.base = parser_peek(ps);
     parser_advance(ps);
 
     if (parser_peek(ps)->kind == TOKEN_NEWLINE ||
         parser_peek(ps)->kind == TOKEN_SEMI ||
         parser_peek(ps)->kind == TOKEN_EOF) {
-        node->ret.value = NULL;
+        node->flow_ctrl.value = NULL;
         return node;
     }
 
-    node->ret.value = parse_expr(ps, 0);
+    node->flow_ctrl.value = parse_expr(ps, 0);
+    return node;
+}
+
+AST* parse_continue(Parser* ps) {
+    AST* node = make_node(AST_FLOW_CONTROL);
+    node->flow_ctrl.value = NULL;
+    node->flow_ctrl.base = parser_peek(ps);
+    parser_advance(ps);
+
+    return node;
+}
+
+AST* parse_break(Parser* ps) {
+    AST* node = make_node(AST_FLOW_CONTROL);
+    node->flow_ctrl.value = NULL;
+    node->flow_ctrl.base = parser_peek(ps);
+    parser_advance(ps);
+
     return node;
 }
 
@@ -498,8 +525,10 @@ AST* parse_statement(Parser* ps) {
                     }
                 }
                 default:
-                    printf(RED "parse_statement: unexpected token after identifier: %s\n" RESET,
-                        token_kind_name(peek(ps->ts, ps->pos + 1)->kind));
+                    printf(RED "parse_statement: unexpected token after identifier: %s on line %d\n" RESET,
+                        token_kind_name(peek(ps->ts, ps->pos + 1)->kind),
+                        get_line(ps->src, parser_peek(ps)->start)
+                    );
                     exit(1);
             }
             break;
@@ -510,6 +539,10 @@ AST* parse_statement(Parser* ps) {
         case TOKEN_RETURN:
             return parse_return(ps);
             
+        case TOKEN_BREAK:
+            return parse_break(ps);
+        case TOKEN_CONTINUE:
+            return parse_continue(ps);
         case TOKEN_IF:
             return parse_if(ps, 0);
 

@@ -28,6 +28,8 @@ typedef enum {
     
     /* Keywords */
     TOKEN_RETURN,   // Return from block
+    TOKEN_CONTINUE, // To skip an iteration in a loop
+    TOKEN_BREAK,    // To stop a loop
     TOKEN_WHILE,    // While loop
     TOKEN_FOR,      // For loop
     TOKEN_IN,       // in

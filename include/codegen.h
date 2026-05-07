@@ -20,6 +20,8 @@ void gen_while(AST* ast, FILE* out, const char* src);
 void gen_for(AST* ast, FILE* out, const char* src);
 void gen_if(AST* ast, FILE* out, const char* src, int is_else_if);
 void gen_return(AST* ast, FILE* out, const char* src);
+void gen_continue(AST* ast, FILE* out, const char* src);
+void gen_break(AST* ast, FILE* out, const char* src);
 void gen_import(AST* ast, FILE* out, const char* src);
 
 void emit_includes(AST* ast, FILE* out, const char* src, TokenStream* ts);

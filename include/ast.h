@@ -4,7 +4,7 @@
 #include "lexer.h"
 
 typedef enum {
-    AST_RETURN,     // return a number
+    AST_FLOW_CONTROL,// return, break, continue
     AST_LITERAL,    // A value
     AST_FLOAT_LIT,  // A decimal value
     AST_CAST,       // Cast a type
@@ -29,6 +29,7 @@ typedef enum {
     AST_SIZEOF,     // sizeof(x)
     AST_DEREF_ASS,  // @ptr = 42
     AST_DEREF,      // @ptr
+    AST_GET_ADDR,   // &ptr
 
     /* Import System */
     AST_IMPORT,     // import "custom.flo"
@@ -133,6 +134,10 @@ typedef struct AST {
         struct {
             struct AST* operand;
         } deref;
+
+        struct {
+            struct AST* operand;
+        } get_addr;
 
 
         /* stdio */
@@ -245,8 +250,9 @@ typedef struct AST {
 
         /* Return */
         struct {
+            Token* base;
             struct AST* value;
-        } ret;
+        } flow_ctrl;
 
         
         

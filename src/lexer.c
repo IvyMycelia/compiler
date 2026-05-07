@@ -21,8 +21,10 @@ void lex(const char* src, TokenStream* ts) {
 
         if (src[i] == '\"') {
             int start = i++;
-            while (src[i] != '"' && src[i] != '\0')
+            while (src[i] != '"' && src[i] != '\0') {
+                if (src[i] == '\\') i++;
                 i++;
+            }
             i++;
             add_token(ts, TOKEN_STRING_LIT, start, i - start);
             continue;
@@ -30,8 +32,10 @@ void lex(const char* src, TokenStream* ts) {
 
         if (src[i] == '\'') {
             int start = i++;
-            while (src[i] != '\'' && src[i] != '\0')
+            while (src[i] != '\'' && src[i] != '\0') {
+                if (src[i] == '\\') i++;
                 i++;
+            }
             i++;
             add_token(ts, TOKEN_CHAR_LIT, start, i - start);
             continue;
@@ -105,6 +109,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_PRINT, start, length);
             else if (length == 5 && !strncmp(src + start, "float", 5))
                 add_token(ts, TOKEN_FLOAT, start, length);
+            else if (length == 5 && !strncmp(src + start, "break", 5))
+                add_token(ts, TOKEN_BREAK, start, length);
             else if (length == 6 && !strncmp(src + start, "return", 6))
                 add_token(ts, TOKEN_RETURN, start, length);
             else if (length == 6 && !strncmp(src + start, "string", 6))
@@ -117,6 +123,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_IMPORT, start, length);
             else if (length == 6 && !strncmp(src + start, "double", 6))
                 add_token(ts, TOKEN_DOUBLE, start, length);
+            else if (length == 8 && !strncmp(src + start, "continue", 8))
+                add_token(ts, TOKEN_CONTINUE, start, length);
             else
                 add_token(ts, TOKEN_IDENTIFIER, start, length);
             continue;
@@ -253,6 +261,8 @@ const char* token_kind_name(TokenKind kind) {
 
         /* Keywords */
         case TOKEN_RETURN:      return "TOKEN_RETURN";
+        case TOKEN_CONTINUE:    return "TOKEN_CONTINUE";
+        case TOKEN_BREAK:       return "TOKEN_BREAK";
         case TOKEN_WHILE:       return "TOKEN_WHILE";
         case TOKEN_IF:          return "TOKEN_IF";
         case TOKEN_ELSE:        return "TOKEN_ELSE";

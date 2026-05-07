@@ -37,7 +37,23 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_VAR_ASS:   gen_var_ass(ast, out, src);     break;
         case AST_WHILE:     gen_while(ast, out, src);       break;
         case AST_FOR:       gen_for(ast, out, src);         break;
-        case AST_RETURN:    gen_return(ast, out, src);      break;
+        case AST_FLOW_CONTROL:    
+            if (ast->flow_ctrl.base->kind == TOKEN_RETURN) {
+                gen_return(ast, out, src);
+                break;
+            } else if (ast->flow_ctrl.base->kind == TOKEN_CONTINUE) {
+                gen_continue(ast, out, src);
+                break;
+            } else if (ast->flow_ctrl.base->kind == TOKEN_BREAK) {
+                gen_break(ast, out, src);
+                break;
+            } else {
+                printf(RED "Unexpected token: %s for control flow at line %d\n" RESET, 
+                    token_kind_name(ast->flow_ctrl.base->kind), 
+                    get_line(src, ast->flow_ctrl.base->start)
+                );
+                exit(1);
+            }
         case AST_FUNC_CALL: 
             { 
                 gen_func_call(ast, out, src);   
@@ -228,6 +244,12 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
         case AST_DEREF:
             fprintf(out, "*(");
             gen_expr(ast->deref.operand, out, src);
+            fprintf(out, ")");
+            break;
+
+        case AST_GET_ADDR:
+            fprintf(out, "&(");
+            gen_expr(ast->get_addr.operand, out, src);
             fprintf(out, ")");
             break;
 
@@ -494,13 +516,23 @@ void gen_if(AST* ast, FILE* out, const char* src, int is_else_if) {
 
 void gen_return(AST* ast, FILE* out, const char* src) {
     // Emit: return n
-    if (ast->ret.value == NULL) 
+    if (ast->flow_ctrl.value == NULL) 
         fprintf(out, "return;");
     else {
         fprintf(out, "return ");
-        gen_expr(ast->ret.value, out, src);
+        gen_expr(ast->flow_ctrl.value, out, src);
         fprintf(out, ";\n");
     }
+}
+
+void gen_continue(AST* ast, FILE* out, const char* src) {
+    // Emit: continue;
+    fprintf(out, "continue;\n");
+}
+
+void gen_break(AST* ast, FILE* out, const char* src) {
+    // Emit: break;
+    fprintf(out, "break;\n");
 }
 
 /* Import Cache */
