@@ -445,7 +445,7 @@ void gen_struct(AST* ast, FILE* out, const char* src) {
         if (field->struct_field.type.array_size == -1)
             fprintf(out, "[]");
         else if (field->struct_field.type.array_size > 0)
-            fprintf(out, "[%d]", ast->struct_field.type.array_size);
+            fprintf(out, "[%d]", field->struct_field.type.array_size);
         else if (field->struct_field.type.arr_size_expr != NULL) {
             fprintf(out, "[");
             gen_expr(field->struct_field.type.arr_size_expr, out, src);
