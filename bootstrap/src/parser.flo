@@ -87,7 +87,7 @@ void parser_expect(ps: @Parser, kind: int):
 end    
 
 @TypeInfo parse_type(ps: @Parser):
-    type: @TypeInfo;
+    type: @TypeInfo = new TypeInfo;
     type.pointer_depth = 0;
     type.array_size = 0;
     type.arr_size_expr = NULL;

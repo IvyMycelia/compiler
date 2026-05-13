@@ -67,7 +67,7 @@ int main(argc: int, argv: @char[]):
             // Lexer
             print("Lexing...\n")
             lexer.lex(tokens, file)
-            lexer.print_all_tokens(tokens, file)
+            // lexer.print_all_tokens(tokens, file)
 
             printf("sizeof AST: %d\n", sizeof(AST))
             printf("sizeof Token: %d\n", sizeof(Token))
