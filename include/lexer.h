@@ -13,6 +13,7 @@ typedef enum {
     /* Types */
     TOKEN_STRING,       // Array of char (char*)
     TOKEN_STRUCT,       // Struct keyword
+    TOKEN_UNION,        // Union
     TOKEN_NULL,         // Empty value
 
     /* Unary Operations */

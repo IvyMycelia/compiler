@@ -69,6 +69,9 @@ int main(argc: int, argv: @char[]):
             lexer.lex(tokens, file)
             lexer.print_all_tokens(tokens, file)
 
+            printf("sizeof AST: %d\n", sizeof(AST))
+            printf("sizeof Token: %d\n", sizeof(Token))
+            printf("sizeof TokenStream: %d\n", sizeof(TokenStream))
 
             // Parser
             print("Parsing...\n")

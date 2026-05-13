@@ -16,6 +16,7 @@ void gen_func_call(AST* ast, FILE* out, const char* src);
 void gen_var_decl(AST* ast, FILE* out, const char* src);
 void gen_var_ass(AST* ast, FILE* out, const char* src);
 void gen_struct(AST* ast, FILE* out, const char* src);
+void gen_union(AST* ast, FILE* out, const char* src);
 void gen_while(AST* ast, FILE* out, const char* src);
 void gen_for(AST* ast, FILE* out, const char* src);
 void gen_if(AST* ast, FILE* out, const char* src, int is_else_if);

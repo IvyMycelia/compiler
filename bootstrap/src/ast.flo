@@ -12,44 +12,45 @@ AST_SUBSCRIPT:      int = 7     // arr[1]
 AST_STRUCT_LIT:     int = 8     // Struct literal {0, 1, 2 ..}
 AST_CHAR_LIT:       int = 9     // char literal 'a' 'B'
 AST_STRUCT_DEF:     int = 10    // Struct declaration
-AST_STRUCT_FIELD:   int = 11    // Struct field
-AST_DOT_ACCESS:     int = 12    // Struct access
-AST_BINARY_OP:      int = 13    // 0 + 0
+AST_UNION_DEF:      int = 11
+AST_STRUCT_FIELD:   int = 12    // Struct field
+AST_DOT_ACCESS:     int = 13    // Struct access
+AST_BINARY_OP:      int = 14    // 0 + 0
 
     //     === Unary ===
 
-AST_UNARY_NOT:      int = 14    // not x
-AST_UNARY_NEG:      int = 15    // *-1
+AST_UNARY_NOT:      int = 15    // not x
+AST_UNARY_NEG:      int = 16    // *-1
 
     // === Memory Management ===
 
-AST_NEW:            int = 16    // malloc(sizeof(t))
-AST_PRUNE:          int = 17    // free(mem)
-AST_SIZEOF:         int = 18    // sizeof(x)
-AST_DEREF_ASS:      int = 19    // @ptr = 42
-AST_DEREF:          int = 20    // @ptr
-AST_GET_ADDR:       int = 21    // &ptr
+AST_NEW:            int = 17    // malloc(sizeof(t))
+AST_PRUNE:          int = 18    // free(mem)
+AST_SIZEOF:         int = 19    // sizeof(x)
+AST_DEREF_ASS:      int = 20    // @ptr = 42
+AST_DEREF:          int = 21    // @ptr
+AST_GET_ADDR:       int = 22    // &ptr
 
     //  === Import System ===
 
-AST_IMPORT:         int = 22    // import "custom.flo"
-AST_PROP:           int = 23    // prop int test():
-AST_FORWARD:        int = 24    // forward <struct || func>
-AST_ALIAS_CALL:     int = 25    // Alias call: math.sqrt()
+AST_IMPORT:         int = 23    // import "custom.flo"
+AST_PROP:           int = 24    // prop int test():
+AST_FORWARD:        int = 25    // forward <struct || func>
+AST_ALIAS_CALL:     int = 26    // Alias call: math.sqrt()
 
-AST_VAR_DECL:       int = 26    // a: int
-AST_VAR_ASS:        int = 27    // a = temp
-AST_VAR_REF:        int = 28    // Reading a variable's value
-AST_FUNC_DEF:       int = 29    // int fib(n: int)
-AST_FUNC_CALL:      int = 30    // fib(5)
-AST_WHILE:          int = 31    // while i < n:
-AST_FOR:            int = 32    // for i in 0..=10
-AST_IF:             int = 33    // if conidtion
-AST_PARAM:          int = 34    // n: int in function signatures
+AST_VAR_DECL:       int = 27    // a: int
+AST_VAR_ASS:        int = 28    // a = temp
+AST_VAR_REF:        int = 29    // Reading a variable's value
+AST_FUNC_DEF:       int = 30    // int fib(n: int)
+AST_FUNC_CALL:      int = 31    // fib(5)
+AST_WHILE:          int = 32    // while i < n:
+AST_FOR:            int = 33    // for i in 0..=10
+AST_IF:             int = 34    // if conidtion
+AST_PARAM:          int = 35    // n: int in function signatures
     
     //     === stdio ===
     
-AST_PRINT:          int = 35    // print()
+AST_PRINT:          int = 36    // print()
 
     
 forward struct AST
@@ -233,7 +234,7 @@ struct func_def {
 struct func_params {
     name_start: int,
     name_length: int,
-    type: TypeInfo,
+    type: TypeInfo
 }
 
 struct func_call {
@@ -270,11 +271,7 @@ struct if_condition {
     else_branch: @AST,
 }
 
-struct AST {
-    kind: int,
-    next: @AST,     // Next statement,
-    value: int,     // For vals
-
+union NodeData {
     _cast:          cast,
     _float_lit:     float_lit,
     _char_lit:      char_lit,
@@ -308,4 +305,11 @@ struct AST {
     _while_loop:    while_loop,
     _for_loop:      for_loop,
     _if_condition:  if_condition
+}
+
+struct AST {
+    kind: int,
+    next: @AST,     // Next statement,
+    value: int,     // For vals
+    data: NodeData
 }

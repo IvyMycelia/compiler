@@ -23,6 +23,8 @@ void codegen(AST* ast, FILE* out, const char* src) {
             gen_func_def(curr, out, src);
         else if (curr->kind == AST_STRUCT_DEF)
             gen_struct(curr, out, src);
+        else if (curr->kind == AST_UNION_DEF)
+            gen_union(curr, out, src);
         else if (curr->kind == AST_PROP)
             gen_func_def(curr->prop.func, out, src);
         else if (curr->kind == AST_FORWARD)
@@ -203,10 +205,18 @@ void gen_expr(AST* ast, FILE* out, const char* src) {
 
         case AST_DOT_ACCESS:
             gen_expr(ast->dot_access.object, out, src);
-            fprintf(out, "->%.*s",
-                ast->dot_access.field_length,
-                src + ast->dot_access.field_start
-            );
+            int obj_kind = ast->dot_access.object->kind;
+            if (obj_kind == AST_DOT_ACCESS || obj_kind == AST_SUBSCRIPT)
+                fprintf(out, ".%.*s",
+                    ast->dot_access.field_length,
+                    src + ast->dot_access.field_start
+                );
+            else
+                fprintf(out, "->%.*s",
+                    ast->dot_access.field_length,
+                    src + ast->dot_access.field_start
+                );
+
             break;
 
         case AST_NEW:
@@ -453,6 +463,53 @@ void gen_struct(AST* ast, FILE* out, const char* src) {
     defined_structs[defined_count].name = strndup(src + ast->struct_def.name_start, ast->struct_def.name_length);
     defined_structs[defined_count].length = ast->struct_def.name_length;
     defined_count++;
+}
+
+static struct {
+    char* name;
+    int length;
+} defined_unions[256];
+static int defined_union_count = 0;
+
+void gen_union(AST* ast, FILE* out, const char* src) {
+    for (int i = 0; i < defined_union_count; i++) {
+        if (defined_unions[i].length == ast->union_def.name_length &&
+            !strncmp(defined_unions[i].name, ast->union_def.name_start + src, ast->union_def.name_length))
+            return;
+    }
+    fprintf(out, "\n\ntypedef union %.*s {\n",
+        ast->union_def.name_length,
+        src + ast->union_def.name_start
+    );
+    AST* field = ast->union_def.fields;
+    while (field != NULL) {
+        typeinfo_to_string(field->struct_field.type, out, src);
+        fprintf(out, " %.*s",
+            field->union_def.name_length,
+            src + field->union_def.name_start
+        );
+
+        if (field->struct_field.type.array_size == -1)
+            fprintf(out, "[]");
+        else if (field->struct_field.type.array_size > 0)
+            fprintf(out, "[%d]", ast->struct_field.type.array_size);
+        else if (field->struct_field.type.arr_size_expr != NULL) {
+            fprintf(out, "[");
+            gen_expr(field->struct_field.type.arr_size_expr, out, src);
+            fprintf(out, "]");
+        }
+
+        fprintf(out, ";\n");
+        field = field->next;
+    }
+    fprintf(out, "} %.*s;\n",
+        ast->union_def.name_length,
+        src + ast->union_def.name_start
+    );
+
+    defined_structs[defined_union_count].name = strndup(src + ast->union_def.name_start, ast->union_def.name_length);
+    defined_structs[defined_union_count].length = ast->union_def.name_length;
+    defined_union_count++;
 }
 
 void gen_while(AST* ast, FILE* out, const char* src) {
@@ -737,6 +794,8 @@ void gen_import(AST* ast, FILE* out, const char* src) {
             gen_import(curr, out, imported_src);
         else if (curr->kind == AST_STRUCT_DEF)
             gen_struct(curr, out, imported_src);
+        else if (curr->kind == AST_UNION_DEF)
+            gen_union(curr, out, imported_src);
         else if (curr->kind == AST_PROP) {
             if (ast->import.has_alias)
                 gen_func_def_aliased(curr->prop.func, out, imported_src,

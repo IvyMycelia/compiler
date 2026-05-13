@@ -165,14 +165,14 @@ end
 @AST parse_var_decl(ps: @Parser):
     node: @AST = make_node(AST_VAR_DECL);
     tok: @Token = parser_advance(ps);
-    node._var_decl.name_start = tok.start;
-    node._var_decl.name_length = tok.length;
+    node.data._var_decl.name_start = tok.start;
+    node.data._var_decl.name_length = tok.length;
     parser_expect(ps, TOKEN_COLON);
-    node._var_decl.type = @parse_type(ps);
+    node.data._var_decl.type = @parse_type(ps);
     
     if parser_peek(ps).kind == TOKEN_ASSIGN:
         parser_advance(ps);
-        node._var_decl.value = parse_expr(ps, 0);
+        node.data._var_decl.value = parse_expr(ps, 0);
     end
     return node;
 end
@@ -180,18 +180,18 @@ end
 @AST parse_var_ass(ps: @Parser):
     node: @AST = make_node(AST_VAR_ASS);
     tok: @Token = parser_advance(ps);
-    node._var_ass.name_start = tok.start;
-    node._var_ass.name_length = tok.length;
+    node.data._var_ass.name_start = tok.start;
+    node.data._var_ass.name_length = tok.length;
     parser_expect(ps, TOKEN_ASSIGN);
-    node._var_ass.value = parse_expr(ps, 0);
+    node.data._var_ass.value = parse_expr(ps, 0);
     return node;
 end
 
 @AST parse_subscript_ass(ps: @Parser):
     name: @Token = parser_advance(ps);
     arr_ref: @AST = make_node(AST_VAR_REF);
-    arr_ref._var_ref.name_start = name.start;
-    arr_ref._var_ref.name_length = name.length;
+    arr_ref.data._var_ref.name_start = name.start;
+    arr_ref.data._var_ref.name_length = name.length;
             
     parser_expect(ps, TOKEN_LBRACK);
     idx: @AST = parse_expr(ps, 0);
@@ -199,9 +199,9 @@ end
     parser_expect(ps, TOKEN_ASSIGN);
     val: @AST = parse_expr(ps, 0);
     sub: @AST = make_node(AST_SUBSCRIPT);
-    sub._subscript.array = arr_ref;
-    sub._subscript.index = idx;
-    sub._subscript.value = val;
+    sub.data._subscript.array = arr_ref;
+    sub.data._subscript.index = idx;
+    sub.data._subscript.value = val;
     return sub;
 end
 
@@ -211,22 +211,22 @@ end
 
 @AST parse_return(ps: @Parser):
     node: @AST = make_node(AST_FLOW_CONTROL);
-    node._flow_ctrl.base = parser_peek(ps);
+    node.data._flow_ctrl.base = parser_peek(ps);
     parser_advance(ps);
 
     if parser_peek(ps).kind == TOKEN_NEWLINE or parser_peek(ps).kind == TOKEN_SEMI or parser_peek(ps).kind == TOKEN_EOF:
-        node._flow_ctrl.value = NULL;
+        node.data._flow_ctrl.value = NULL;
         return node;
     end
 
-    node._flow_ctrl.value = parse_expr(ps, 0);
+    node.data._flow_ctrl.value = parse_expr(ps, 0);
     return node;
 end
 
 @AST parse_continue(ps: @Parser):
     node: @AST = make_node(AST_FLOW_CONTROL);
-    node._flow_ctrl.value = NULL;
-    node._flow_ctrl.base = parser_peek(ps);
+    node.data._flow_ctrl.value = NULL;
+    node.data._flow_ctrl.base = parser_peek(ps);
     parser_advance(ps);
 
     return node;
@@ -234,8 +234,8 @@ end
 
 @AST parse_break(ps: @Parser):
     node: @AST = make_node(AST_FLOW_CONTROL);
-    node._flow_ctrl.value = NULL;
-    node._flow_ctrl.base = parser_peek(ps);
+    node.data._flow_ctrl.value = NULL;
+    node.data._flow_ctrl.base = parser_peek(ps);
     parser_advance(ps);
 
     return node;
@@ -244,7 +244,7 @@ end
 @AST parse_while(ps: @Parser):
     node: @AST = make_node(AST_WHILE);
     parser_expect(ps, TOKEN_WHILE);
-    node._while_loop.condition = parse_expr(ps, 0);
+    node.data._while_loop.condition = parse_expr(ps, 0);
     parser_expect(ps, TOKEN_COLON);
     body_head: @AST = NULL;
     body_tail: @AST = NULL;
@@ -262,7 +262,7 @@ end
         body_tail = statement;
     end
     parser_expect(ps, TOKEN_END);
-    node._while_loop.body = body_head;
+    node.data._while_loop.body = body_head;
 
     return node;
 end
@@ -270,7 +270,7 @@ end
 @AST parse_if(ps: @Parser, is_elf_if: int):
     node: @AST = make_node(AST_IF);
     parser_expect(ps, TOKEN_IF);
-    node._if_condition.condition = parse_expr(ps, 0);
+    node.data._if_condition.condition = parse_expr(ps, 0);
     parser_expect(ps, TOKEN_COLON);
 
     body_head: @AST = NULL;
@@ -288,14 +288,14 @@ end
         end
         body_tail = statement;
     end
-    node._if_condition.body = body_head;
+    node.data._if_condition.body = body_head;
     if parser_peek(ps).kind == TOKEN_ELSE:
         parser_advance(ps);
         if parser_peek(ps).kind == TOKEN_IF:
-            node._if_condition.else_branch = parse_if(ps, 1);
+            node.data._if_condition.else_branch = parse_if(ps, 1);
         else:
             else_node: @AST = make_node(AST_IF);
-            else_node._if_condition.condition = NULL;
+            else_node.data._if_condition.condition = NULL;
             parser_expect(ps, TOKEN_COLON);
             else_body_head: @AST = NULL;
             else_body_tail: @AST = NULL;
@@ -312,8 +312,8 @@ end
                 end
                 else_body_tail = statement;
             end
-            else_node._if_condition.body = else_body_head;
-            node._if_condition.else_branch = else_node;
+            else_node.data._if_condition.body = else_body_head;
+            node.data._if_condition.else_branch = else_node;
         end
     end
     if not is_elf_if:
@@ -331,22 +331,22 @@ end
         printf("Expected loop variable after for, got %s\n", token_kind_name(var.kind));
         exit(1);
     end
-    node._for_loop.var_start = var.start;
-    node._for_loop.var_length = var.length;
+    node.data._for_loop.var_start = var.start;
+    node.data._for_loop.var_length = var.length;
 
     parser_expect(ps, TOKEN_IN);
     from: @AST = parse_expr(ps, 0);
-    node._for_loop.from = from;
+    node.data._for_loop.from = from;
 
     op_range: @Token = parser_advance(ps);
     if op_range.kind != TOKEN_DOTDOT and op_range.kind != TOKEN_DOTDOTEQ:
         printf("Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range.kind));
         exit(1);
     end
-    node._for_loop.inclusive = op_range.kind == TOKEN_DOTDOTEQ;
+    node.data._for_loop.inclusive = op_range.kind == TOKEN_DOTDOTEQ;
 
     to: @AST = parse_expr(ps, 0);
-    node._for_loop.to = to;
+    node.data._for_loop.to = to;
 
     parser_expect(ps, TOKEN_COLON);
 
@@ -366,7 +366,7 @@ end
         body_tail = statement;
     end
     parser_expect(ps, TOKEN_END);
-    node._for_loop.body = body_head;
+    node.data._for_loop.body = body_head;
     
     return node;
 end
@@ -381,8 +381,8 @@ end
     if parser_peek(ps).kind == TOKEN_AS:
         parser_advance(ps);
         cast: @AST = make_node(AST_CAST);
-        cast._cast.value = left;
-        cast._cast.type = @parse_type(ps);
+        cast.data._cast.value = left;
+        cast.data._cast.type = @parse_type(ps);
         left = cast;
     end
 
@@ -390,9 +390,9 @@ end
         op: @Token = parser_advance(ps);
         right: @AST = parse_expr(ps, get_precedence(op.kind));
         bin: @AST = make_node(AST_BINARY_OP);
-        bin._binary.left = left;
-        bin._binary.right = right;
-        bin._binary.op = op.kind;
+        bin.data._binary.left = left;
+        bin.data._binary.right = right;
+        bin.data._binary.op = op.kind;
         left = bin;
     end
     return left;
@@ -443,24 +443,24 @@ end
         parser_advance(ps);
         node: @AST = make_node(AST_PRINT);
         parser_expect(ps, TOKEN_LPAREN);
-        node._print.value = parse_expr(ps, 0);
+        node.data._print.value = parse_expr(ps, 0);
         parser_expect(ps, TOKEN_RPAREN);
         return node;
 
     else if parser_peek(ps).kind ==  TOKEN_PRUNE:
             parser_advance(ps);
             node: @AST = make_node(AST_PRUNE);
-            node._prune_free.ptr = parse_expr(ps, 0);
+            node.data._prune_free.ptr = parse_expr(ps, 0);
             return node;
 
     else if parser_peek(ps).kind ==  TOKEN_AT:
             parser_advance(ps);
             node: @AST = make_node(AST_DEREF_ASS);
             name: @Token = parser_advance(ps);
-            node._deref_ass.name_length = name.length;
-            node._deref_ass.name_start = name.start;
+            node.data._deref_ass.name_length = name.length;
+            node.data._deref_ass.name_start = name.start;
             parser_expect(ps, TOKEN_ASSIGN);
-            node._deref_ass.value = parse_expr(ps, 0);
+            node.data._deref_ass.value = parse_expr(ps, 0);
             return node;
             
     else:
@@ -478,9 +478,9 @@ end
                 parser_advance(ps);
                 field: @Token = parser_advance(ps);
                 dot: @AST = make_node(AST_DOT_ACCESS);
-                dot._dot_access.object = node;
-                dot._dot_access.field_length = field.length;
-                dot._dot_access.field_start = field.start;
+                dot.data._dot_access.object = node;
+                dot.data._dot_access.field_length = field.length;
+                dot.data._dot_access.field_start = field.start;
                 return dot;
             end
             return node;
@@ -491,14 +491,14 @@ end
         tok: @Token = parser_peek(ps);
         parser_advance(ps);
         node: @AST = make_node(AST_VAR_REF);
-        node._var_ref.name_start = tok.start;
-        node._var_ref.name_length = tok.length;
+        node.data._var_ref.name_start = tok.start;
+        node.data._var_ref.name_length = tok.length;
 
         if parser_peek(ps).kind == TOKEN_AT:
             parser_advance(ps);
             operand: @AST = parse_primary(ps);
             drf: @AST = make_node(AST_DEREF);
-            drf._unary.operand = operand;
+            drf.data._unary.operand = operand;
             return drf;
         end
 
@@ -507,17 +507,17 @@ end
                 parser_advance(ps);
                 field: @Token = parser_advance(ps);
                 dot: @AST = make_node(AST_DOT_ACCESS);
-                dot._dot_access.object = node;
-                dot._dot_access.field_start = field.start;
-                dot._dot_access.field_length = field.length;
+                dot.data._dot_access.object = node;
+                dot.data._dot_access.field_start = field.start;
+                dot.data._dot_access.field_length = field.length;
                 node = dot;
             else if parser_peek(ps).kind == TOKEN_LBRACK:
                 parser_advance(ps);
                 idx: @AST = parse_expr(ps, 0);
                 parser_expect(ps, TOKEN_RBRACK);
                 sub: @AST = make_node(AST_SUBSCRIPT);
-                sub._subscript.array = node;
-                sub._subscript.index = idx;
+                sub.data._subscript.array = node;
+                sub.data._subscript.index = idx;
                 node = sub;
             end
         end
@@ -532,8 +532,8 @@ end
 
     else if parser_peek(ps).kind == TOKEN_FLOAT_LIT:
         lit: @AST = make_node(AST_FLOAT_LIT);
-        lit._float_lit.start = parser_peek(ps).start;
-        lit._float_lit.length = parser_peek(ps).length;
+        lit.data._float_lit.start = parser_peek(ps).start;
+        lit.data._float_lit.length = parser_peek(ps).length;
         parser_advance(ps);
         return lit;
 
@@ -544,8 +544,8 @@ end
 
     else if parser_peek(ps).kind == TOKEN_STRING_LIT:
         str: @AST = make_node(AST_STRING_LIT);
-        str._string.str_start = parser_peek(ps).start;
-        str._string.str_length = parser_peek(ps).length;
+        str.data._string.str_start = parser_peek(ps).start;
+        str.data._string.str_length = parser_peek(ps).length;
         parser_advance(ps);
         return str;
 
@@ -569,7 +569,7 @@ end
         end
 
         parser_expect(ps, TOKEN_RBRACK);
-        arr._array.elements = elem_head;
+        arr.data._array.elements = elem_head;
         return arr;
 
     else if parser_peek(ps).kind == TOKEN_LBRACE:
@@ -592,7 +592,7 @@ end
         end
 
         parser_expect(ps, TOKEN_RBRACE);
-        strct_lit._struct_lit.elements = struct_head;
+        strct_lit.data._struct_lit.elements = struct_head;
         return strct_lit;
 
     else if parser_peek(ps).kind == TOKEN_LPAREN:
@@ -604,49 +604,49 @@ end
     else if parser_peek(ps).kind == TOKEN_NEW:
         parser_advance(ps);
         new_node: @AST = make_node(AST_NEW);
-        new_node._new_alloc.type = @parse_type(ps);
+        new_node.data._new_alloc.type = @parse_type(ps);
         return new_node;
 
     else if parser_peek(ps).kind == TOKEN_NOT:
         parser_advance(ps);
         operand: @AST = parse_primary(ps);
         unry: @AST = make_node(AST_UNARY_NOT);
-        unry._unary.operand = operand;
+        unry.data._unary.operand = operand;
         return unry;
 
     else if parser_peek(ps).kind == TOKEN_MINUS:
         parser_advance(ps);
         operand: @AST = parse_primary(ps);
         unry: @AST = make_node(AST_UNARY_NEG);
-        unry._unary.operand = operand;
+        unry.data._unary.operand = operand;
         return unry;
 
     else if parser_peek(ps).kind == TOKEN_AT:
         parser_advance(ps);
         operand: @AST = parse_primary(ps);
         deref: @AST = make_node(AST_DEREF);
-        deref._deref.operand = operand;
+        deref.data._deref.operand = operand;
         return deref;
 
     else if parser_peek(ps).kind == TOKEN_AMPERSAND:
         parser_advance(ps);
         operand: @AST = parse_primary(ps);
         get: @AST = make_node(AST_GET_ADDR);
-        get._get_addr.operand = operand;
+        get.data._get_addr.operand = operand;
         return get;
 
     else if parser_peek(ps).kind == TOKEN_SIZEOF:
         parser_advance(ps);
         parser_expect(ps, TOKEN_LPAREN);
         node: @AST = make_node(AST_SIZEOF);
-        node._size_of.type = @parse_type(ps);
+        node.data._size_of.type = @parse_type(ps);
         parser_expect(ps, TOKEN_RPAREN);
         return node;
 
     else if parser_peek(ps).kind == TOKEN_CHAR_LIT:
         node: @AST = make_node(AST_CHAR_LIT);
-        node._char_lit.start = parser_peek(ps).start;
-        node._char_lit.length = parser_peek(ps).length;
+        node.data._char_lit.start = parser_peek(ps).start;
+        node.data._char_lit.length = parser_peek(ps).length;
         parser_advance(ps);
         return node;
 
@@ -662,11 +662,11 @@ end
 
 @AST parse_func_def(ps: @Parser):
     node: @AST = make_node(AST_FUNC_DEF);
-    node._func_def.return_type = @parse_type(ps);
+    node.data._func_def.return_type = @parse_type(ps);
     
     name: @Token = parser_advance(ps);
-    node._func_def.name_start = name.start;
-    node._func_def.name_length = name.length;
+    node.data._func_def.name_start = name.start;
+    node.data._func_def.name_length = name.length;
 
     // Set parameters of function
     parser_expect(ps, TOKEN_LPAREN);
@@ -688,7 +688,7 @@ end
     end
 
     parser_expect(ps, TOKEN_RPAREN);
-    node._func_def.params = param_head;
+    node.data._func_def.params = param_head;
     
     // Function body
     parser_expect(ps, TOKEN_COLON);
@@ -709,7 +709,7 @@ end
         body_tail = statement;
     end
     parser_expect(ps, TOKEN_END);
-    node._func_def.body = body_head;
+    node.data._func_def.body = body_head;
 
     return node;
 end
@@ -717,8 +717,8 @@ end
 @AST parse_func_call(ps: @Parser):
     node: @AST = make_node(AST_FUNC_CALL);
     name: @Token = parser_advance(ps);
-    node._func_call.name_start = name.start;
-    node._func_call.name_length = name.length;
+    node.data._func_call.name_start = name.start;
+    node.data._func_call.name_length = name.length;
     parser_expect(ps, TOKEN_LPAREN);
 
     arg_head: @AST = NULL;
@@ -737,20 +737,20 @@ end
         end
     end
     parser_expect(ps, TOKEN_RPAREN);
-    node._func_call.args = arg_head;
+    node.data._func_call.args = arg_head;
     return node;
 end
 
 @AST parse_alias_call(ps: @Parser):
     node: @AST = make_node(AST_ALIAS_CALL);
     alias: @Token = parser_advance(ps);
-    node._alias_call.alias_start = alias.start;
-    node._alias_call.alias_length = alias.length;
+    node.data._alias_call.alias_start = alias.start;
+    node.data._alias_call.alias_length = alias.length;
     parser_expect(ps, TOKEN_DOT);
 
     func: @Token = parser_advance(ps);
-    node._alias_call.func_start = func.start;
-    node._alias_call.func_length = func.length;
+    node.data._alias_call.func_start = func.start;
+    node.data._alias_call.func_length = func.length;
     parser_expect(ps, TOKEN_LPAREN);
 
     arg_head: @AST = NULL;
@@ -769,17 +769,17 @@ end
     end
     parser_expect(ps, TOKEN_RPAREN);
 
-    node._alias_call.args = arg_head;
+    node.data._alias_call.args = arg_head;
     return node;
 end
 
 @AST parse_param(ps: @Parser):
     node: @AST = make_node(AST_PARAM);
     name: @Token = parser_advance(ps);
-    node._func_params.name_start = name.start;
-    node._func_params.name_length = name.length;
+    node.data._func_params.name_start = name.start;
+    node.data._func_params.name_length = name.length;
     parser_expect(ps, TOKEN_COLON);
-    node._func_params.type = @parse_type(ps);
+    node.data._func_params.type = @parse_type(ps);
     return node;
 end
 
@@ -793,8 +793,8 @@ end
     node: @AST = make_node(AST_STRUCT_DEF);
 
     name: @Token = parser_advance(ps);
-    node._struct_def.name_start = name.start;
-    node._struct_def.name_length = name.length;
+    node.data._struct_def.name_start = name.start;
+    node.data._struct_def.name_length = name.length;
 
     parser_expect(ps, TOKEN_LBRACE);
 
@@ -809,10 +809,10 @@ end
         end
         field: @AST = make_node(AST_STRUCT_FIELD);
         fname: @Token = parser_advance(ps);
-        field._struct_field.name_start = fname.start;
-        field._struct_field.name_length = fname.length;
+        field.data._struct_field.name_start = fname.start;
+        field.data._struct_field.name_length = fname.length;
         parser_expect(ps, TOKEN_COLON);
-        field._struct_field.type = @parse_type(ps);
+        field.data._struct_field.type = @parse_type(ps);
         if field_head == NULL:
             field_head = field;
         else:
@@ -821,7 +821,46 @@ end
         field_tail = field;
     end
     parser_expect(ps, TOKEN_RBRACE);
-    node._struct_def.fields = field_head;
+    node.data._struct_def.fields = field_head;
+
+    return node;
+end
+
+@AST parse_union(ps: @Parser):
+    parser_expect(ps, TOKEN_UNION);
+
+    node: @AST = make_node(AST_UNION_DEF);
+
+    name: @Token = parser_advance(ps);
+    node.data._struct_def.name_start = name.start;
+    node.data._struct_def.name_length = name.length;
+
+    parser_expect(ps, TOKEN_LBRACE);
+
+    field_head: @AST = NULL;
+    field_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_RBRACE:
+        while parser_peek(ps).kind == TOKEN_NEWLINE or parser_peek(ps).kind == TOKEN_COMMA or parser_peek(ps).kind == TOKEN_SEMI:
+            parser_advance(ps);
+        end
+        if parser_peek(ps).kind == TOKEN_RBRACE:
+            break;
+        end
+        field: @AST = make_node(AST_STRUCT_FIELD);
+        fname: @Token = parser_advance(ps);
+        field.data._struct_field.name_start = fname.start;
+        field.data._struct_field.name_length = fname.length;
+        parser_expect(ps, TOKEN_COLON);
+        field.data._struct_field.type = @parse_type(ps);
+        if field_head == NULL:
+            field_head = field;
+        else:
+            field_tail.next = field;
+        end
+        field_tail = field;
+    end
+    parser_expect(ps, TOKEN_RBRACE);
+    node.data._struct_def.fields = field_head;
 
     return node;
 end
@@ -833,9 +872,9 @@ end
         parser_advance(ps);
         val: @AST = parse_expr(ps, 0);
         if expr.kind == AST_DOT_ACCESS:
-            expr._dot_access.value = val;
+            expr.data._dot_access.value = val;
         else if expr.kind == AST_SUBSCRIPT:
-            expr._subscript.value = val;
+            expr.data._subscript.value = val;
         else:
             printf("Invalid assignment target at line: %d\n", get_line(ps.src, parser_peek(ps).start));
             exit(1);
@@ -856,44 +895,44 @@ end
         // system import: `import <stdlib>`
         parser_advance(ps);
         path: @Token = parser_advance(ps);
-        node._import.path_start = path.start;
-        node._import.path_length = path.length;
+        node.data._import.path_start = path.start;
+        node.data._import.path_length = path.length;
 
         parser_expect(ps, TOKEN_GT);
-        node._import.is_system = 1;
+        node.data._import.is_system = 1;
         
         if parser_peek(ps).kind == TOKEN_AS:
             parser_advance(ps);
             alias: @Token = parser_advance(ps);
-            node._import.alias_start = alias.start;
-            node._import.alias_length = alias.length;
-            node._import.has_alias = 1;
+            node.data._import.alias_start = alias.start;
+            node.data._import.alias_length = alias.length;
+            node.data._import.has_alias = 1;
 
             ps.alias_start[ps.alias_count] = alias.start;
             ps.alias_lengths[ps.alias_count] = alias.length;
             ps.alias_count = ps.alias_count + 1;
         else:
-            node._import.has_alias = 0;
+            node.data._import.has_alias = 0;
         end
     else:
         // file import: `import "file.flo"`
         path: @Token = parser_advance(ps);
-        node._import.path_start = path.start;
-        node._import.path_length = path.length;
-        node._import.is_system = 0;
+        node.data._import.path_start = path.start;
+        node.data._import.path_length = path.length;
+        node.data._import.is_system = 0;
 
         if parser_peek(ps).kind == TOKEN_AS:
             parser_advance(ps);
             alias: @Token = parser_advance(ps);
-            node._import.alias_start = alias.start;
-            node._import.alias_length = alias.length;
-            node._import.has_alias = 1;
+            node.data._import.alias_start = alias.start;
+            node.data._import.alias_length = alias.length;
+            node.data._import.has_alias = 1;
 
             ps.alias_start[ps.alias_count] = alias.start;
             ps.alias_lengths[ps.alias_count] = alias.length;
             ps.alias_count = ps.alias_count + 1;
         else:
-            node._import.has_alias = 0;
+            node.data._import.has_alias = 0;
         end
     end
 
@@ -907,15 +946,15 @@ end
     if parser_peek(ps).kind == TOKEN_STRUCT:
         parser_advance(ps);
         name: @Token = parser_advance(ps);
-        node._forward.name_start = name.start;
-        node._forward.name_length = name.length;
-        node._forward.is_func = 0
+        node.data._forward.name_start = name.start;
+        node.data._forward.name_length = name.length;
+        node.data._forward.is_func = 0
     else:
-        node._forward.is_func = 1;
-        node._forward.return_type = @parse_type(ps);
+        node.data._forward.is_func = 1;
+        node.data._forward.return_type = @parse_type(ps);
         name: @Token = parser_advance(ps);
-        node._forward.name_start = name.start;
-        node._forward.name_length = name.length;
+        node.data._forward.name_start = name.start;
+        node.data._forward.name_length = name.length;
 
         parser_expect(ps, TOKEN_LPAREN);
         param_head: @AST = null;
@@ -933,7 +972,7 @@ end
             end
         end
         parser_expect(ps, TOKEN_RPAREN);
-        node._forward.params = param_head;
+        node.data._forward.params = param_head;
     end
     return node;
 end
@@ -961,7 +1000,7 @@ prop @AST parse(ps: @Parser):
             parser_advance(ps)
             func: @AST = parse_func_def(ps)
             prop_node: @AST = make_node(AST_PROP)
-            prop_node._prop.func = func
+            prop_node.data._prop.func = func
             node = prop_node
         else if parser_peek(ps).kind == TOKEN_IDENTIFIER and peek(ps.ts, ps.pos + 1).kind == TOKEN_COLON:
             node = parse_var_decl(ps)

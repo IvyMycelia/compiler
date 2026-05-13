@@ -15,6 +15,7 @@ typedef enum {
     AST_STRUCT_LIT, // Struct literal {0, 1, 2 ..}
     AST_CHAR_LIT,   // char literal 'a' 'B'
     AST_STRUCT_DEF, // Struct declaration
+    AST_UNION_DEF,  // Union declaration
     AST_STRUCT_FIELD, // Struct field
     AST_DOT_ACCESS, // Struct access
     AST_BINARY_OP,  // 0 + 0
@@ -184,6 +185,13 @@ typedef struct AST {
             int name_length;
             struct AST* fields;
         } struct_def;
+
+        struct {
+            int name_start;
+            int name_length;
+
+            struct AST* fields;
+        } union_def;
 
         struct {
             int name_start;

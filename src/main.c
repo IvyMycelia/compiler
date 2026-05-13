@@ -76,7 +76,9 @@ int main(int argc, char *argv[]) {
             lex(file, &tokens);
             // printf("lexed %d tokens\n", tokens.count);
             // print_all_tokens(&tokens, file);
-
+            printf("sizeof AST: %d\n", sizeof(AST));
+            printf("sizeof Token: %d\n", sizeof(Token));
+            printf("sizeof TokenStream: %d\n", sizeof(TokenStream));
             // parser
             Parser tree;
             init_parser(&tree, &tokens, file);

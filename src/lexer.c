@@ -111,6 +111,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_FLOAT, start, length);
             else if (length == 5 && !strncmp(src + start, "break", 5))
                 add_token(ts, TOKEN_BREAK, start, length);
+            else if (length == 5 && !strncmp(src + start, "union", 5))
+                add_token(ts, TOKEN_UNION, start, length);
             else if (length == 6 && !strncmp(src + start, "return", 6))
                 add_token(ts, TOKEN_RETURN, start, length);
             else if (length == 6 && !strncmp(src + start, "string", 6))

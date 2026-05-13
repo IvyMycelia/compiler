@@ -11,72 +11,73 @@ TOKEN_CHAR:         int = 5     // Characters (represented as integers)
 
 TOKEN_STRING:       int = 6     // Array of char (char*)
 TOKEN_STRUCT:       int = 7     // Struct keyword
-TOKEN_NULL:         int = 8     // Empty value
+TOKEN_UNION:        int = 8
+TOKEN_NULL:         int = 9     // Empty value
 
     // === Unary Operations ===
 
-TOKEN_TILDE:        int = 9     // bitwise operation
+TOKEN_TILDE:        int = 10     // bitwise operation
     
     // === Identifiers === 
 
-TOKEN_IDENTIFIER:   int = 10    // Variable & Function names
-TOKEN_NUMBER:       int = 11    // Number
-TOKEN_FLOAT_LIT:    int = 12    // Decimal number
-TOKEN_STRING_LIT:   int = 13    // String literal "Hello, World!"
-TOKEN_CHAR_LIT:     int = 14    // Char literal 'a'
-TOKEN_VOID:         int = 15    // Void (empty)
+TOKEN_IDENTIFIER:   int = 11    // Variable & Function names
+TOKEN_NUMBER:       int = 12    // Number
+TOKEN_FLOAT_LIT:    int = 13    // Decimal number
+TOKEN_STRING_LIT:   int = 14    // String literal "Hello, World!"
+TOKEN_CHAR_LIT:     int = 15    // Char literal 'a'
+TOKEN_VOID:         int = 16    // Void (empty)
     
     // === Keywords ===
 
-TOKEN_RETURN:       int = 16    // Return from block
-TOKEN_CONTINUE:     int = 61    // Skip a loop iteration
-TOKEN_BREAK:        int = 62    // Stop a loop
-TOKEN_WHILE:        int = 17    // While loop
-TOKEN_FOR:          int = 18    // For loop
-TOKEN_IN:           int = 19    // in
-TOKEN_END:          int = 20    // Close block
-TOKEN_IF:           int = 21    // If statement
-TOKEN_ELSE:         int = 22    // Else block
-TOKEN_NOT:          int = 23    // opposite of a value
-TOKEN_AND:          int = 24    // logical and
-TOKEN_OR:           int = 25    // logical or
+TOKEN_RETURN:       int = 17    // Return from block
+TOKEN_CONTINUE:     int = 18    // Skip a loop iteration
+TOKEN_BREAK:        int = 19    // Stop a loop
+TOKEN_WHILE:        int = 20    // While loop
+TOKEN_FOR:          int = 21    // For loop
+TOKEN_IN:           int = 22    // in
+TOKEN_END:          int = 23    // Close block
+TOKEN_IF:           int = 24    // If statement
+TOKEN_ELSE:         int = 25    // Else block
+TOKEN_NOT:          int = 26    // opposite of a value
+TOKEN_AND:          int = 27    // logical and
+TOKEN_OR:           int = 28    // logical or
 
     // === Import System ===
 
-TOKEN_IMPORT:       int = 26    // .flo imports
-TOKEN_FORWARD:      int = 27    // forward declarations
-TOKEN_AS:           int = 28    // Alias for imports
-TOKEN_PROP:         int = 29    // Propagating functions (making them public)
+TOKEN_IMPORT:       int = 29    // .flo imports
+TOKEN_FORWARD:      int = 30    // forward declarations
+TOKEN_AS:           int = 31    // Alias for imports
+TOKEN_PROP:         int = 32    // Propagating functions (making them public)
 
     // === Memory Management ===
 
-TOKEN_NEW:          int = 30    // Automatically allocate memory
-TOKEN_PRUNE:        int = 31    // Free memory
-TOKEN_SIZEOF:       int = 32    // sizeof(x)
+TOKEN_NEW:          int = 33    // Automatically allocate memory
+TOKEN_PRUNE:        int = 34    // Free memory
+TOKEN_SIZEOF:       int = 35    // sizeof(x)
     
     // === stdio ===
 
-TOKEN_PRINT:        int = 33    // Prints out to console
+TOKEN_PRINT:        int = 36    // Prints out to console
 
     // === Operators ===
 
-TOKEN_DOT:          int = 34    // Dot access
-TOKEN_DOTDOT:       int = 35    // ..
-TOKEN_DOTDOTEQ:     int = 36    // ..=
-TOKEN_PLUS:         int = 37    // Addition
-TOKEN_MINUS:        int = 38    // Subtraction
-TOKEN_STAR:         int = 39    // Multiplication
-TOKEN_CARET:        int = 40    // ^ for exponents (eventually)
-TOKEN_SLASH:        int = 41    // Division
-TOKEN_AMPERSAND:    int = 42    // Memory address
-TOKEN_AT:           int = 43    // Pointer / deref, @
-TOKEN_ASSIGN:       int = 44    // Assign value
-TOKEN_LT:           int = 45    // Less than
-TOKEN_GT:           int = 46    // Greater than
-TOKEN_COMP:         int = 47    // Comparison `==`
-TOKEN_NEQ:          int = 48    // !=
-TOKEN_GEQ:          int = 49    // >=
-TOKEN_LEQ:          int = 50    // <=
+TOKEN_DOT:          int = 37    // Dot access
+TOKEN_DOTDOT:       int = 38    // ..
+TOKEN_DOTDOTEQ:     int = 39    // ..=
+TOKEN_PLUS:         int = 40    // Addition
+TOKEN_MINUS:        int = 41    // Subtraction
+TOKEN_STAR:         int = 42    // Multiplication
+TOKEN_CARET:        int = 43    // ^ for exponents (eventually)
+TOKEN_SLASH:        int = 44    // Division
+TOKEN_AMPERSAND:    int = 45    // Memory address
+TOKEN_AT:           int = 46    // Pointer / deref, @
+TOKEN_ASSIGN:       int = 47    // Assign value
+TOKEN_LT:           int = 48    // Less than
+TOKEN_GT:           int = 49    // Greater than
+TOKEN_COMP:         int = 50    // Comparison `==`
+TOKEN_NEQ:          int = 51    // !=
+TOKEN_GEQ:          int = 52    // >=
+TOKEN_LEQ:          int = 53    // <=
 
     // === Punctuation ===
 

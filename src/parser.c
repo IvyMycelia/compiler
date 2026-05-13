@@ -671,6 +671,40 @@ AST* parse_struct(Parser* ps) {
     return node;
 }
 
+AST* parse_union(Parser* ps) {
+    parser_expect(ps, TOKEN_UNION);
+
+    AST* node = make_node(AST_UNION_DEF);
+
+    Token* name = parser_advance(ps);
+    node->struct_def.name_start = name->start;
+    node->struct_def.name_length = name->length;
+
+    parser_expect(ps, TOKEN_LBRACE);
+
+    AST* field_head = NULL;
+    AST* field_tail = NULL;
+    while (parser_peek(ps)->kind != TOKEN_RBRACE) {
+        while ( parser_peek(ps)->kind == TOKEN_NEWLINE ||
+                parser_peek(ps)->kind == TOKEN_COMMA ||
+                parser_peek(ps)->kind == TOKEN_SEMI) parser_advance(ps);
+        if (parser_peek(ps)->kind == TOKEN_RBRACE) break;
+        AST* field = make_node(AST_STRUCT_FIELD);
+        Token* fname = parser_advance(ps);
+        field->struct_field.name_start = fname->start;
+        field->struct_field.name_length = fname->length;
+        parser_expect(ps, TOKEN_COLON);
+        field->struct_field.type = parse_type(ps);
+        if (field_head == NULL) field_head = field;
+        else field_tail->next = field;
+        field_tail = field;
+    }
+    parser_expect(ps, TOKEN_RBRACE);
+    node->struct_def.fields = field_head;
+
+    return node;
+}
+
 AST* parse_forward(Parser* ps) {
     parser_expect(ps, TOKEN_FORWARD);
     AST* node = make_node(AST_FORWARD);
@@ -848,6 +882,8 @@ AST* parse(Parser* ps) {
             node = parse_import(ps);
         else if (parser_peek(ps)->kind == TOKEN_STRUCT)
             node = parse_struct(ps);
+        else if (parser_peek(ps)->kind == TOKEN_UNION)
+            node = parse_union(ps);
         else if (parser_peek(ps)->kind == TOKEN_PROP) {
             parser_advance(ps);
             AST* func = parse_func_def(ps);

@@ -34,6 +34,7 @@ AST*    parse_continue(Parser* ps);
 AST*    parse_break(Parser* ps);
 AST*    parse_param(Parser* ps);
 AST*    parse_struct(Parser* ps);
+AST*    parse_union(Parser* ps);
 AST*    parse_dot_ass(Parser* ps);
 AST*    parse_subscript_ass(Parser* ps);
 AST*    parse_import(Parser* ps);
