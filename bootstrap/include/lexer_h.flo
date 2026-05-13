@@ -81,19 +81,19 @@ TOKEN_LEQ:          int = 53    // <=
 
     // === Punctuation ===
 
-TOKEN_LPAREN:       int = 51    // Function handling
-TOKEN_RPAREN:       int = 52    // Function handling
-TOKEN_LBRACK:       int = 53    // Array handling
-TOKEN_RBRACK:       int = 54    // Array handling
-TOKEN_LBRACE:       int = 55    // Struct handling
-TOKEN_RBRACE:       int = 56    // Struct handling
-TOKEN_COLON:        int = 57    // Start block
-TOKEN_COMMA:        int = 58    // Separate parameters
-TOKEN_SEMI:         int = 59    // Semicolon for starting a new statement
+TOKEN_LPAREN:       int = 54    // Function handling
+TOKEN_RPAREN:       int = 55    // Function handling
+TOKEN_LBRACK:       int = 56    // Array handling
+TOKEN_RBRACK:       int = 57    // Array handling
+TOKEN_LBRACE:       int = 58    // Struct handling
+TOKEN_RBRACE:       int = 59    // Struct handling
+TOKEN_COLON:        int = 60    // Start block
+TOKEN_COMMA:        int = 61    // Separate parameters
+TOKEN_SEMI:         int = 62    // Semicolon for starting a new statement
 
-TOKEN_NEWLINE:      int = 60    // For determining next statement
+TOKEN_NEWLINE:      int = 63    // For determining next statement
 
-TOKEN_EOF:          int = 61    // End of File
+TOKEN_EOF:          int = 64    // End of File
 
 struct Token {
     kind: int,
