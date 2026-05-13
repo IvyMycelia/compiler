@@ -25,6 +25,8 @@ void codegen(AST* ast, FILE* out, const char* src) {
             gen_struct(curr, out, src);
         else if (curr->kind == AST_PROP)
             gen_func_def(curr->prop.func, out, src);
+        else if (curr->kind == AST_FORWARD)
+            gen_forward(curr, out, src);
         else if (curr->kind == AST_VAR_DECL)
             gen_var_decl(curr, out, src);
         curr = curr->next;
@@ -63,10 +65,17 @@ void gen_statement(AST* ast, FILE* out, const char* src) {
         case AST_IF:        gen_if(ast, out, src, 0);       break;
         case AST_DOT_ACCESS:
             gen_expr(ast->dot_access.object, out, src);
-            fprintf(out, "->%.*s",
-                ast->dot_access.field_length,
-                src + ast->dot_access.field_start
-            );
+            int obj_kind = ast->dot_access.object->kind;
+            if (obj_kind == AST_DOT_ACCESS || obj_kind == AST_SUBSCRIPT)
+                fprintf(out, ".%.*s",
+                    ast->dot_access.field_length,
+                    src + ast->dot_access.field_start
+                );
+            else
+                fprintf(out, "->%.*s",
+                    ast->dot_access.field_length,
+                    src + ast->dot_access.field_start
+                );
             if (ast->dot_access.value != NULL) {
                 fprintf(out, " = ");
                 gen_expr(ast->dot_access.value, out, src);
@@ -346,6 +355,11 @@ void gen_param(AST* param, FILE* out, const char* src) {
         fprintf(out, "[]");
     else if (param->func_params.type.array_size != 0)
         fprintf(out, "[%d]", param->func_params.type.array_size);
+    else if (param->func_params.type.arr_size_expr != NULL) {
+        fprintf(out, "[");
+        gen_expr(param->func_params.type.arr_size_expr, out, src);
+        fprintf(out, "]");
+    }
 }
 
 void gen_func_call(AST* ast, FILE* out, const char* src) {
@@ -373,7 +387,11 @@ void gen_var_decl(AST* ast, FILE* out, const char* src) {
         fprintf(out, "[]");
     else if (ast->var_decl.type.array_size != 0)
         fprintf(out, "[%d]", ast->var_decl.type.array_size);
-
+    else if (ast->var_decl.type.arr_size_expr != NULL) {
+        fprintf(out, "[");
+        gen_expr(ast->var_decl.type.arr_size_expr, out, src);
+        fprintf(out, "]");
+    }
     if (ast->var_decl.value != NULL) {
         fprintf(out, " = ");
         gen_expr(ast->var_decl.value, out, src);
@@ -390,21 +408,51 @@ void gen_var_ass(AST* ast, FILE* out, const char* src) {
     fprintf(out, ";\n");
 }
 
+static struct {
+    char* name;
+    int length;
+} defined_structs[256];
+static int defined_count = 0;
+
 void gen_struct(AST* ast, FILE* out, const char* src) {
-    fprintf(out, "\n\ntypedef struct {\n");
+    for (int i = 0; i < defined_count; i++) {
+        if (defined_structs[i].length == ast->struct_def.name_length &&
+            !strncmp(defined_structs[i].name, ast->struct_def.name_start + src, ast->struct_def.name_length))
+            return;
+    }
+    fprintf(out, "\n\ntypedef struct %.*s {\n",
+        ast->struct_def.name_length,
+        src + ast->struct_def.name_start
+    );
     AST* field = ast->struct_def.fields;
     while (field != NULL) {
         typeinfo_to_string(field->struct_field.type, out, src);
-        fprintf(out, " %.*s;\n",
+        fprintf(out, " %.*s",
             field->struct_field.name_length,
             src + field->struct_field.name_start
         );
+
+        if (field->struct_field.type.array_size == -1)
+            fprintf(out, "[]");
+        else if (field->struct_field.type.array_size > 0)
+            fprintf(out, "[%d]", ast->struct_field.type.array_size);
+        else if (field->struct_field.type.arr_size_expr != NULL) {
+            fprintf(out, "[");
+            gen_expr(field->struct_field.type.arr_size_expr, out, src);
+            fprintf(out, "]");
+        }
+
+        fprintf(out, ";\n");
         field = field->next;
     }
     fprintf(out, "} %.*s;\n",
         ast->struct_def.name_length,
         src + ast->struct_def.name_start
     );
+
+    defined_structs[defined_count].name = strndup(src + ast->struct_def.name_start, ast->struct_def.name_length);
+    defined_structs[defined_count].length = ast->struct_def.name_length;
+    defined_count++;
 }
 
 void gen_while(AST* ast, FILE* out, const char* src) {
@@ -487,7 +535,6 @@ void gen_for(AST* ast, FILE* out, const char* src) {
     fprintf(out, "}\n");
 }
 
-
 void gen_if(AST* ast, FILE* out, const char* src, int is_else_if) {
     if (is_else_if) {
         if (ast->if_condition.condition == NULL)
@@ -533,6 +580,27 @@ void gen_continue(AST* ast, FILE* out, const char* src) {
 void gen_break(AST* ast, FILE* out, const char* src) {
     // Emit: break;
     fprintf(out, "break;\n");
+}
+
+void gen_forward(AST* ast, FILE* out, const char* src) {
+    if (ast->forward.is_func) {
+        typeinfo_to_string(ast->forward.return_type, out, src);
+        fprintf(out, " %.*s(",
+            ast->forward.name_length,
+            src + ast->forward.name_start
+        );
+        AST* param = ast->forward.params;
+        while (param != NULL) {
+            gen_param(param, out, src);
+            if (param->next != NULL) fprintf(out, ", ");
+            param = param->next;
+        }
+        fprintf(out, ");\n");
+    } else
+        fprintf(out, "typedef struct %.*s %.*s;\n",
+            ast->forward.name_length, src + ast->forward.name_start,
+            ast->forward.name_length, src + ast->forward.name_start
+        );
 }
 
 /* Import Cache */
@@ -630,6 +698,8 @@ void gen_import(AST* ast, FILE* out, const char* src) {
             printf(RED "Could not import file: %s\n" RESET, path);
             exit(1);
         }
+
+        printf("Importing: %s\n", path);
         TokenStream* ts = malloc(sizeof(TokenStream));
         init_token_stream(ts);
         lex(imported_src, ts);
@@ -673,7 +743,9 @@ void gen_import(AST* ast, FILE* out, const char* src) {
                     alias, strlen(alias));
             else
                 gen_func_def(curr->prop.func, out, imported_src);
-        } else if (curr->kind == AST_FUNC_DEF)
+        } else if (curr->kind == AST_FORWARD)
+            gen_forward(curr, out, imported_src    );
+        else if (curr->kind == AST_FUNC_DEF)
             gen_func_def(curr, out, imported_src);
         else if (curr->kind == AST_VAR_DECL)
             gen_var_decl(curr, out, imported_src);

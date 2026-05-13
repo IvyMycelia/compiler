@@ -124,9 +124,20 @@ AST* parse_expr(Parser* ps, int min_prec) {
 AST* parse_primary(Parser* ps) {
     switch (parser_peek(ps)->kind) {
         case TOKEN_IDENTIFIER:
-            if (peek(ps->ts, ps->pos + 1)->kind == TOKEN_LPAREN)
-                return parse_func_call(ps);
-            if (peek(ps->ts, ps->pos + 1)->kind == TOKEN_DOT && 
+            if (peek(ps->ts, ps->pos + 1)->kind == TOKEN_LPAREN) {
+                AST* node = parse_func_call(ps);
+
+                if (parser_peek(ps)->kind == TOKEN_DOT) {
+                    parser_advance(ps);
+                    Token* field = parser_advance(ps);
+                    AST* dot = make_node(AST_DOT_ACCESS);
+                    dot->dot_access.object = node;
+                    dot->dot_access.field_length = field->length;
+                    dot->dot_access.field_start = field->start;
+                    return dot;
+                }
+                return node;
+            } if (peek(ps->ts, ps->pos + 1)->kind == TOKEN_DOT && 
                 is_alias(ps, parser_peek(ps)))
                 return parse_alias_call(ps);
             Token* tok = parser_peek(ps);
@@ -660,6 +671,40 @@ AST* parse_struct(Parser* ps) {
     return node;
 }
 
+AST* parse_forward(Parser* ps) {
+    parser_expect(ps, TOKEN_FORWARD);
+    AST* node = make_node(AST_FORWARD);
+
+    if (parser_peek(ps)->kind == TOKEN_STRUCT) {
+        parser_advance(ps);
+        Token* name = parser_advance(ps);
+        node->forward.name_start = name->start;
+        node->forward.name_length = name->length;
+        node->forward.is_func = 0;
+    } else {
+        node->forward.is_func = 1;
+        node->forward.return_type = parse_type(ps);
+        Token* name = parser_advance(ps);
+        node->forward.name_start = name->start;
+        node->forward.name_length = name->length;
+
+        parser_expect(ps, TOKEN_LPAREN);
+        AST* param_head = NULL;
+        AST* param_tail = NULL;
+        while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+            AST* param = parse_param(ps);
+            if (param_head == NULL) param_head = param;
+            else param_tail->next = param;
+            param_tail = param;
+            if (parser_peek(ps)->kind == TOKEN_COMMA)
+                parser_advance(ps);
+        }
+        parser_expect(ps, TOKEN_RPAREN);
+        node->forward.params = param_head;
+    }
+    return node;
+}
+
 AST* parse_import(Parser* ps) {
     parser_expect(ps, TOKEN_IMPORT);
     AST* node = make_node(AST_IMPORT);
@@ -737,9 +782,6 @@ AST* parse_alias_call(Parser* ps) {
     return node;
 }
 
-
-
-
 TypeInfo parse_type(Parser* ps) {
     TypeInfo type;
     type.pointer_depth = 0;
@@ -812,6 +854,9 @@ AST* parse(Parser* ps) {
             AST* prop_node = make_node(AST_PROP);
             prop_node->prop.func = func;
             node = prop_node;
+        } else if (parser_peek(ps)->kind == TOKEN_FORWARD) {
+            AST* forward = parse_forward(ps);
+            node = forward;
         } else if (parser_peek(ps)->kind == TOKEN_IDENTIFIER &&
                    peek(ps->ts, ps->pos + 1)->kind == TOKEN_COLON)
             node = parse_var_decl(ps);

@@ -23,6 +23,7 @@ void gen_return(AST* ast, FILE* out, const char* src);
 void gen_continue(AST* ast, FILE* out, const char* src);
 void gen_break(AST* ast, FILE* out, const char* src);
 void gen_import(AST* ast, FILE* out, const char* src);
+void gen_forward(AST* ast, FILE* out, const char* src);
 
 void emit_includes(AST* ast, FILE* out, const char* src, TokenStream* ts);
 void typeinfo_to_string(TypeInfo type, FILE* out, const char* src);

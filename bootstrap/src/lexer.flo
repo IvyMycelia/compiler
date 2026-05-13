@@ -162,7 +162,6 @@ prop void lex(ts: @TokenStream, src: @char):
                 add_token(ts, TOKEN_FLOAT, start, length)
             else if length == 5 and not strncmp(src + start, "break", 5):
                 add_token(ts, TOKEN_BREAK, start, length)
-
             else if length == 6 and not strncmp(src + start, "return", 6):
                 add_token(ts, TOKEN_RETURN, start, length)
             else if length == 6 and not strncmp(src + start, "string", 6):
@@ -293,7 +292,6 @@ prop void lex(ts: @TokenStream, src: @char):
     add_token(ts, TOKEN_EOF, i, 0)
 end
 
-
 @char token_kind_name(kind: int):
     if kind == TOKEN_INT:               return "TOKEN_INT"
     else if kind == TOKEN_FLOAT:        return "TOKEN_FLOAT";
@@ -391,4 +389,11 @@ prop void print_all_tokens(ts: @TokenStream, src: @char):
     for i in 0..ts.count:
         print_token(&ts.data[i], src)
     end
+end
+
+@Token peek(ts: @TokenStream, index: int):
+    if index >= ts.count:
+        return &ts.data[ts.count - 1]; // EoF
+    end
+    return &ts.data[index];
 end

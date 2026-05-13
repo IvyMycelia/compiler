@@ -44,6 +44,7 @@ typedef enum {
     TOKEN_IMPORT,   // .flo imports
     TOKEN_AS,       // Alias for imports
     TOKEN_PROP,     // Propagating functions (making them public)
+    TOKEN_FORWARD,  // `typedef <kind> <name>`
 
     /* Memory Management */
     TOKEN_NEW,      // Automatically allocate memory

@@ -1,0 +1,974 @@
+import "./bootstrap/include/ast_h.flo" as ast
+
+struct Parser {
+    ts: @TokenStream,
+    src: @char,
+    pos: int,
+    alias_start: int[32],
+    alias_lengths: int[32],
+    alias_count: int
+}
+
+
+// === SETUP ===
+
+@AST make_node(kind: int):
+    node: @AST = calloc(1, sizeof(AST));
+    node.kind = kind
+    node.value = 0
+
+    return node
+end
+
+prop void init_parser(ps: @Parser, ts: @TokenStream, src: @char):
+    ps.ts = ts
+    ps.src = src
+    ps.pos = 0
+    ps.alias_count = 0
+end
+
+
+
+forward @AST parse_var_decl(ps: @Parser)
+forward @AST parse_var_ass(ps: @Parser)
+forward @AST parse_subscript_ass(ps: @Parser)
+
+forward @AST parse_return(ps: @Parser)
+forward @AST parse_continue(ps: @Parser)
+forward @AST parse_break(ps: @Parser)
+forward @AST parse_while(ps: @Parser)
+forward @AST parse_if(ps: @Parser, is_elf_if: int)
+forward @AST parse_for(ps: @Parser)
+
+forward @AST parse_expr(ps: @Parser, min_prec: int)
+forward @AST parse_statement(ps: @Parser)
+forward @AST parse_primary(ps: @Parser)
+
+forward @AST parse_func_def(ps: @Parser)
+forward @AST parse_func_call(ps: @Parser)
+forward @AST parse_alias_call(ps: @Parser)
+forward @AST parse_param(ps: @Parser)
+
+forward @AST parse_struct(ps: @Parser)
+forward @AST parse_dot_ass(ps: @Parser)
+
+forward @AST parse_forward(ps: @Parser)
+forward @AST parse_import(ps: @Parser)
+
+
+
+// === UTILITIES ===
+
+@Token parser_peek(ps: @Parser):
+    return peek(ps.ts, ps.pos)
+end
+
+@Token parser_advance(ps: @Parser):
+    token: @Token = parser_peek(ps)
+
+    ps.pos = ps.pos + 1
+    return token;
+end
+
+void parser_skip_newline(ps: @Parser):
+    while parser_peek(ps).kind == TOKEN_NEWLINE or parser_peek(ps).kind == TOKEN_SEMI:
+        parser_advance(ps)
+    end    
+end    
+
+void parser_expect(ps: @Parser, kind: int):
+    curr_tok: @Token = parser_peek(ps)
+
+    if curr_tok.kind != kind:
+        printf("Expected token: %s but got `%.*s` (%s) at line %d\n", token_kind_name(kind), curr_tok.length, curr_tok.start + ps.src, token_kind_name(curr_tok.kind), get_line(ps.src, curr_tok.start))
+        exit(1)
+    end    
+    parser_advance(ps)
+end    
+
+@TypeInfo parse_type(ps: @Parser):
+    type: @TypeInfo;
+    type.pointer_depth = 0;
+    type.array_size = 0;
+    type.arr_size_expr = NULL;
+
+    
+    while parser_peek(ps).kind == TOKEN_AT:
+        type.pointer_depth = type.pointer_depth + 1;
+        parser_advance(ps);
+    end
+
+    base: @Token = parser_advance(ps);
+    type.base = base.kind;
+
+    if base.kind == TOKEN_IDENTIFIER:
+        type.name_start = base.start;
+        type.name_length = base.length;
+    end
+
+    if parser_peek(ps).kind == TOKEN_LBRACK:
+        parser_advance(ps);
+        if parser_peek(ps).kind == TOKEN_RBRACK:
+            type.array_size = -1;
+        else if parser_peek(ps).kind == TOKEN_NUMBER:
+            type.array_size = atoi(ps.src + parser_peek(ps).start);
+            parser_advance(ps);
+        else:
+            type.arr_size_expr = parse_expr(ps, 0);
+        end
+        parser_expect(ps, TOKEN_RBRACK);
+    end
+
+    return type;
+end
+
+int get_precedence(kind: int):
+    if kind == TOKEN_STAR or kind == TOKEN_SLASH:
+        return 3;
+    else if kind == TOKEN_AND or kind == TOKEN_PLUS or kind == TOKEN_MINUS:
+        return 2;
+    else if kind == TOKEN_GT or kind == TOKEN_LT or kind == TOKEN_OR or kind == TOKEN_NEQ or kind == TOKEN_LEQ or kind == TOKEN_GEQ or kind == TOKEN_COMP:
+        return 1;
+    else if kind == TOKEN_DOTDOT:
+        return 0;
+    else if kind == TOKEN_DOTDOTEQ:
+        return 0;
+    else:
+        return 0;
+    end
+end
+
+int token_stream_contains(ts: @TokenStream, kind: int):
+    for i in 0..ts.count:
+        t: @Token = ts.data + i
+        t.kind = kind
+        if t.kind == kind:
+            return 1;
+        end
+    end
+    return 0;
+end
+
+int is_alias(ps: @Parser, tok: @Token):
+    for i in 0..ps.alias_count:
+        if ps.alias_lengths[i] == tok.length and !strncmp(ps.src + ps.alias_start[i], ps.src + tok.start, tok.length):
+            return 1;
+        end
+    end
+    return 0;
+end
+
+
+
+// === VARIABLES ===
+
+@AST parse_var_decl(ps: @Parser):
+    node: @AST = make_node(AST_VAR_DECL);
+    tok: @Token = parser_advance(ps);
+    node._var_decl.name_start = tok.start;
+    node._var_decl.name_length = tok.length;
+    parser_expect(ps, TOKEN_COLON);
+    node._var_decl.type = @parse_type(ps);
+    
+    if parser_peek(ps).kind == TOKEN_ASSIGN:
+        parser_advance(ps);
+        node._var_decl.value = parse_expr(ps, 0);
+    end
+    return node;
+end
+
+@AST parse_var_ass(ps: @Parser):
+    node: @AST = make_node(AST_VAR_ASS);
+    tok: @Token = parser_advance(ps);
+    node._var_ass.name_start = tok.start;
+    node._var_ass.name_length = tok.length;
+    parser_expect(ps, TOKEN_ASSIGN);
+    node._var_ass.value = parse_expr(ps, 0);
+    return node;
+end
+
+@AST parse_subscript_ass(ps: @Parser):
+    name: @Token = parser_advance(ps);
+    arr_ref: @AST = make_node(AST_VAR_REF);
+    arr_ref._var_ref.name_start = name.start;
+    arr_ref._var_ref.name_length = name.length;
+            
+    parser_expect(ps, TOKEN_LBRACK);
+    idx: @AST = parse_expr(ps, 0);
+    parser_expect(ps, TOKEN_RBRACK);
+    parser_expect(ps, TOKEN_ASSIGN);
+    val: @AST = parse_expr(ps, 0);
+    sub: @AST = make_node(AST_SUBSCRIPT);
+    sub._subscript.array = arr_ref;
+    sub._subscript.index = idx;
+    sub._subscript.value = val;
+    return sub;
+end
+
+
+
+// === CONTROL FLOW ===
+
+@AST parse_return(ps: @Parser):
+    node: @AST = make_node(AST_FLOW_CONTROL);
+    node._flow_ctrl.base = parser_peek(ps);
+    parser_advance(ps);
+
+    if parser_peek(ps).kind == TOKEN_NEWLINE or parser_peek(ps).kind == TOKEN_SEMI or parser_peek(ps).kind == TOKEN_EOF:
+        node._flow_ctrl.value = NULL;
+        return node;
+    end
+
+    node._flow_ctrl.value = parse_expr(ps, 0);
+    return node;
+end
+
+@AST parse_continue(ps: @Parser):
+    node: @AST = make_node(AST_FLOW_CONTROL);
+    node._flow_ctrl.value = NULL;
+    node._flow_ctrl.base = parser_peek(ps);
+    parser_advance(ps);
+
+    return node;
+end
+
+@AST parse_break(ps: @Parser):
+    node: @AST = make_node(AST_FLOW_CONTROL);
+    node._flow_ctrl.value = NULL;
+    node._flow_ctrl.base = parser_peek(ps);
+    parser_advance(ps);
+
+    return node;
+end
+
+@AST parse_while(ps: @Parser):
+    node: @AST = make_node(AST_WHILE);
+    parser_expect(ps, TOKEN_WHILE);
+    node._while_loop.condition = parse_expr(ps, 0);
+    parser_expect(ps, TOKEN_COLON);
+    body_head: @AST = NULL;
+    body_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_END:
+        parser_skip_newline(ps);
+        if parser_peek(ps).kind == TOKEN_END:
+            break;
+        end
+        statement: @AST = parse_statement(ps);
+        if body_head == NULL:
+            body_head = statement;
+        else:
+            body_tail.next = statement;
+        end
+        body_tail = statement;
+    end
+    parser_expect(ps, TOKEN_END);
+    node._while_loop.body = body_head;
+
+    return node;
+end
+
+@AST parse_if(ps: @Parser, is_elf_if: int):
+    node: @AST = make_node(AST_IF);
+    parser_expect(ps, TOKEN_IF);
+    node._if_condition.condition = parse_expr(ps, 0);
+    parser_expect(ps, TOKEN_COLON);
+
+    body_head: @AST = NULL;
+    body_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_END and parser_peek(ps).kind != TOKEN_ELSE:
+        parser_skip_newline(ps);
+        if parser_peek(ps).kind == TOKEN_END or parser_peek(ps).kind == TOKEN_ELSE:
+            break;
+        end
+        statement: @AST = parse_statement(ps);
+        if body_head == NULL:
+            body_head = statement;
+        else:
+            body_tail.next = statement;
+        end
+        body_tail = statement;
+    end
+    node._if_condition.body = body_head;
+    if parser_peek(ps).kind == TOKEN_ELSE:
+        parser_advance(ps);
+        if parser_peek(ps).kind == TOKEN_IF:
+            node._if_condition.else_branch = parse_if(ps, 1);
+        else:
+            else_node: @AST = make_node(AST_IF);
+            else_node._if_condition.condition = NULL;
+            parser_expect(ps, TOKEN_COLON);
+            else_body_head: @AST = NULL;
+            else_body_tail: @AST = NULL;
+            while parser_peek(ps).kind != TOKEN_END and parser_peek(ps).kind != TOKEN_ELSE:
+                parser_skip_newline(ps);
+                if parser_peek(ps).kind == TOKEN_END or parser_peek(ps).kind == TOKEN_ELSE:
+                    break;
+                end
+                statement: @AST = parse_statement(ps);
+                if else_body_head == NULL:
+                    else_body_head = statement;
+                else:
+                    else_body_tail.next = statement;
+                end
+                else_body_tail = statement;
+            end
+            else_node._if_condition.body = else_body_head;
+            node._if_condition.else_branch = else_node;
+        end
+    end
+    if not is_elf_if:
+        parser_expect(ps, TOKEN_END);
+    end
+    return node;
+end
+
+@AST parse_for(ps: @Parser):
+    node: @AST = make_node(AST_FOR);
+    parser_expect(ps, TOKEN_FOR);
+
+    var: @Token = parser_advance(ps);
+    if var.kind != TOKEN_IDENTIFIER:
+        printf("Expected loop variable after for, got %s\n", token_kind_name(var.kind));
+        exit(1);
+    end
+    node._for_loop.var_start = var.start;
+    node._for_loop.var_length = var.length;
+
+    parser_expect(ps, TOKEN_IN);
+    from: @AST = parse_expr(ps, 0);
+    node._for_loop.from = from;
+
+    op_range: @Token = parser_advance(ps);
+    if op_range.kind != TOKEN_DOTDOT and op_range.kind != TOKEN_DOTDOTEQ:
+        printf("Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range.kind));
+        exit(1);
+    end
+    node._for_loop.inclusive = op_range.kind == TOKEN_DOTDOTEQ;
+
+    to: @AST = parse_expr(ps, 0);
+    node._for_loop.to = to;
+
+    parser_expect(ps, TOKEN_COLON);
+
+    body_head: @AST = NULL;
+    body_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_END:
+        parser_skip_newline(ps);
+        if parser_peek(ps).kind == TOKEN_END:
+            break;
+        end
+        statement: @AST = parse_statement(ps);
+        if body_head == NULL:
+            body_head = statement;
+        else:
+            body_tail.next = statement;
+        end
+        body_tail = statement;
+    end
+    parser_expect(ps, TOKEN_END);
+    node._for_loop.body = body_head;
+    
+    return node;
+end
+
+
+
+// === EXECUTIVE ===
+
+@AST parse_expr(ps: @Parser, min_prec: int):
+    left: @AST = parse_primary(ps);
+
+    if parser_peek(ps).kind == TOKEN_AS:
+        parser_advance(ps);
+        cast: @AST = make_node(AST_CAST);
+        cast._cast.value = left;
+        cast._cast.type = @parse_type(ps);
+        left = cast;
+    end
+
+    while get_precedence(parser_peek(ps).kind) > min_prec:
+        op: @Token = parser_advance(ps);
+        right: @AST = parse_expr(ps, get_precedence(op.kind));
+        bin: @AST = make_node(AST_BINARY_OP);
+        bin._binary.left = left;
+        bin._binary.right = right;
+        bin._binary.op = op.kind;
+        left = bin;
+    end
+    return left;
+end
+
+@AST parse_statement(ps: @Parser):
+    parser_skip_newline(ps);
+    // printf("parse_statement: token kind %d\n", parser_peek(ps).kind);
+    if parser_peek(ps).kind == TOKEN_IDENTIFIER:
+        if peek(ps.ts, ps.pos + 1).kind == TOKEN_COLON:
+            return parse_var_decl(ps);
+        else if peek(ps.ts, ps.pos + 1).kind == TOKEN_ASSIGN:
+            return parse_var_ass(ps);
+        else if peek(ps.ts, ps.pos + 1).kind == TOKEN_LPAREN:
+            return parse_func_call(ps);
+        else if peek(ps.ts, ps.pos + 1).kind == TOKEN_LBRACK:
+            return parse_subscript_ass(ps);
+        else if peek(ps.ts, ps.pos + 1).kind == TOKEN_DOT:
+            if is_alias(ps, parser_peek(ps)):
+                return parse_alias_call(ps);
+            else:
+                return parse_dot_ass(ps);
+            end
+        else:
+            printf("parse_statement: unexpected token after identifier: %s on line %d\n", token_kind_name(peek(ps.ts, ps.pos + 1).kind), get_line(ps.src, parser_peek(ps).start));
+            exit(1);
+        end
+
+    else if parser_peek(ps).kind == TOKEN_WHILE:
+        return parse_while(ps);
+
+    else if parser_peek(ps).kind == TOKEN_RETURN:
+        return parse_return(ps);
+
+    else if parser_peek(ps).kind ==  TOKEN_BREAK:
+        return parse_break(ps);
+
+    else if parser_peek(ps).kind ==  TOKEN_CONTINUE:
+        return parse_continue(ps);
+
+    else if parser_peek(ps).kind ==  TOKEN_IF:
+        return parse_if(ps, 0);
+
+    else if parser_peek(ps).kind ==  TOKEN_FOR:
+        return parse_for(ps);
+
+    else if parser_peek(ps).kind ==  TOKEN_PRINT:
+        parser_advance(ps);
+        node: @AST = make_node(AST_PRINT);
+        parser_expect(ps, TOKEN_LPAREN);
+        node._print.value = parse_expr(ps, 0);
+        parser_expect(ps, TOKEN_RPAREN);
+        return node;
+
+    else if parser_peek(ps).kind ==  TOKEN_PRUNE:
+            parser_advance(ps);
+            node: @AST = make_node(AST_PRUNE);
+            node._prune_free.ptr = parse_expr(ps, 0);
+            return node;
+
+    else if parser_peek(ps).kind ==  TOKEN_AT:
+            parser_advance(ps);
+            node: @AST = make_node(AST_DEREF_ASS);
+            name: @Token = parser_advance(ps);
+            node._deref_ass.name_length = name.length;
+            node._deref_ass.name_start = name.start;
+            parser_expect(ps, TOKEN_ASSIGN);
+            node._deref_ass.value = parse_expr(ps, 0);
+            return node;
+            
+    else:
+        printf("parse_statement: unexpected token: %s at line %d\n", token_kind_name(parser_peek(ps).kind), get_line(ps.src, parser_peek(ps).start));
+        exit(1);
+    end
+end
+
+@AST parse_primary(ps: @Parser):
+    if parser_peek(ps).kind == TOKEN_IDENTIFIER:
+        if peek(ps.ts, ps.pos + 1).kind == TOKEN_LPAREN:
+            node: @AST = parse_func_call(ps);
+
+            if parser_peek(ps).kind == TOKEN_DOT:
+                parser_advance(ps);
+                field: @Token = parser_advance(ps);
+                dot: @AST = make_node(AST_DOT_ACCESS);
+                dot._dot_access.object = node;
+                dot._dot_access.field_length = field.length;
+                dot._dot_access.field_start = field.start;
+                return dot;
+            end
+            return node;
+        end
+        if peek(ps.ts, ps.pos + 1).kind == TOKEN_DOT and is_alias(ps, parser_peek(ps)):
+            return parse_alias_call(ps);
+        end
+        tok: @Token = parser_peek(ps);
+        parser_advance(ps);
+        node: @AST = make_node(AST_VAR_REF);
+        node._var_ref.name_start = tok.start;
+        node._var_ref.name_length = tok.length;
+
+        if parser_peek(ps).kind == TOKEN_AT:
+            parser_advance(ps);
+            operand: @AST = parse_primary(ps);
+            drf: @AST = make_node(AST_DEREF);
+            drf._unary.operand = operand;
+            return drf;
+        end
+
+        while parser_peek(ps).kind == TOKEN_DOT or parser_peek(ps).kind == TOKEN_LBRACK:
+            if parser_peek(ps).kind == TOKEN_DOT:
+                parser_advance(ps);
+                field: @Token = parser_advance(ps);
+                dot: @AST = make_node(AST_DOT_ACCESS);
+                dot._dot_access.object = node;
+                dot._dot_access.field_start = field.start;
+                dot._dot_access.field_length = field.length;
+                node = dot;
+            else if parser_peek(ps).kind == TOKEN_LBRACK:
+                parser_advance(ps);
+                idx: @AST = parse_expr(ps, 0);
+                parser_expect(ps, TOKEN_RBRACK);
+                sub: @AST = make_node(AST_SUBSCRIPT);
+                sub._subscript.array = node;
+                sub._subscript.index = idx;
+                node = sub;
+            end
+        end
+
+        return node;
+
+    else if parser_peek(ps).kind == TOKEN_NUMBER:
+        lit: @AST = make_node(AST_LITERAL);
+        lit.value = atoi(ps.src + parser_peek(ps).start);
+        parser_advance(ps);
+        return lit;
+
+    else if parser_peek(ps).kind == TOKEN_FLOAT_LIT:
+        lit: @AST = make_node(AST_FLOAT_LIT);
+        lit._float_lit.start = parser_peek(ps).start;
+        lit._float_lit.length = parser_peek(ps).length;
+        parser_advance(ps);
+        return lit;
+
+    else if parser_peek(ps).kind == TOKEN_NULL:
+        nll: @AST = make_node(AST_NULL);
+        parser_advance(ps);
+        return nll;
+
+    else if parser_peek(ps).kind == TOKEN_STRING_LIT:
+        str: @AST = make_node(AST_STRING_LIT);
+        str._string.str_start = parser_peek(ps).start;
+        str._string.str_length = parser_peek(ps).length;
+        parser_advance(ps);
+        return str;
+
+    else if parser_peek(ps).kind == TOKEN_LBRACK:
+        parser_advance(ps);
+        arr: @AST = make_node(AST_ARRAY_LIT);
+        elem_head: @AST = NULL;
+        elem_tail: @AST = NULL;
+            
+        while parser_peek(ps).kind != TOKEN_RBRACK:
+            elem: @AST = parse_expr(ps, 0);
+            if elem_head == NULL:
+                elem_head = elem;
+            else:
+                elem_tail.next = elem;
+            end
+            elem_tail = elem;
+            if parser_peek(ps).kind == TOKEN_COMMA:
+                parser_advance(ps);
+            end
+        end
+
+        parser_expect(ps, TOKEN_RBRACK);
+        arr._array.elements = elem_head;
+        return arr;
+
+    else if parser_peek(ps).kind == TOKEN_LBRACE:
+        parser_advance(ps);
+        strct_lit: @AST = make_node(AST_STRUCT_LIT);
+        struct_head: @AST = NULL;
+        struct_tail: @AST = NULL;
+
+        while parser_peek(ps).kind != TOKEN_RBRACE:
+            elem: @AST = parse_expr(ps, 0);
+            if struct_head == NULL:
+                struct_head = elem;
+            else:
+                struct_tail.next = elem;
+            end
+            struct_tail = elem;
+            if parser_peek(ps).kind == TOKEN_COMMA:
+                parser_advance(ps);
+            end
+        end
+
+        parser_expect(ps, TOKEN_RBRACE);
+        strct_lit._struct_lit.elements = struct_head;
+        return strct_lit;
+
+    else if parser_peek(ps).kind == TOKEN_LPAREN:
+        parser_advance(ps);
+        expr: @AST = parse_expr(ps, 0);
+        parser_expect(ps, TOKEN_RPAREN);
+        return expr;
+
+    else if parser_peek(ps).kind == TOKEN_NEW:
+        parser_advance(ps);
+        new_node: @AST = make_node(AST_NEW);
+        new_node._new_alloc.type = @parse_type(ps);
+        return new_node;
+
+    else if parser_peek(ps).kind == TOKEN_NOT:
+        parser_advance(ps);
+        operand: @AST = parse_primary(ps);
+        unry: @AST = make_node(AST_UNARY_NOT);
+        unry._unary.operand = operand;
+        return unry;
+
+    else if parser_peek(ps).kind == TOKEN_MINUS:
+        parser_advance(ps);
+        operand: @AST = parse_primary(ps);
+        unry: @AST = make_node(AST_UNARY_NEG);
+        unry._unary.operand = operand;
+        return unry;
+
+    else if parser_peek(ps).kind == TOKEN_AT:
+        parser_advance(ps);
+        operand: @AST = parse_primary(ps);
+        deref: @AST = make_node(AST_DEREF);
+        deref._deref.operand = operand;
+        return deref;
+
+    else if parser_peek(ps).kind == TOKEN_AMPERSAND:
+        parser_advance(ps);
+        operand: @AST = parse_primary(ps);
+        get: @AST = make_node(AST_GET_ADDR);
+        get._get_addr.operand = operand;
+        return get;
+
+    else if parser_peek(ps).kind == TOKEN_SIZEOF:
+        parser_advance(ps);
+        parser_expect(ps, TOKEN_LPAREN);
+        node: @AST = make_node(AST_SIZEOF);
+        node._size_of.type = @parse_type(ps);
+        parser_expect(ps, TOKEN_RPAREN);
+        return node;
+
+    else if parser_peek(ps).kind == TOKEN_CHAR_LIT:
+        node: @AST = make_node(AST_CHAR_LIT);
+        node._char_lit.start = parser_peek(ps).start;
+        node._char_lit.length = parser_peek(ps).length;
+        parser_advance(ps);
+        return node;
+
+    else:
+        printf("parse_primary: unexpected token kind: %s at line %d\n", token_kind_name(parser_peek(ps).kind), get_line(ps.src, parser_peek(ps).start));
+        exit(1);
+    end
+end
+
+
+
+// === FUNCTIONS ===
+
+@AST parse_func_def(ps: @Parser):
+    node: @AST = make_node(AST_FUNC_DEF);
+    node._func_def.return_type = @parse_type(ps);
+    
+    name: @Token = parser_advance(ps);
+    node._func_def.name_start = name.start;
+    node._func_def.name_length = name.length;
+
+    // Set parameters of function
+    parser_expect(ps, TOKEN_LPAREN);
+
+    param_head: @AST = NULL;
+    param_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_RPAREN:
+        param: @AST = parse_param(ps);
+        if param_head == NULL:
+            param_head = param;
+        else:
+            param_tail.next = param;
+        end
+        param_tail = param;
+        
+        if parser_peek(ps).kind == TOKEN_COMMA:
+            parser_advance(ps);
+        end
+    end
+
+    parser_expect(ps, TOKEN_RPAREN);
+    node._func_def.params = param_head;
+    
+    // Function body
+    parser_expect(ps, TOKEN_COLON);
+
+    body_head: @AST = NULL;
+    body_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_END:
+        parser_skip_newline(ps);
+        if parser_peek(ps).kind == TOKEN_END:
+            break;
+        end
+        statement: @AST = parse_statement(ps);
+        if body_head == NULL:
+            body_head = statement;
+        else:
+            body_tail.next = statement;
+        end
+        body_tail = statement;
+    end
+    parser_expect(ps, TOKEN_END);
+    node._func_def.body = body_head;
+
+    return node;
+end
+
+@AST parse_func_call(ps: @Parser):
+    node: @AST = make_node(AST_FUNC_CALL);
+    name: @Token = parser_advance(ps);
+    node._func_call.name_start = name.start;
+    node._func_call.name_length = name.length;
+    parser_expect(ps, TOKEN_LPAREN);
+
+    arg_head: @AST = NULL;
+    arg_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_RPAREN:
+        param: @AST = parse_expr(ps, 0);
+        if arg_head == NULL:
+            arg_head = param;
+        else:
+            arg_tail.next = param;
+        end
+        arg_tail = param;
+
+        if parser_peek(ps).kind == TOKEN_COMMA:
+            parser_advance(ps);
+        end
+    end
+    parser_expect(ps, TOKEN_RPAREN);
+    node._func_call.args = arg_head;
+    return node;
+end
+
+@AST parse_alias_call(ps: @Parser):
+    node: @AST = make_node(AST_ALIAS_CALL);
+    alias: @Token = parser_advance(ps);
+    node._alias_call.alias_start = alias.start;
+    node._alias_call.alias_length = alias.length;
+    parser_expect(ps, TOKEN_DOT);
+
+    func: @Token = parser_advance(ps);
+    node._alias_call.func_start = func.start;
+    node._alias_call.func_length = func.length;
+    parser_expect(ps, TOKEN_LPAREN);
+
+    arg_head: @AST = NULL;
+    arg_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_RPAREN:
+        arg: @AST = parse_expr(ps, 0);
+        if arg_head == NULL:
+            arg_head = arg;
+        else:
+            arg_tail.next = arg;
+        end
+        arg_tail = arg;
+        if parser_peek(ps).kind == TOKEN_COMMA:
+            parser_advance(ps);
+        end
+    end
+    parser_expect(ps, TOKEN_RPAREN);
+
+    node._alias_call.args = arg_head;
+    return node;
+end
+
+@AST parse_param(ps: @Parser):
+    node: @AST = make_node(AST_PARAM);
+    name: @Token = parser_advance(ps);
+    node._func_params.name_start = name.start;
+    node._func_params.name_length = name.length;
+    parser_expect(ps, TOKEN_COLON);
+    node._func_params.type = @parse_type(ps);
+    return node;
+end
+
+
+
+// === STRUCTS ===
+
+@AST parse_struct(ps: @Parser):
+    parser_expect(ps, TOKEN_STRUCT);
+
+    node: @AST = make_node(AST_STRUCT_DEF);
+
+    name: @Token = parser_advance(ps);
+    node._struct_def.name_start = name.start;
+    node._struct_def.name_length = name.length;
+
+    parser_expect(ps, TOKEN_LBRACE);
+
+    field_head: @AST = NULL;
+    field_tail: @AST = NULL;
+    while parser_peek(ps).kind != TOKEN_RBRACE:
+        while parser_peek(ps).kind == TOKEN_NEWLINE or parser_peek(ps).kind == TOKEN_COMMA or parser_peek(ps).kind == TOKEN_SEMI:
+            parser_advance(ps);
+        end
+        if parser_peek(ps).kind == TOKEN_RBRACE:
+            break;
+        end
+        field: @AST = make_node(AST_STRUCT_FIELD);
+        fname: @Token = parser_advance(ps);
+        field._struct_field.name_start = fname.start;
+        field._struct_field.name_length = fname.length;
+        parser_expect(ps, TOKEN_COLON);
+        field._struct_field.type = @parse_type(ps);
+        if field_head == NULL:
+            field_head = field;
+        else:
+            field_tail.next = field;
+        end
+        field_tail = field;
+    end
+    parser_expect(ps, TOKEN_RBRACE);
+    node._struct_def.fields = field_head;
+
+    return node;
+end
+
+@AST parse_dot_ass(ps: @Parser):
+    expr: @AST = parse_expr(ps, 0);
+    // printf("parse_dot_ass: expr kind=%d, next token=%s\n", expr.kind, token_kind_name(parser_peek(ps).kind));
+    if parser_peek(ps).kind == TOKEN_ASSIGN:
+        parser_advance(ps);
+        val: @AST = parse_expr(ps, 0);
+        if expr.kind == AST_DOT_ACCESS:
+            expr._dot_access.value = val;
+        else if expr.kind == AST_SUBSCRIPT:
+            expr._subscript.value = val;
+        else:
+            printf("Invalid assignment target at line: %d\n", get_line(ps.src, parser_peek(ps).start));
+            exit(1);
+        end
+    end
+    return expr;
+end
+
+
+
+// === IMPORTS ===
+
+@AST parse_import(ps: @Parser):
+    parser_expect(ps, TOKEN_IMPORT);
+    node: @AST = make_node(AST_IMPORT);
+
+    if parser_peek(ps).kind == TOKEN_LT:
+        // system import: `import <stdlib>`
+        parser_advance(ps);
+        path: @Token = parser_advance(ps);
+        node._import.path_start = path.start;
+        node._import.path_length = path.length;
+
+        parser_expect(ps, TOKEN_GT);
+        node._import.is_system = 1;
+        
+        if parser_peek(ps).kind == TOKEN_AS:
+            parser_advance(ps);
+            alias: @Token = parser_advance(ps);
+            node._import.alias_start = alias.start;
+            node._import.alias_length = alias.length;
+            node._import.has_alias = 1;
+
+            ps.alias_start[ps.alias_count] = alias.start;
+            ps.alias_lengths[ps.alias_count] = alias.length;
+            ps.alias_count = ps.alias_count + 1;
+        else:
+            node._import.has_alias = 0;
+        end
+    else:
+        // file import: `import "file.flo"`
+        path: @Token = parser_advance(ps);
+        node._import.path_start = path.start;
+        node._import.path_length = path.length;
+        node._import.is_system = 0;
+
+        if parser_peek(ps).kind == TOKEN_AS:
+            parser_advance(ps);
+            alias: @Token = parser_advance(ps);
+            node._import.alias_start = alias.start;
+            node._import.alias_length = alias.length;
+            node._import.has_alias = 1;
+
+            ps.alias_start[ps.alias_count] = alias.start;
+            ps.alias_lengths[ps.alias_count] = alias.length;
+            ps.alias_count = ps.alias_count + 1;
+        else:
+            node._import.has_alias = 0;
+        end
+    end
+
+    return node;
+end
+
+@AST parse_forward(ps: @Parser):
+    parser_expect(ps, TOKEN_FORWARD);
+    node: @AST = make_node(AST_FORWARD);
+
+    if parser_peek(ps).kind == TOKEN_STRUCT:
+        parser_advance(ps);
+        name: @Token = parser_advance(ps);
+        node._forward.name_start = name.start;
+        node._forward.name_length = name.length;
+        node._forward.is_func = 0
+    else:
+        node._forward.is_func = 1;
+        node._forward.return_type = @parse_type(ps);
+        name: @Token = parser_advance(ps);
+        node._forward.name_start = name.start;
+        node._forward.name_length = name.length;
+
+        parser_expect(ps, TOKEN_LPAREN);
+        param_head: @AST = null;
+        param_tail: @AST = null;
+        while parser_peek(ps).kind != TOKEN_RPAREN:
+            param: @AST = parse_param(ps);
+            if param_head == null:
+                param_head = param;
+            else:
+                param_tail.next = param;
+            end
+            param_tail = param;
+            if parser_peek(ps).kind == TOKEN_COMMA:
+                parser_advance(ps);
+            end
+        end
+        parser_expect(ps, TOKEN_RPAREN);
+        node._forward.params = param_head;
+    end
+    return node;
+end
+
+
+
+// === MISC ===
+
+prop @AST parse(ps: @Parser):
+    head: @AST = null
+    tail: @AST = null
+
+    while parser_peek(ps).kind != TOKEN_EOF:
+        parser_skip_newline(ps)
+        if parser_peek(ps).kind == TOKEN_EOF:
+            break
+        end
+
+        node: @AST;
+        if parser_peek(ps).kind == TOKEN_IMPORT:
+            node = parse_import(ps)
+        else if parser_peek(ps).kind == TOKEN_STRUCT:
+            node = parse_struct(ps)
+        else if parser_peek(ps).kind == TOKEN_PROP:
+            parser_advance(ps)
+            func: @AST = parse_func_def(ps)
+            prop_node: @AST = make_node(AST_PROP)
+            prop_node._prop.func = func
+            node = prop_node
+        else if parser_peek(ps).kind == TOKEN_IDENTIFIER and peek(ps.ts, ps.pos + 1).kind == TOKEN_COLON:
+            node = parse_var_decl(ps)
+        else: 
+            node = parse_func_def(ps)
+        end
+    end
+
+    return head
+end

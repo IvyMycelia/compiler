@@ -34,6 +34,7 @@ typedef enum {
     /* Import System */
     AST_IMPORT,     // import "custom.flo"
     AST_PROP,       // prop int test():
+    AST_FORWARD,    // forward struct test
     AST_ALIAS_CALL, // Alias call: math.sqrt()
 
     /* stdio */
@@ -159,6 +160,14 @@ typedef struct AST {
         struct {
             struct AST* func;
         } prop;
+
+        struct {
+            int name_start;
+            int name_length;
+            int is_func;
+            TypeInfo return_type;
+            struct AST* params;
+        } forward;
 
         struct {
             int alias_start;

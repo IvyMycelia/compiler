@@ -4,6 +4,8 @@ import <ctype>
 import <stdlib>
 
 import "./bootstrap/src/lexer.flo" as lexer
+import "./bootstrap/src/ast.flo" as parser
+import "./bootstrap/src/parser.flo" as parser
 import "./bootstrap/src/file.flo" as file
 
 int main(argc: int, argv: @char[]):
@@ -66,6 +68,13 @@ int main(argc: int, argv: @char[]):
             print("Lexing...\n")
             lexer.lex(tokens, file)
             lexer.print_all_tokens(tokens, file)
+
+
+            // Parser
+            print("Parsing...\n")
+            tree: Parser;
+            parser.init_parser(&tree, tokens, file)
+            ast: @AST = parser.parse(&tree)
         end
     end
 end

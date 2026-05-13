@@ -1,0 +1,311 @@
+    
+    // === PRIMITIVES & TYPES ===
+
+AST_FLOW_CONTROL:   int = 0     // return, break, continue
+AST_LITERAL:        int = 1     // A value
+AST_FLOAT_LIT:      int = 2     // A decimal value
+AST_CAST:           int = 3     // Cast a type
+AST_NULL:           int = 4     // An empty value
+AST_STRING_LIT:     int = 5     // A string "Hello, World!"
+AST_ARRAY_LIT:      int = 6     // Array literal [0, 1, 2 ..]
+AST_SUBSCRIPT:      int = 7     // arr[1]
+AST_STRUCT_LIT:     int = 8     // Struct literal {0, 1, 2 ..}
+AST_CHAR_LIT:       int = 9     // char literal 'a' 'B'
+AST_STRUCT_DEF:     int = 10    // Struct declaration
+AST_STRUCT_FIELD:   int = 11    // Struct field
+AST_DOT_ACCESS:     int = 12    // Struct access
+AST_BINARY_OP:      int = 13    // 0 + 0
+
+    //     === Unary ===
+
+AST_UNARY_NOT:      int = 14    // not x
+AST_UNARY_NEG:      int = 15    // *-1
+
+    // === Memory Management ===
+
+AST_NEW:            int = 16    // malloc(sizeof(t))
+AST_PRUNE:          int = 17    // free(mem)
+AST_SIZEOF:         int = 18    // sizeof(x)
+AST_DEREF_ASS:      int = 19    // @ptr = 42
+AST_DEREF:          int = 20    // @ptr
+AST_GET_ADDR:       int = 21    // &ptr
+
+    //  === Import System ===
+
+AST_IMPORT:         int = 22    // import "custom.flo"
+AST_PROP:           int = 23    // prop int test():
+AST_FORWARD:        int = 24    // forward <struct || func>
+AST_ALIAS_CALL:     int = 25    // Alias call: math.sqrt()
+
+AST_VAR_DECL:       int = 26    // a: int
+AST_VAR_ASS:        int = 27    // a = temp
+AST_VAR_REF:        int = 28    // Reading a variable's value
+AST_FUNC_DEF:       int = 29    // int fib(n: int)
+AST_FUNC_CALL:      int = 30    // fib(5)
+AST_WHILE:          int = 31    // while i < n:
+AST_FOR:            int = 32    // for i in 0..=10
+AST_IF:             int = 33    // if conidtion
+AST_PARAM:          int = 34    // n: int in function signatures
+    
+    //     === stdio ===
+    
+AST_PRINT:          int = 35    // print()
+
+    
+forward struct AST
+
+
+struct TypeInfo {
+    base: int,
+    pointer_depth: int,
+    array_size: int,
+    arr_size_expr: @AST,
+    name_start: int,
+    name_length: int
+}
+
+    // === Type Casting ===
+struct cast {
+    value: @AST,
+    type: TypeInfo
+}
+
+struct float_lit {
+    start: int,
+    length: int
+}
+
+struct char_lit {
+    start: int,
+    length: int
+}
+
+    // === Strings ===
+struct strng {
+    str_start: int,
+    str_length: int
+}
+
+    // === Arrays ===
+struct array {
+    elements: @AST,
+    arr_length: int
+}
+
+struct subscript {
+    array: @AST,
+    index: @AST,
+    value: @AST
+}
+
+    // === Unary Operations ===
+struct unary {
+    operand: @AST,
+}
+
+    // === Memory Management ===
+struct new_alloc {
+    type: TypeInfo,
+}
+
+struct prune_free {
+    ptr: @AST,
+}
+
+struct size_of {
+    type: TypeInfo,
+}
+
+struct deref_ass {
+    name_start: int,
+    name_length: int,
+    value: @AST,
+}
+
+struct deref {
+    operand: @AST,
+}
+
+struct get_addr {
+    operand: @AST,
+}
+
+
+    // === stdio ===
+struct prnt {
+    value: @AST,
+}
+
+
+    // === Import System ===
+struct imprt {
+    path_start: int,
+    path_length: int,
+    alias_start: int,
+    alias_length: int,
+    is_system: int,      // 1 if <stdlib>, 0 if "file.flo"
+    has_alias: int,      // 1 if `as name` present
+}
+
+struct prp {
+    func: @AST,
+}
+
+struct forwrd {
+    name_start: int,
+    name_length: int,
+    is_func: int,
+    return_type: TypeInfo,
+    params: @AST
+}
+
+struct alias_call {
+    alias_start: int,
+    alias_length: int,
+    func_start: int,
+    func_length: int,
+    args: @AST,
+}
+
+    // === Structs ===
+
+struct struct_def {
+    name_start: int,
+    name_length: int,
+    fields: @AST,
+}
+
+struct struct_field {
+    name_start: int,
+    name_length: int,
+    type: TypeInfo,
+}
+
+struct struct_lit {
+    elements: @AST,
+}
+
+struct dot_access {
+    object: @AST,
+    field_start: int,
+    field_length: int,
+    value: @AST,
+}
+
+    // === Operations ===
+
+struct binary {
+    left: @AST,   // left binary-op
+    right: @AST,  // right bin-op
+    op: int,
+}
+
+    // === Variables ===
+
+struct var_decl {
+    name_start: int,
+    name_length: int,
+    type: TypeInfo,
+    value: @AST,
+}
+
+struct var_ass {
+    name_start: int,
+    name_length: int,
+    value: @AST,
+}
+
+struct var_ref {
+    name_start: int,
+    name_length: int,
+}   
+    
+    // === Functions ===
+
+struct func_def {
+    name_start: int,
+    name_length: int,
+    params: @AST,
+    body: @AST,
+    return_type: TypeInfo,
+}
+
+struct func_params {
+    name_start: int,
+    name_length: int,
+    type: TypeInfo,
+}
+
+struct func_call {
+    name_start: int,
+    name_length: int,
+    args: @AST,
+}
+
+    // === Return ===
+
+struct flow_ctrl {
+    base: @Token,
+    value: @AST,
+}
+
+    // === Conditionals ===
+struct while_loop {
+    condition: @AST,
+    body: @AST,
+}
+
+struct for_loop {
+    var_start: int,
+    var_length: int,
+    from: @AST,
+    to: @AST,
+    inclusive: int,
+    body: @AST,
+}
+
+struct if_condition {
+    condition: @AST,
+    body: @AST,
+    else_branch: @AST,
+}
+
+struct AST {
+    kind: int,
+    next: @AST,     // Next statement,
+    value: int,     // For vals
+
+    _cast:          cast,
+    _float_lit:     float_lit,
+    _char_lit:      char_lit,
+    _string:        strng,
+    _array:         array,
+    _subscript:     subscript,
+    _unary:         unary,
+    _new_alloc:     new_alloc,
+    _prune_free:    prune_free,
+    _size_of:       size_of,
+    _deref_ass:     deref_ass,
+    _deref:         deref,
+    _get_addr:      get_addr,
+    _print:         prnt,
+    _import:         imprt,
+    _prop:          prp,
+    _forward:       forwrd,
+    _alias_call:    alias_call,
+    _struct_def:    struct_def,
+    _struct_field:  struct_field,
+    _struct_lit:    struct_lit,
+    _dot_access:    dot_access,
+    _binary:        binary,
+    _var_decl:      var_decl,
+    _var_ass:       var_ass,
+    _var_ref:       var_ref,
+    _func_def:      func_def,
+    _func_params:   func_params,
+    _func_call:     func_call,
+    _flow_ctrl:     flow_ctrl,
+    _while_loop:    while_loop,
+    _for_loop:      for_loop,
+    _if_condition:  if_condition
+}

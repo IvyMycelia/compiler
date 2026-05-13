@@ -123,6 +123,8 @@ void lex(const char* src, TokenStream* ts) {
                 add_token(ts, TOKEN_IMPORT, start, length);
             else if (length == 6 && !strncmp(src + start, "double", 6))
                 add_token(ts, TOKEN_DOUBLE, start, length);
+            else if (length == 7 && !strncmp(src + start, "forward", 7))
+                add_token(ts, TOKEN_FORWARD, start, length);
             else if (length == 8 && !strncmp(src + start, "continue", 8))
                 add_token(ts, TOKEN_CONTINUE, start, length);
             else
@@ -274,6 +276,7 @@ const char* token_kind_name(TokenKind kind) {
         /* Import System */
         case TOKEN_IMPORT:      return "TOKEN_IMPORT";
         case TOKEN_PROP:        return "TOKEN_PROP";
+        case TOKEN_FORWARD:     return "TOKEN_FORWARD";
 
         /* Memory Management */
         case TOKEN_AS:          return "TOKEN_AS";
