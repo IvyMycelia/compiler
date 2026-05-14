@@ -751,8 +751,8 @@ void gen_expr(ast: @AST, out: @FILE, src: @char):
             fprintf(out, ")")
         else if ast.data._new_alloc.type.array_size > 0:
             fprintf(out, " * %d", ast.data._new_alloc.type.array_size)
-            fprintf(out, ")")
         end
+        fprintf(out, ")")
 
     else if ast.kind == AST_ALIAS_CALL:
         fprintf(out, "%.*s_%.*s(", ast.data._alias_call.alias_length, ast.data._alias_call.alias_start + src, ast.data._alias_call.func_length, src + ast.data._alias_call.func_start)
