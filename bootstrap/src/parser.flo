@@ -141,7 +141,6 @@ end
 int token_stream_contains(ts: @TokenStream, kind: int):
     for i in 0..ts.count:
         t: @Token = ts.data + i
-        t.kind = kind
         if t.kind == kind:
             return 1
         end
@@ -1007,6 +1006,13 @@ prop @AST parse(ps: @Parser):
         else: 
             node = parse_func_def(ps)
         end
+
+        if head == null:
+            head = node
+        else:
+            tail.next = node
+        end
+        tail = node
     end
 
     return head

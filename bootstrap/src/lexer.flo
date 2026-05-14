@@ -34,7 +34,7 @@ prop void lex(ts: @TokenStream, src: @char):
     
     while src[i] != '\0':
         // Skip whitespace
-        // printf("DEBUG: char literal at i=%d, next='%c'\n", i, src[i+1]);
+        // printf("DEBUG: char literal at i=%d, next='%c'\n", i, src[i+1])
 
         // whitespace
         if src[i] == ' ' or src[i] == '\r':
@@ -62,6 +62,9 @@ prop void lex(ts: @TokenStream, src: @char):
             start: int = i
             i = i + 1
             while src[i] != '"' and src[i] != '\0':
+                if src[i] == '\\':
+                    i = i + 1
+                end
                 i = i + 1
             end
             i = i + 1
@@ -74,6 +77,9 @@ prop void lex(ts: @TokenStream, src: @char):
             start: int = i
             i = i + 1
             while src[i] != '\'' and src[i] != '\0':
+                if src[i] == '\\':
+                    i = i + 1
+                end
                 i = i + 1
             end
             i = i + 1
@@ -90,7 +96,7 @@ prop void lex(ts: @TokenStream, src: @char):
         
         // numbers
         if isdigit(src[i]):
-            start: int = i;
+            start: int = i
 
             while isdigit(src[i]):
                 i = i + 1
@@ -191,95 +197,95 @@ prop void lex(ts: @TokenStream, src: @char):
             if src[i+1] == '.':
                 if src[i+2] == '=':
                     add_token(ts, TOKEN_DOTDOTEQ, i, 3)
-                    i = i + 3; continue
+                    i = i + 3 continue
                 else:
                     add_token(ts, TOKEN_DOTDOT, i, 2)
-                    i = i + 2; continue
+                    i = i + 2 continue
                 end
             else:
-                add_token(ts, TOKEN_DOT, i, 1);
-                i = i + 1; continue
+                add_token(ts, TOKEN_DOT, i, 1)
+                i = i + 1 continue
             end
         else if src[i] == '+':
             add_token(ts, TOKEN_PLUS, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '-':
             add_token(ts, TOKEN_MINUS, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '~':
             add_token(ts, TOKEN_TILDE, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '*':
             add_token(ts, TOKEN_STAR, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '/':
             add_token(ts, TOKEN_SLASH, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '^':
             add_token(ts, TOKEN_CARET, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '&':
             add_token(ts, TOKEN_AMPERSAND, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '@':
             add_token(ts, TOKEN_AT, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '=':
             if src[i+1] == '=':
                 add_token(ts, TOKEN_COMP, i, 2)
-                i = i + 2; continue
+                i = i + 2 continue
             else:
-                add_token(ts, TOKEN_ASSIGN, i, 1);
-                i = i + 1; continue
+                add_token(ts, TOKEN_ASSIGN, i, 1)
+                i = i + 1 continue
             end
         else if src[i] == '<':
             if src[i+1] == '=':
                 add_token(ts, TOKEN_LEQ, i, 2)
-                i = i + 2; continue
+                i = i + 2 continue
             else:
-                add_token(ts, TOKEN_LT, i, 1);
-                i = i + 1; continue
+                add_token(ts, TOKEN_LT, i, 1)
+                i = i + 1 continue
             end
         else if src[i] == '>':
             if src[i+1] == '=':
                 add_token(ts, TOKEN_GEQ, i, 2)
-                i = i + 2; continue
+                i = i + 2 continue
             else:
-                add_token(ts, TOKEN_GT, i, 1);
-                i = i + 1; continue
+                add_token(ts, TOKEN_GT, i, 1)
+                i = i + 1 continue
             end
         else if src[i] == '!':
             if src[i+1] == '=':
                 add_token(ts, TOKEN_NEQ, i, 2)
-                i = i + 2; continue
+                i = i + 2 continue
             else:
-                add_token(ts, TOKEN_NOT, i, 1);
-                i = i + 1; continue
+                add_token(ts, TOKEN_NOT, i, 1)
+                i = i + 1 continue
             end
         else if src[i] == '(':
             add_token(ts, TOKEN_LPAREN, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == ')':
             add_token(ts, TOKEN_RPAREN, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '[':
             add_token(ts, TOKEN_LBRACK, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == ']':
             add_token(ts, TOKEN_RBRACK, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '{':
             add_token(ts, TOKEN_LBRACE, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == '}':
             add_token(ts, TOKEN_RBRACE, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == ':':
             add_token(ts, TOKEN_COLON, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else if src[i] == ',':
             add_token(ts, TOKEN_COMMA, i, 1)
-            i = i + 1; continue
+            i = i + 1 continue
         else:
             printf("Unknown char '%c' (%d) at i=%d, line %d\n", src[i], src[i], i, get_line(src, i))
             exit(1)
@@ -294,84 +300,85 @@ end
 
 @char token_kind_name(kind: int):
     if kind == TOKEN_INT:               return "TOKEN_INT"
-    else if kind == TOKEN_FLOAT:        return "TOKEN_FLOAT";
-    else if kind == TOKEN_DOUBLE:       return "TOKEN_DOUBLE";
-    else if kind == TOKEN_VOID:         return "TOKEN_VOID";
-    else if kind == TOKEN_NULL:         return "TOKEN_NULL";
-    else if kind == TOKEN_BOOL:         return "TOKEN_BOOL";
-    else if kind == TOKEN_CHAR:         return "TOKEN_CHAR";
-    else if kind == TOKEN_STRING:       return "TOKEN_STRING";
+    else if kind == TOKEN_FLOAT:        return "TOKEN_FLOAT"
+    else if kind == TOKEN_DOUBLE:       return "TOKEN_DOUBLE"
+    else if kind == TOKEN_VOID:         return "TOKEN_VOID"
+    else if kind == TOKEN_NULL:         return "TOKEN_NULL"
+    else if kind == TOKEN_BOOL:         return "TOKEN_BOOL"
+    else if kind == TOKEN_CHAR:         return "TOKEN_CHAR"
+    else if kind == TOKEN_STRING:       return "TOKEN_STRING"
 
-    else if kind == TOKEN_STRING_LIT:   return "TOKEN_STRING_LIT";
-    else if kind == TOKEN_CHAR_LIT:     return "TOKEN_CHAR_LIT";
+    else if kind == TOKEN_STRING_LIT:   return "TOKEN_STRING_LIT"
+    else if kind == TOKEN_CHAR_LIT:     return "TOKEN_CHAR_LIT"
 
         // Identifiers 
-    else if kind == TOKEN_STRUCT:       return "TOKEN_STRUCT";
-    else if kind == TOKEN_IDENTIFIER:   return "TOKEN_IDENTIFIER";
-    else if kind == TOKEN_NUMBER:       return "TOKEN_NUMBER";
+    else if kind == TOKEN_STRUCT:       return "TOKEN_STRUCT"
+    else if kind == TOKEN_IDENTIFIER:   return "TOKEN_IDENTIFIER"
+    else if kind == TOKEN_NUMBER:       return "TOKEN_NUMBER"
 
         // Keywords 
-    else if kind == TOKEN_RETURN:       return "TOKEN_RETURN";
-    else if kind == TOKEN_CONTINUE:     return "TOKEN_CONTINUE";
-    else if kind == TOKEN_BREAK:        return "TOKEN_BREAK";
-    else if kind == TOKEN_WHILE:        return "TOKEN_WHILE";
-    else if kind == TOKEN_IF:           return "TOKEN_IF";
-    else if kind == TOKEN_ELSE:         return "TOKEN_ELSE";
-    else if kind == TOKEN_END:          return "TOKEN_END";
-    else if kind == TOKEN_NOT:          return "TOKEN_NOT";
-    else if kind == TOKEN_FOR:          return "TOKEN_FOR";
-    else if kind == TOKEN_IN:           return "TOKEN_IN";
-    else if kind == TOKEN_OR:           return "TOKEN_OR";
+    else if kind == TOKEN_RETURN:       return "TOKEN_RETURN"
+    else if kind == TOKEN_CONTINUE:     return "TOKEN_CONTINUE"
+    else if kind == TOKEN_BREAK:        return "TOKEN_BREAK"
+    else if kind == TOKEN_WHILE:        return "TOKEN_WHILE"
+    else if kind == TOKEN_IF:           return "TOKEN_IF"
+    else if kind == TOKEN_ELSE:         return "TOKEN_ELSE"
+    else if kind == TOKEN_END:          return "TOKEN_END"
+    else if kind == TOKEN_NOT:          return "TOKEN_NOT"
+    else if kind == TOKEN_FOR:          return "TOKEN_FOR"
+    else if kind == TOKEN_AND:          return "TOKEN_AND"
+    else if kind == TOKEN_IN:           return "TOKEN_IN"
+    else if kind == TOKEN_OR:           return "TOKEN_OR"
 
         // Import System 
-    else if kind == TOKEN_IMPORT:       return "TOKEN_IMPORT";
-    else if kind == TOKEN_PROP:         return "TOKEN_PROP";
+    else if kind == TOKEN_IMPORT:       return "TOKEN_IMPORT"
+    else if kind == TOKEN_PROP:         return "TOKEN_PROP"
 
         // Memory Management 
-    else if kind == TOKEN_AS:           return "TOKEN_AS";
-    else if kind == TOKEN_NEW:          return "TOKEN_NEW";
-    else if kind == TOKEN_PRUNE:        return "TOKEN_PRUNE";
-    else if kind == TOKEN_SIZEOF:       return "TOKEN_SIZEOF";
+    else if kind == TOKEN_AS:           return "TOKEN_AS"
+    else if kind == TOKEN_NEW:          return "TOKEN_NEW"
+    else if kind == TOKEN_PRUNE:        return "TOKEN_PRUNE"
+    else if kind == TOKEN_SIZEOF:       return "TOKEN_SIZEOF"
 
         // stdio 
-    else if kind == TOKEN_PRINT:        return "TOKEN_PRINT";
+    else if kind == TOKEN_PRINT:        return "TOKEN_PRINT"
 
         // Operators 
-    else if kind == TOKEN_DOT:          return "TOKEN_DOT";
-    else if kind == TOKEN_DOTDOT:       return "TOKEN_DOTDOT";
-    else if kind == TOKEN_DOTDOTEQ:     return "TOKEN_DOTDOTEQ";
-    else if kind == TOKEN_PLUS:         return "TOKEN_PLUS";
-    else if kind == TOKEN_MINUS:        return "TOKEN_MINUS";
-    else if kind == TOKEN_TILDE:        return "TOKEN_TILDE";
-    else if kind == TOKEN_STAR:         return "TOKEN_STAR";
-    else if kind == TOKEN_SLASH:        return "TOKEN_SLASH";
-    else if kind == TOKEN_CARET:        return "TOKEN_CARET";
-    else if kind == TOKEN_AMPERSAND:    return "TOKEN_AMPERSAND";
-    else if kind == TOKEN_AT:           return "TOKEN_AT";
-    else if kind == TOKEN_ASSIGN:       return "TOKEN_ASSIGN";
-    else if kind == TOKEN_LT:           return "TOKEN_LT";
-    else if kind == TOKEN_GT:           return "TOKEN_GT";
-    else if kind == TOKEN_NEQ:          return "TOKEN_NEQ";
-    else if kind == TOKEN_GEQ:          return "TOKEN_GEQ";
-    else if kind == TOKEN_LEQ:          return "TOKEN_LEQ";
-    else if kind == TOKEN_COMP:         return "TOKEN_COMP";
+    else if kind == TOKEN_DOT:          return "TOKEN_DOT"
+    else if kind == TOKEN_DOTDOT:       return "TOKEN_DOTDOT"
+    else if kind == TOKEN_DOTDOTEQ:     return "TOKEN_DOTDOTEQ"
+    else if kind == TOKEN_PLUS:         return "TOKEN_PLUS"
+    else if kind == TOKEN_MINUS:        return "TOKEN_MINUS"
+    else if kind == TOKEN_TILDE:        return "TOKEN_TILDE"
+    else if kind == TOKEN_STAR:         return "TOKEN_STAR"
+    else if kind == TOKEN_SLASH:        return "TOKEN_SLASH"
+    else if kind == TOKEN_CARET:        return "TOKEN_CARET"
+    else if kind == TOKEN_AMPERSAND:    return "TOKEN_AMPERSAND"
+    else if kind == TOKEN_AT:           return "TOKEN_AT"
+    else if kind == TOKEN_ASSIGN:       return "TOKEN_ASSIGN"
+    else if kind == TOKEN_LT:           return "TOKEN_LT"
+    else if kind == TOKEN_GT:           return "TOKEN_GT"
+    else if kind == TOKEN_NEQ:          return "TOKEN_NEQ"
+    else if kind == TOKEN_GEQ:          return "TOKEN_GEQ"
+    else if kind == TOKEN_LEQ:          return "TOKEN_LEQ"
+    else if kind == TOKEN_COMP:         return "TOKEN_COMP"
 
         // Punctuation 
-    else if kind == TOKEN_LPAREN:       return "TOKEN_LPAREN";
-    else if kind == TOKEN_RPAREN:       return "TOKEN_RPAREN";
-    else if kind == TOKEN_LBRACK:       return "TOKEN_LBRACK";
-    else if kind == TOKEN_RBRACK:       return "TOKEN_RBRACK";
-    else if kind == TOKEN_LBRACE:       return "TOKEN_LBRACE";
-    else if kind == TOKEN_RBRACE:       return "TOKEN_RBRACE";
-    else if kind == TOKEN_COLON:        return "TOKEN_COLON";
-    else if kind == TOKEN_COMMA:        return "TOKEN_COMMA";
-    else if kind == TOKEN_SEMI:         return "TOKEN_SEMI";
+    else if kind == TOKEN_LPAREN:       return "TOKEN_LPAREN"
+    else if kind == TOKEN_RPAREN:       return "TOKEN_RPAREN"
+    else if kind == TOKEN_LBRACK:       return "TOKEN_LBRACK"
+    else if kind == TOKEN_RBRACK:       return "TOKEN_RBRACK"
+    else if kind == TOKEN_LBRACE:       return "TOKEN_LBRACE"
+    else if kind == TOKEN_RBRACE:       return "TOKEN_RBRACE"
+    else if kind == TOKEN_COLON:        return "TOKEN_COLON"
+    else if kind == TOKEN_COMMA:        return "TOKEN_COMMA"
+    else if kind == TOKEN_SEMI:         return "TOKEN_SEMI"
 
-    else if kind == TOKEN_NEWLINE:      return "TOKEN_NEWLINE";
+    else if kind == TOKEN_NEWLINE:      return "TOKEN_NEWLINE"
 
-    else if kind == TOKEN_EOF:          return "TOKEN_EOF";
+    else if kind == TOKEN_EOF:          return "TOKEN_EOF"
 
-    else:                               return "UNKNOWN";
+    else:                               return "UNKNOWN"
     end
 end
 
@@ -379,7 +386,7 @@ void print_token(token: @Token, src: @char):
     printf("%-18s\t", token_kind_name(token.kind))
 
     if token.kind == TOKEN_IDENTIFIER or token.kind == TOKEN_NUMBER:
-       printf("\"%.*s\"", token.length, src + token.start)
+        printf("\"%.*s\"", token.length, src + token.start)
     end
 
     print("\n")
@@ -393,9 +400,9 @@ end
 
 @Token peek(ts: @TokenStream, index: int):
     if index >= ts.count:
-        return &ts.data[ts.count - 1]; // EoF
+        return &ts.data[ts.count - 1] // EoF
     end
-    return &ts.data[index];
+    return &ts.data[index]
 end
 
 void free_token_stream(ts: @TokenStream):

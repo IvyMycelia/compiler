@@ -589,7 +589,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
     end
 
     // Mark as in progress
-    in_progress[in_progress_count + 1] = strdup(path)
+    in_progress[in_progress_count] = strdup(path)
     in_progress_count = in_progress_count + 1
 
     // Check cache for already-parsed AST
@@ -618,6 +618,10 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
         lexer.init_token_stream(ts)
         lexer.lex(ts, imported_src)
 
+        if strcmp(path, "PATH") == 0:
+            lexer.print_all_tokens(ts, imported_src)
+        end
+
         if not has_stdlib and (token_stream_contains(ts, TOKEN_NEW) or token_stream_contains(ts, TOKEN_NULL)):
             fprintf(out, "#include <stdlib.h>\n")
             has_stdlib = 1
@@ -627,6 +631,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
             has_stdio = 1
         end
 
+        printf("Parsing: %s\n", path)
         p: Parser
         parser.init_parser(&p, ts, imported_src)
         imported_ast = parser.parse(&p)
@@ -644,6 +649,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
     emitted_count = emitted_count + 1
 
     // Emit functions
+    printf("Generating: %s\n", path)
     curr: @AST = imported_ast
     while curr != null:
         if curr.kind == AST_IMPORT:
