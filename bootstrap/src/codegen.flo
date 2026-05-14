@@ -847,11 +847,11 @@ void gen_statement(ast: @AST, out: @FILE, src: @char):
             fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
         else:
             fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
-            if ast.data._dot_access.value != null:
-                fprintf(out, " = ")
-                gen_expr(ast.data._dot_access.value, out, src)
-                fprintf(out, ";\n")
-            end
+        end
+        if ast.data._dot_access.value != null:
+            fprintf(out, " = ")
+            gen_expr(ast.data._dot_access.value, out, src)
+            fprintf(out, ";\n")
         end
 
     else if ast.kind == AST_PRINT:
