@@ -605,7 +605,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
     if imported_ast == null:
         imported_src = file.read_file(path)
         if not imported_src:
-            printf("Could not import file: %s\n", path)
+            printf("%sCould not import file: %s\nfrom file:%s\nwith root: %s%s\n", RED, path, original, project_root, RESET)
             exit(1)
         end
 

@@ -2592,7 +2592,7 @@ break;
 if (imported_ast == NULL) {
 imported_src = file_read_file(path);
 if (!(imported_src)) {
-printf("Could not import file: %s\n", path);
+printf("%sCould not import file: %s\nfrom file:%s\nwith root: %s%s\n", RED, path, original, project_root, RESET);
 exit(1);
 }
 set_current_file(path);
