@@ -114,6 +114,7 @@ int main(argc: int, argv: @char[]):
             codegen(ast, output, file)
 
             free_token_stream(tokens)
+            prune tokens
             prune file
             fclose(output)
 

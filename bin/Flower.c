@@ -2393,8 +2393,8 @@ fprintf(out, ";\n");
 field = field->next;
 }
 fprintf(out, "} %.*s;\n", ast->data._union_def.name_length, src + ast->data._union_def.name_start);
-defined_structs[defined_union_count].name = strndup(src + ast->data._union_def.name_start, ast->data._union_def.name_length);
-defined_structs[defined_union_count].length = ast->data._union_def.name_length;
+defined_unions[defined_union_count].name = strndup(src + ast->data._union_def.name_start, ast->data._union_def.name_length);
+defined_unions[defined_union_count].length = ast->data._union_def.name_length;
 defined_union_count = defined_union_count + 1;
 }
 
@@ -2990,6 +2990,7 @@ fflush(stdout);
 emit_includes(ast, output, file, tokens);
 codegen(ast, output, file);
 free_token_stream(tokens);
+free(tokens);
 free(file);
 fclose(output);
 char bin_name[512];

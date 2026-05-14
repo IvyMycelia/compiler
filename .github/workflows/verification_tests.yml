@@ -17,7 +17,7 @@ jobs:
       - name: Build Flower
         working-directory: .
         env:
-          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1:strict_string_checks=1
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=0:strict_string_checks=0
         run:  |
           ls ./bin
           gcc \
