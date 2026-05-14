@@ -105,8 +105,8 @@ int main(int argc, char *argv[]) {
                 has_output = 1;
             }
 
-            emit_includes(ast, output, file, &tokens);
             printf("Codegen...\n"); fflush(stdout);
+            emit_includes(ast, output, file, &tokens);
             codegen(ast, output, file);
 
             free_token_stream(&tokens);

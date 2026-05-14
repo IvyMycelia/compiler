@@ -1,0 +1,921 @@
+import "./bootstrap/src/lexer.flo" as lexer
+import "./bootstrap/src/parser.flo" as parser
+import "./bootstrap/src/file.flo" as file
+
+has_stdlib: int = 0
+has_stdio: int = 0
+
+// === UTILITIES ===
+
+void emit_includes(ast: @AST, out: @FILE, src: @char, ts: @TokenStream):
+    if not has_stdlib and (token_stream_contains(ts, TOKEN_NULL) or token_stream_contains(ts, TOKEN_NEW)):
+        fprintf(out, "#include <stdlib.h>\n")
+        has_stdlib = 1
+    end
+
+    if not has_stdio and token_stream_contains(ts, TOKEN_PRINT):
+        fprintf(out, "#include <stdio.h>\n")
+        has_stdio = 1
+
+    end
+end
+
+@char token_to_string(kind: int):
+    if kind == TOKEN_INT:
+        return "int"
+
+    else if kind == TOKEN_BOOL:
+        return "int"
+
+    else if kind == TOKEN_FLOAT:
+        return "float"
+
+    else if kind == TOKEN_DOUBLE:
+        return "double"
+
+    else if kind == TOKEN_CHAR:
+        return "char"
+
+    else if kind == TOKEN_STRING:
+        return "char*"
+
+    else if kind == TOKEN_VOID:
+        return "void"
+
+        // === Keywords ===
+    else if kind == TOKEN_RETURN:
+        return "return"
+
+    else if kind == TOKEN_WHILE:
+        return "while"
+
+    else if kind == TOKEN_IF:
+        return "if"
+
+    else if kind == TOKEN_ELSE:
+        return "else"
+
+    else if kind == TOKEN_END:
+        return "}"
+
+    else if kind == TOKEN_OR:
+        return " || "
+
+    else if kind == TOKEN_AND:
+        return " && "
+
+        // === Operators ===
+    else if kind == TOKEN_DOT:
+        return "."
+
+    else if kind == TOKEN_PLUS:
+        return "+"
+
+    else if kind == TOKEN_MINUS:
+        return "-"
+
+    else if kind == TOKEN_STAR:
+        return "*"
+
+    else if kind == TOKEN_SLASH:
+        return "/"
+
+    else if kind == TOKEN_CARET:
+        return "^"
+
+    else if kind == TOKEN_AT:
+        return "@"
+
+    else if kind == TOKEN_AMPERSAND:
+        return "&"
+
+    else if kind == TOKEN_ASSIGN:
+        return "="
+
+    else if kind == TOKEN_LT:
+        return "<"
+
+    else if kind == TOKEN_GT:
+        return ">"
+
+    else if kind == TOKEN_GEQ:
+        return ">="
+
+    else if kind == TOKEN_LEQ:
+        return "<="
+
+    else if kind == TOKEN_NEQ:
+        return "!="
+
+    else if kind == TOKEN_COMP:
+        return "=="
+
+        // === Punctuation ===
+    else if kind == TOKEN_LPAREN:
+        return "("
+
+    else if kind == TOKEN_RPAREN:
+        return ")"
+
+    else if kind == TOKEN_LBRACE:
+        return "{"
+
+    else if kind == TOKEN_RBRACE:
+        return "}"
+
+    else if kind == TOKEN_COLON:
+        return ":"
+
+    else if kind == TOKEN_COMMA:
+        return ","
+
+    else if kind == TOKEN_SEMI:
+        return ""
+
+    else if kind == TOKEN_NEWLINE:
+        return "\n"
+
+    else:
+        return "ERROR"
+
+    end
+end
+
+void typeinfo_to_string(type: @TypeInfo, out: @FILE, src: @char):
+    if type.base == TOKEN_IDENTIFIER:
+        fprintf(out, "%.*s", type.name_length, src + type.name_start)
+    else:
+        fprintf(out, "%s", token_to_string(type.base))
+    end
+    i: int = 0
+    while i + 1 < type.pointer_depth:
+        i = i + 1
+        fprintf(out, "*")
+    end
+end
+
+
+
+// === FORWARDS ===
+
+forward void gen_expr(ast: @AST, out: @FILE, src: @char)
+forward void gen_statement(ast: @AST, out: @FILE, src: @char)
+
+
+
+// === CONDITIONALS ===
+
+void gen_if(ast: @AST, out: @FILE, src: @char, is_else_if: int):
+    if is_else_if:
+        if ast.data._if_condition.condition == null:
+            fprintf(out, "else {\n")
+        else:
+            fprintf(out, "else if (")
+            gen_expr(ast.data._if_condition.condition, out, src)
+            fprintf(out, ") {\n")
+        end
+    else:
+        fprintf(out, "if (")
+        gen_expr(ast.data._if_condition.condition, out, src)
+        fprintf(out, ") {\n")
+    end
+
+    statement: @AST = ast.data._if_condition.body
+    while statement != null:
+        gen_statement(statement, out, src)
+        statement = statement.next
+    end
+    fprintf(out, "}\n")
+
+    if ast.data._if_condition.else_branch != null:
+        gen_if(ast.data._if_condition.else_branch, out, src, 1)
+    end
+end
+
+void gen_while(ast: @AST, out: @FILE, src: @char):
+    fprintf(out, "while (")
+    gen_expr(ast.data._while_loop.condition, out, src)
+    fprintf(out, ") {\n")
+    
+    statement: @AST = ast.data._while_loop.body
+    while statement != null:
+        gen_statement(statement, out, src)
+        statement = statement.next
+    end
+    fprintf(out, "}\n")
+end
+
+void gen_for(ast: @AST, out: @FILE, src: @char):
+    desc_op: @char
+    asc_op: @char
+    add_op: @char
+    sub_op: @char
+    if ast.data._for_loop.inclusive:
+        desc_op = ">="
+        sub_op = "--"
+    else if ast.data._for_loop.inclusive:
+        desc_op = ">"
+        add_op = "++"
+    end
+
+    if ast.data._for_loop.inclusive:
+        asc_op = "<="
+    else if ast.data._for_loop.inclusive:
+        asc_op = "<"
+    end
+
+    from: @AST = ast.data._for_loop.from
+    to: @AST = ast.data._for_loop.to
+    if from.kind == AST_LITERAL and to.kind == AST_LITERAL:
+        reverse: int
+        if from.value > to.value:
+            reverse = 1
+        else:
+            reverse = 0
+        end
+
+
+        op: @char
+        math_op: @char
+        if reverse:
+            op = desc_op
+            math_op = sub_op
+        else:
+            op = asc_op
+            math_op = add_op
+        end
+
+
+
+        fprintf(out, "for (int %.*s = ", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start)
+        gen_expr(ast.data._for_loop.from, out, src)
+        fprintf(out, " %.*s %s ", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start, op)
+        gen_expr(ast.data._for_loop.to, out, src)
+
+        fprintf(out, " %.*s%s) {\n", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start, math_op)
+    else:
+        fprintf(out, "for (int %.*s = ", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start)
+        gen_expr(ast.data._for_loop.from, out, src)
+
+        fprintf(out, " ((")
+        gen_expr(ast.data._for_loop.from, out, src)
+        fprintf(out, ") > (")
+        gen_expr(ast.data._for_loop.to, out, src)
+        fprintf(out, ")) ? %.*s %s (", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start, desc_op)
+        gen_expr(ast.data._for_loop.to, out, src)
+        fprintf(out, ") : %.*s %s (", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start, asc_op)
+        gen_expr(ast.data._for_loop.to, out, src)
+
+        fprintf(out, ") ((")
+        gen_expr(ast.data._for_loop.from, out, src)
+        fprintf(out, ") > (")
+        gen_expr(ast.data._for_loop.to, out, src)
+        fprintf(out, ")) ? %.*s-- : %.*s++) {\n", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start, ast.data._for_loop.var_length, src + ast.data._for_loop.var_start)
+    end
+
+    statement: @AST = ast.data._for_loop.body
+    while statement != null:
+        gen_statement(statement, out, src)
+        statement = statement.next
+    end
+    fprintf(out, "}\n")
+end
+
+
+
+// === CONTROL FLOW ===
+
+void gen_return(ast: @AST, out: @FILE, src: @char):
+    // Emit: return n
+    if ast.data._flow_ctrl.value == null:
+        fprintf(out, "return")
+    else:
+        fprintf(out, "return ")
+        gen_expr(ast.data._flow_ctrl.value, out, src)
+        fprintf(out, "\n")
+    end
+end
+
+void gen_continue(ast: @AST, out: @FILE, src: @char):
+    // Emit: continue
+    fprintf(out, "continue\n")
+end
+
+void gen_break(ast: @AST, out: @FILE, src: @char):
+    // Emit: break
+    fprintf(out, "break\n")
+end
+
+
+
+// === STRUCTS & UNIONS ===
+
+struct defined_struct {
+    name: @char,
+    length: int
+}
+defined_structs: defined_struct[256]
+defined_count: int = 0
+
+void gen_struct(ast: @AST, out: @FILE, src: @char):
+    for i in 0..defined_count:
+        if defined_structs[i].length == ast.data._struct_def.name_length and not strncmp(defined_structs[i].name, ast.data._struct_def.name_start + src, ast.data._struct_def.name_length):
+            return
+        end
+    end
+    fprintf(out, "\n\ntypedef struct %.*s {\n", ast.data._struct_def.name_length, src + ast.data._struct_def.name_start)
+    field: @AST = ast.data._struct_def.fields
+    while field != null:
+        typeinfo_to_string(&field.data._struct_field.type, out, src)
+        fprintf(out, " %.*s", field.data._struct_field.name_length, src + field.data._struct_field.name_start)
+
+        if field.data._struct_field.type.array_size == -1:
+            fprintf(out, "[]")
+        else if field.data._struct_field.type.array_size > 0:
+            fprintf(out, "[%d]", field.data._struct_field.type.array_size)
+        else if field.data._struct_field.type.arr_size_expr != null:
+            fprintf(out, "[")
+            gen_expr(field.data._struct_field.type.arr_size_expr, out, src)
+            fprintf(out, "]")
+        end
+
+        fprintf(out, "\n")
+        field = field.next
+    end
+    fprintf(out, "} %.*s\n", ast.data._struct_def.name_length, src + ast.data._struct_def.name_start)
+
+    defined_structs[defined_count].name = strndup(src + ast.data._struct_def.name_start, ast.data._struct_def.name_length)
+    defined_structs[defined_count].length = ast.data._struct_def.name_length
+    defined_count = defined_count + 1
+end
+
+
+struct defined_union {
+    name: @char,
+    length: int
+}
+defined_unions: defined_union[256]
+defined_union_count: int = 0
+
+void gen_union(ast: @AST, out: @FILE, src: @char):
+    for i in 0..defined_union_count:
+        if defined_unions[i].length == ast.data._union_def.name_length and not strncmp(defined_unions[i].name, ast.data._union_def.name_start + src, ast.data._union_def.name_length):
+            return
+        end
+    end
+    fprintf(out, "\n\ntypedef union %.*s {\n", ast.data._union_def.name_length, src + ast.data._union_def.name_start)
+    field: @AST = ast.data._union_def.fields
+    while field != null:
+        typeinfo_to_string(&field.data._struct_field.type, out, src)
+        fprintf(out, " %.*s", field.data._union_def.name_length, src + field.data._union_def.name_start)
+
+        if field.data._struct_field.type.array_size == -1:
+            fprintf(out, "[]")
+        else if field.data._struct_field.type.array_size > 0:
+            fprintf(out, "[%d]", ast.data._struct_field.type.array_size)
+        else if field.data._struct_field.type.arr_size_expr != null:
+            fprintf(out, "[")
+            gen_expr(field.data._struct_field.type.arr_size_expr, out, src)
+            fprintf(out, "]")
+        end
+
+        fprintf(out, "\n")
+        field = field.next
+    end
+    fprintf(out, "} %.*s\n", ast.data._union_def.name_length, src + ast.data._union_def.name_start)
+
+    defined_structs[defined_union_count].name = strndup(src + ast.data._union_def.name_start, ast.data._union_def.name_length)
+    defined_structs[defined_union_count].length = ast.data._union_def.name_length
+    defined_union_count = defined_union_count + 1
+end
+
+
+
+// === FUNCTIONS ===
+
+void gen_param(param: @AST, out: @FILE, src: @char):
+    // Emit: int v,
+    typeinfo_to_string(&param.data._func_params.type, out, src)
+    fprintf(out, " %.*s", param.data._func_params.name_length, src + param.data._func_params.name_start)
+
+    if param.data._func_params.type.array_size == -1:
+        fprintf(out, "[]")
+    else if param.data._func_params.type.array_size != 0:
+        fprintf(out, "[%d]", param.data._func_params.type.array_size)
+    else if param.data._func_params.type.arr_size_expr != null:
+        fprintf(out, "[")
+        gen_expr(param.data._func_params.type.arr_size_expr, out, src)
+        fprintf(out, "]")
+    end
+end
+
+void gen_func_def(ast: @AST, out: @FILE, src: @char):
+    // Emit: int fib(
+    fprintf(out, "\n\n")
+    typeinfo_to_string(&ast.data._func_def.return_type, out, src)
+    fprintf(out, " %.*s(", ast.data._func_def.name_length, src + ast.data._func_def.name_start)
+    
+    // Emit: params
+    param: @AST = ast.data._func_def.params
+    while param != null:
+        gen_param(param, out, src)
+        if param.next != null:
+            fprintf(out, ", ")
+        end
+        param = param.next
+    end
+    fprintf(out, ") {\n")
+
+    // Emit: body
+    statement: @AST = ast.data._func_def.body
+    while statement != null:
+        gen_statement(statement, out, src)
+        statement = statement.next
+    end
+    fprintf(out, "}\n")
+end
+
+void gen_func_def_aliased(ast: @AST, out: @FILE, src: @char, alias: @char, alias_len: int):
+    // Emit: int fib(
+    fprintf(out, "\n\n")
+    typeinfo_to_string(&ast.data._func_def.return_type, out, src)
+    fprintf(out, " %.*s_%.*s(", alias_len, alias, ast.data._func_def.name_length, src + ast.data._func_def.name_start)
+    
+    // Emit: params
+    param: @AST = ast.data._func_def.params
+    while param != null:
+        gen_param(param, out, src)
+        if param.next != null:
+            fprintf(out, ", ")
+        end
+        param = param.next
+    end
+    fprintf(out, ") {\n")
+
+    // Emit: body
+    statement: @AST = ast.data._func_def.body
+    while statement != null:
+        gen_statement(statement, out, src)
+        statement = statement.next
+    end
+    fprintf(out, "}\n")
+end
+
+void gen_func_call(ast: @AST, out: @FILE, src: @char):
+    fprintf(out, "%.*s(", ast.data._func_call.name_length, src + ast.data._func_call.name_start)
+
+    arg: @AST = ast.data._func_call.args
+    while arg != null:
+        gen_expr(arg, out, src)
+        if arg.next != null:
+            fprintf(out, ", ")
+        end
+        arg = arg.next
+    end
+    fprintf(out, ")")
+end
+
+
+
+// === VARIABLES ===
+
+void gen_var_decl(ast: @AST, out: @FILE, src: @char):
+    typeinfo_to_string(&ast.data._var_decl.type, out, src)
+    fprintf(out, " %.*s", ast.data._var_decl.name_length, src + ast.data._var_decl.name_start)
+    if ast.data._var_decl.type.array_size == -1:
+        fprintf(out, "[]")
+    else if ast.data._var_decl.type.array_size != 0:
+        fprintf(out, "[%d]", ast.data._var_decl.type.array_size)
+    else if ast.data._var_decl.type.arr_size_expr != null:
+        fprintf(out, "[")
+        gen_expr(ast.data._var_decl.type.arr_size_expr, out, src)
+        fprintf(out, "]")
+    end
+    if ast.data._var_decl.value != null:
+        fprintf(out, " = ")
+        gen_expr(ast.data._var_decl.value, out, src)
+    end
+    fprintf(out, "\n")
+end
+
+void gen_var_ass(ast: @AST, out: @FILE, src: @char):
+    fprintf(out, "%.*s = ", ast.data._var_ass.name_length, src + ast.data._var_ass.name_start)
+    gen_expr(ast.data._var_ass.value, out, src)
+    fprintf(out, "\n")
+end
+
+
+
+// === IMPORT ===
+
+void gen_forward(ast: @AST, out: @FILE, src: @char):
+    if ast.data._forward.is_func:
+        typeinfo_to_string(&ast.data._forward.return_type, out, src)
+        fprintf(out, " %.*s(", ast.data._forward.name_length, src + ast.data._forward.name_start)
+        param: @AST = ast.data._forward.params
+        while param != null:
+            gen_param(param, out, src)
+            if param.next != null:
+                fprintf(out, ", ")
+            end
+            param = param.next
+        end
+        fprintf(out, ")\n")
+    else:
+        fprintf(out, "typedef struct %.*s %.*s\n", ast.data._forward.name_length, src + ast.data._forward.name_start, ast.data._forward.name_length, src + ast.data._forward.name_start)
+    end
+end
+
+// Import Cache
+struct ImportCache {
+    path: @char,
+    ast: @AST,
+    src: @char
+}
+
+import_cache: ImportCache[64]
+cache_count: int = 0
+
+// Track emitted alias+file combos to prevent duplicates
+struct EmittedImport {
+    path: @char
+    alias: @char
+}
+
+emitted_imports: EmittedImport[256]
+emitted_count: int = 0
+
+// Currently processing (for circular detection)
+in_progress: @char[64]
+in_progress_count: int = 0
+
+void gen_import(ast: @AST, out: @FILE, src: @char):
+    if ast.data._import.is_system:
+        name: char[64]
+        snprintf(name, sizeof(name), "%.*s", ast.data._import.path_length, src + ast.data._import.path_start)
+        if not strcmp(name, "stdio") and not has_stdio:
+            fprintf(out, "#include <stdio.h>\n")
+            has_stdio = 1
+        else if not strcmp(name, "stdlib") and not has_stdlib:
+            fprintf(out, "#include <stdlib.h>\n")
+            has_stdlib = 1
+        else if strcmp(name, "stdio") and strcmp(name, "stdlib"):
+            fprintf(out, "#include <%s.h>\n", name)
+        end
+        return
+    end
+
+    path: char[256]
+    snprintf(path, sizeof(path), "%.*s", ast.data._import.path_length - 2, src + ast.data._import.path_start + 1)
+
+    alias: char[64] = ""
+    if ast.data._import.has_alias:
+        snprintf(alias, sizeof(alias), "%.*s", ast.data._import.alias_length, src + ast.data._import.alias_start )
+    end
+
+    // Check if this exact path+alias combo already emitted
+    for i in 0..emitted_count:
+        if not strcmp(emitted_imports[i].path, path) and not strcmp(emitted_imports[i].alias, alias):
+            return
+        end
+    end
+
+    // Check for circular imports
+    for i in 0..in_progress_count:
+        if not strcmp(in_progress[i], path):
+            printf("Circular import detected: %s\n", path)
+            exit(1)
+        end
+    end
+
+    // Mark as in progress
+    in_progress[in_progress_count + 1] = strdup(path)
+    in_progress_count = in_progress_count + 1
+
+    // Check cache for already-parsed AST
+    imported_ast: @AST = null
+    imported_src: @char = null
+    cached_ts: @TokenStream = null
+
+    for i in 0..cache_count:
+        if not strcmp(import_cache[i].path, path):
+            imported_ast = import_cache[i].ast
+            imported_src = import_cache[i].src
+            break
+        end
+    end
+
+    // If not cached, read and parse
+    if imported_ast == null:
+        imported_src = file.read_file(path)
+        if not imported_src:
+            printf("Could not import file: %s\n", path)
+            exit(1)
+        end
+
+        printf("Importing: %s\n", path)
+        ts: @TokenStream = new TokenStream
+        lexer.init_token_stream(ts)
+        lexer.lex(ts, imported_src)
+
+        if not has_stdlib and (token_stream_contains(ts, TOKEN_NEW) or token_stream_contains(ts, TOKEN_NULL)):
+            fprintf(out, "#include <stdlib.h>\n")
+            has_stdlib = 1
+        end
+        if not has_stdio and token_stream_contains(ts, TOKEN_PRINT):
+            fprintf(out, "#include <stdio.h>\n")
+            has_stdio = 1
+        end
+
+        p: Parser
+        parser.init_parser(&p, ts, imported_src)
+        imported_ast = parser.parse(&p)
+
+        // Store in cache
+        import_cache[cache_count].path = strdup(path)
+        import_cache[cache_count].ast = imported_ast
+        import_cache[cache_count].src = imported_src
+        cache_count = cache_count + 1
+    end
+
+    // Record this path+alias as emitted
+    emitted_imports[emitted_count].path = strdup(path)
+    emitted_imports[emitted_count].alias = strdup(alias)
+    emitted_count = emitted_count + 1
+
+    // Emit functions
+    curr: @AST = imported_ast
+    while curr != null:
+        if curr.kind == AST_IMPORT:
+            gen_import(curr, out, imported_src)
+        else if curr.kind == AST_STRUCT_DEF:
+            gen_struct(curr, out, imported_src)
+        else if curr.kind == AST_UNION_DEF:
+            gen_union(curr, out, imported_src)
+        else if curr.kind == AST_PROP:
+            if ast.data._import.has_alias:
+                gen_func_def_aliased(curr.data._prop.func, out, imported_src, alias, strlen(alias))
+            else:
+                gen_func_def(curr.data._prop.func, out, imported_src)
+            end
+        else if curr.kind == AST_FORWARD:
+            gen_forward(curr, out, imported_src)
+        else if curr.kind == AST_FUNC_DEF:
+            gen_func_def(curr, out, imported_src)
+        else if curr.kind == AST_VAR_DECL:
+            gen_var_decl(curr, out, imported_src)
+        end
+        curr = curr.next
+    end
+
+    // Remove from in_progress
+    in_progress_count = in_progress_count - 1
+    prune in_progress[in_progress_count]
+end
+
+
+
+// === EXECUTIVE ===
+
+void gen_expr(ast: @AST, out: @FILE, src: @char):
+    if ast.kind == AST_VAR_REF:
+        fprintf(out, "%.*s", ast.data._var_ref.name_length, src + ast.data._var_ref.name_start)
+
+    else if ast.kind == AST_LITERAL:
+        fprintf(out, "%d", ast.value)
+
+    else if ast.kind == AST_FLOAT_LIT:
+        fprintf(out, "%.*s", ast.data._float_lit.length, src + ast.data._float_lit.start)
+        
+    else if ast.kind == AST_NULL:
+        fprintf(out, "NULL")
+        
+    else if ast.kind == AST_BINARY_OP: 
+        gen_expr(ast.data._binary.left, out, src)
+        fprintf(out, " %s ", token_to_string(ast.data._binary.op))
+        gen_expr(ast.data._binary.right, out, src)
+        
+    else if ast.kind == AST_FUNC_CALL: 
+        gen_func_call(ast, out, src)
+        
+    else if ast.kind == AST_STRING_LIT:
+        fprintf(out, "%.*s", ast.data._string.str_length, src + ast.data._string.str_start)
+        
+    else if ast.kind == AST_ARRAY_LIT:
+        fprintf(out, "{")
+        elem: @AST = ast.data._array.elements
+        while elem != null:
+            gen_expr(elem, out, src)
+            if elem.next != null:
+                fprintf(out, ", ")
+                elem = elem.next
+            end
+        end
+        fprintf(out, "}")
+        
+    else if ast.kind == AST_STRUCT_LIT:
+        fprintf(out, "{")
+        struct_elem: @AST = ast.data._struct_lit.elements
+        while struct_elem != null:
+            gen_expr(struct_elem, out, src)
+            if struct_elem.next != null:
+                fprintf(out, ", ")
+                struct_elem = struct_elem.next
+            end
+        end
+        fprintf(out, "}")
+        
+    else if ast.kind == AST_CAST:
+        fprintf(out, "(")
+        typeinfo_to_string(&ast.data._cast.type, out, src)
+        fprintf(out, ")(")
+        gen_expr(ast.data._cast.value, out, src)
+        fprintf(out, ")")
+        
+    else if ast.kind == AST_DOT_ACCESS:
+        object: @AST = ast.data._dot_access.object
+        gen_expr(object, out, src)
+        obj_kind: int = object.kind
+        if obj_kind == AST_DOT_ACCESS or obj_kind == AST_SUBSCRIPT:
+            fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
+        else:
+            fprintf(out, "->%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
+        end
+        
+    else if ast.kind == AST_NEW:
+        fprintf(out, "malloc(sizeof(")
+        typeinfo_to_string(&ast.data._new_alloc.type, out, src)
+        fprintf(out, ")")
+            
+        if ast.data._new_alloc.type.arr_size_expr != null:
+            fprintf(out, " * (")
+            gen_expr(ast.data._new_alloc.type.arr_size_expr, out, src)
+            fprintf(out, ")")
+        else if ast.data._new_alloc.type.array_size > 0:
+            fprintf(out, " * %d", ast.data._new_alloc.type.array_size)
+            fprintf(out, ")")
+        end
+
+    else if ast.kind == AST_ALIAS_CALL:
+        fprintf(out, "%.*s_%.*s(", ast.data._alias_call.alias_length, ast.data._alias_call.alias_start + src, ast.data._alias_call.func_length, src + ast.data._alias_call.func_start)
+        arg: @AST = ast.data._alias_call.args
+        while arg != null:
+            gen_expr(arg, out, src)
+            if arg.next != null:
+                fprintf(out, ", ")
+            end
+            arg = arg.next
+        end
+        fprintf(out, ")")
+        
+    else if ast.kind == AST_UNARY_NOT:
+        fprintf(out, "!(")
+        gen_expr(ast.data._unary.operand, out, src)
+        fprintf(out, ")")
+                
+    else if ast.kind == AST_UNARY_NEG:
+        fprintf(out, "-")
+        gen_expr(ast.data._unary.operand, out, src)
+        
+    else if ast.kind == AST_DEREF:
+        fprintf(out, "*(")
+        gen_expr(ast.data._deref.operand, out, src)
+        fprintf(out, ")")
+        
+    else if ast.kind == AST_GET_ADDR:
+        fprintf(out, "&(")
+        gen_expr(ast.data._get_addr.operand, out, src)
+        fprintf(out, ")")
+        
+    else if ast.kind == AST_SIZEOF:
+        fprintf(out, "sizeof(")
+        typeinfo_to_string(&ast.data._size_of.type, out, src)
+        fprintf(out, ")")
+        
+    else if ast.kind == AST_CHAR_LIT:
+        fprintf(out, "%.*s", ast.data._char_lit.length, ast.data._char_lit.start + src)
+        
+    else if ast.kind == AST_SUBSCRIPT:
+        gen_expr(ast.data._subscript.array, out, src)
+        fprintf(out, "[")
+        gen_expr(ast.data._subscript.index, out, src)
+        fprintf(out, "]")
+
+    else:
+        printf("gen_expr received node addr: %p, kind: %d\n", ast, ast.kind)
+        exit(1)
+    end
+end
+
+void gen_statement(ast: @AST, out: @FILE, src: @char):
+    if ast.kind == AST_VAR_DECL:
+        gen_var_decl(ast, out, src)
+        
+    else if ast.kind == AST_VAR_ASS:
+        gen_var_ass(ast, out, src)
+        
+    else if ast.kind == AST_WHILE:
+        gen_while(ast, out, src)
+        
+    else if ast.kind == AST_FOR:
+        gen_for(ast, out, src)
+        
+    else if ast.kind == AST_FLOW_CONTROL: 
+        base: @Token = ast.data._flow_ctrl.base   
+        if base.kind == TOKEN_RETURN:
+            gen_return(ast, out, src)
+        else if base.kind == TOKEN_CONTINUE:
+            gen_continue(ast, out, src)
+        else if base.kind == TOKEN_BREAK:
+            gen_break(ast, out, src)
+        else:
+            base: @Token = ast.data._flow_ctrl.base
+            printf("Unexpected token: %s for control flow at line %d\n", token_kind_name(base.kind), get_line(src, base.start))
+            exit(1)
+        end
+
+    else if ast.kind == AST_FUNC_CALL: 
+        gen_func_call(ast, out, src)
+        fprintf(out, "\n")
+        
+    else if ast.kind == AST_IF:
+        gen_if(ast, out, src, 0)
+        
+    else if ast.kind == AST_DOT_ACCESS:
+        object: @AST = ast.data._dot_access.object
+        gen_expr(object, out, src)
+        obj_kind: int = object.kind
+        if obj_kind == AST_DOT_ACCESS or obj_kind == AST_SUBSCRIPT:
+            fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
+        else:
+            fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
+            if ast.data._dot_access.value != null:
+                fprintf(out, " = ")
+                gen_expr(ast.data._dot_access.value, out, src)
+                fprintf(out, "\n")
+            end
+        end
+
+    else if ast.kind == AST_PRINT:
+        fprintf(out, "printf(")
+        gen_expr(ast.data._print.value, out, src)
+        fprintf(out, ")\n")
+                
+    else if ast.kind == AST_PRUNE:
+        fprintf(out, "free(")
+        gen_expr(ast.data._prune_free.ptr, out, src)
+        fprintf(out, ")\n")
+        
+    else if ast.kind == AST_DEREF_ASS:
+        fprintf(out, "*%.*s = ", ast.data._deref_ass.name_length, src + ast.data._deref_ass.name_start)
+        gen_expr(ast.data._deref_ass.value, out, src)
+        fprintf(out, "\n")
+        
+    else if ast.kind == AST_SUBSCRIPT:
+        gen_expr(ast.data._subscript.array, out, src)
+        fprintf(out, "[")
+        gen_expr(ast.data._subscript.index, out, src)
+        fprintf(out, "]")
+
+        if ast.data._subscript.value != null:
+            fprintf(out, " = ")
+            gen_expr(ast.data._subscript.value, out, src)
+        end
+        fprintf(out, "\n")
+        
+    else if ast.kind == AST_ALIAS_CALL:
+        gen_expr(ast, out, src)
+        fprintf(out, "\n")
+
+    else:
+        printf("Unknown statement kind: %d\n", ast.kind)
+        exit(1)
+    end
+end
+
+
+
+// === SETUP ===
+
+void codegen(ast: @AST, out: @FILE, src: @char):
+    curr: @AST = ast
+
+    while curr != null:
+        if curr.kind == AST_IMPORT:
+            gen_import(curr, out, src)
+        else if curr.kind == AST_FUNC_DEF:
+            gen_func_def(curr, out, src)
+        else if curr.kind == AST_STRUCT_DEF:
+            gen_struct(curr, out, src)
+        else if curr.kind == AST_UNION_DEF:
+            gen_union(curr, out, src)
+        else if curr.kind == AST_PROP:
+            gen_func_def(curr.data._prop.func, out, src)
+        else if curr.kind == AST_FORWARD:
+            gen_forward(curr, out, src)
+        else if curr.kind == AST_VAR_DECL:
+            gen_var_decl(curr, out, src)
+        end
+        curr = curr.next
+    end
+end

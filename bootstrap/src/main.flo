@@ -7,6 +7,7 @@ import "./bootstrap/src/lexer.flo" as lexer
 import "./bootstrap/src/ast.flo" as parser
 import "./bootstrap/src/parser.flo" as parser
 import "./bootstrap/src/file.flo" as file
+import "./bootstrap/src/codegen.flo" as codegen
 
 int main(argc: int, argv: @char[]):
     if argc < 2:
@@ -78,6 +79,51 @@ int main(argc: int, argv: @char[]):
             tree: Parser;
             parser.init_parser(&tree, tokens, file)
             ast: @AST = parser.parse(&tree)
+
+            // Codegen
+            out_c: char[512]
+            if i + 1 < argc and argv[i + 1][0] != '-':
+                snprintf(out_c, sizeof(out_c), "%s.c", argv[i + 1])
+            else:
+                snprintf(out_c, sizeof(out_c), "output.c")
+            end
+
+            output: @FILE = fopen(out_c, "w")
+            if not output:
+                print("Failed to open output file\n")
+                return -1
+            end
+
+            has_output: int = 0
+            if token_stream_contains(tokens, TOKEN_PRINT):
+                has_output = 1
+            end
+
+            print("Codegen...\n")
+            emit_includes(ast, output, file, tokens)
+            codegen(ast, output, file)
+
+            free_token_stream(tokens)
+            prune file
+            fclose(output)
+
+            bin_name: char[512]
+            snprintf(bin_name, sizeof(bin_name), "%.*s", (strlen(out_c) - 2) as int, out_c)
+
+            build_cmd: char[1024]
+            snprintf(build_cmd, sizeof(build_cmd), "clang %s -o %s", out_c, bin_name)
+
+            system(build_cmd)
+
+            if has_output:
+                print("\nOUTPUT:\n")
+                snprintf(build_cmd, sizeof(build_cmd), "./%s", bin_name)
+            end
+
+            system(build_cmd)
+            print("\n")
+            printf("Compiled %s.c → %s\n", argv[i], bin_name)
+            break
         end
     end
 end

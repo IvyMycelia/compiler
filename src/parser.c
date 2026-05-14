@@ -526,8 +526,8 @@ AST* parse_statement(Parser* ps) {
                     return parse_var_ass(ps);
                 case TOKEN_LPAREN:
                     return parse_func_call(ps);
-                    case TOKEN_LBRACK:
-                    return parse_subscript_ass(ps);
+                case TOKEN_LBRACK:
+                    return parse_dot_ass(ps);
                 case TOKEN_DOT: {
                     if (is_alias(ps, parser_peek(ps)))
                         return parse_alias_call(ps);

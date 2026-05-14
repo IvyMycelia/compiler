@@ -397,3 +397,10 @@ end
     end
     return &ts.data[index];
 end
+
+void free_token_stream(ts: @TokenStream):
+    prune ts.data
+    ts.data = null
+    ts.count = 0
+    ts.capacity = 0
+end

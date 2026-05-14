@@ -176,6 +176,13 @@ struct struct_def {
     fields: @AST,
 }
 
+struct union_def {
+    name_start: int,
+    name_length: int,
+
+    fields: @AST
+}
+
 struct struct_field {
     name_start: int,
     name_length: int,
@@ -291,6 +298,7 @@ union NodeData {
     _forward:       forwrd,
     _alias_call:    alias_call,
     _struct_def:    struct_def,
+    _union_def:     union_def,
     _struct_field:  struct_field,
     _struct_lit:    struct_lit,
     _dot_access:    dot_access,
