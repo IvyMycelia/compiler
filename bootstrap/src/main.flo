@@ -3,23 +3,16 @@ import <string>
 import <ctype>
 import <stdlib>
 
-current_file: @char
-
-forward void set_current_file(f: @char)
-
+import "./bootstrap/src/globals.flo" as globals
 import "./bootstrap/src/lexer.flo" as lexer
 import "./bootstrap/src/ast.flo" as parser
 import "./bootstrap/src/parser.flo" as parser
 import "./bootstrap/src/file.flo" as file
 import "./bootstrap/src/codegen.flo" as codegen
 
-void set_current_file(f: @char):
-    current_file = f
-end
-
 int main(argc: int, argv: @char[]):
     if argc < 2:
-        printf("Missing arguments! Use -help for usage instructions.\n")
+        printf("%sMissing arguments! Use -help for usage instructions.%s\n", RED, RESET)
         return -1
     end
 
@@ -33,36 +26,38 @@ int main(argc: int, argv: @char[]):
             end
 
             for i in 0..strlen(arg):
-                arg[i]= tolower(arg[i] as char)
+                arg[i] = tolower(arg[i] as char)
             end
 
             if not strcmp(arg, "help") or not strcmp(arg, "h"):
-                print("🌸 Welcome to Flower Compiler!\n\n")
+                printf("%s🌸 Welcome to Flower Compiler!\n\n%s", GREEN, RESET)
         
-                print("Usage:\n")
+                printf("%sUsage:\n%s", BLUE, RESET)
                 print("\tflower\t[options] <filepath>\n\n")
 
-                print("Options:\n")
+                printf("%sOptions:\n%s", BLUE, RESET)
                 print("\t-help,    -h\tShow this help message\n")
                 print("\t-version, -v\tShow the current version of FloC\n")
                 print("\t<filepath>\tSpecify the source code file to compile\n\n")
         
-                print("Example:\n")
+                printf("%sExample:\n%s", BLUE, RESET)
                 print("\tflower -help\n")
                 print("\tflower main.flo\n\n")
         
-                print("Tips:\n")
+                printf("%sTips:\n%s", BLUE, RESET)
                 print(" - You can use any number of dashes before a flag, e.g., ---help\n")
                 print(" - Flags are case-insensitive: -HELP works too!\n\n")
         
-                print("Happy Compiling with Flower! 🌼\n")
+                printf("%sHappy Compiling with Flower! 🌼\n%s", GREEN, RESET)
+                continue
             else if not strcmp(arg, "version") or not strcmp(arg, "v"):
                 print("Version: 0.0.4\n")
+                continue
             else:
-                print("Unrecognized flag argument! Use -help for more information.\n")
+                printf("%sUnrecognized flag argument! Use -help for more information.\n%s", RED, RESET)
             end
         else:
-            printf("Compiling file: %s\n", argv[i])
+            printf("%sCompiling file: %s%s\n", BLUE, argv[i], RESET)
             
             file: @char = file.read_file(argv[i])
             if not file:
@@ -76,7 +71,7 @@ int main(argc: int, argv: @char[]):
             lexer.init_token_stream(tokens)
 
             // Lexer
-            print("Lexing...\n")
+            print("Lexing...\n"); fflush(stdout)
             lexer.lex(tokens, file)
             // lexer.print_all_tokens(tokens, file)
 
@@ -85,7 +80,7 @@ int main(argc: int, argv: @char[]):
             // printf("sizeof TokenStream: %d\n", sizeof(TokenStream))
 
             // Parser
-            print("Parsing...\n")
+            print("Parsing...\n"); fflush(stdout)
             tree: Parser;
             parser.init_parser(&tree, tokens, file, argv[i])
             ast: @AST = parser.parse(&tree)
@@ -100,7 +95,7 @@ int main(argc: int, argv: @char[]):
 
             output: @FILE = fopen(out_c, "w")
             if not output:
-                print("Failed to open output file\n")
+                printf("%sFailed to open output file\n%s", RED, RESET)
                 return -1
             end
 
@@ -109,7 +104,7 @@ int main(argc: int, argv: @char[]):
                 has_output = 1
             end
 
-            print("Codegen...\n")
+            print("Codegen...\n"); fflush(stdout)
             emit_includes(ast, output, file, tokens)
             codegen(ast, output, file)
 
@@ -126,13 +121,16 @@ int main(argc: int, argv: @char[]):
             system(build_cmd)
 
             if has_output:
-                print("\nOUTPUT:\n")
+                printf("%s\nOUTPUT:\n", YELLOW)
+                fflush(stdout)
+                printf("%s", RESET)
+                fflush(stdout)
                 snprintf(build_cmd, sizeof(build_cmd), "./%s", bin_name)
             end
 
             system(build_cmd)
             print("\n")
-            printf("Compiled %s.c → %s\n", argv[i], bin_name)
+            printf("%sCompiled %s → %s%s\n", GREEN, out_c, bin_name, RESET)
             break
         end
     end

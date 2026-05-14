@@ -1,0 +1,12 @@
+current_file: @char
+
+void set_current_file(f: @char):
+    current_file = f
+end
+
+RED:    @char   =   "\033[0;31m"
+YELLOW: @char   =   "\033[0;33m"
+GREEN:  @char   =   "\033[0;32m"
+RESET:  @char   =   "\033[0m"
+BLUE:   @char   =   "\033[0;34m"
+BOLD:   @char   =   "\033[1m"
