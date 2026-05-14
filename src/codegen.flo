@@ -376,8 +376,8 @@ void gen_union(ast: @AST, out: @FILE, src: @char):
     end
     fprintf(out, "} %.*s;\n", ast.data._union_def.name_length, src + ast.data._union_def.name_start)
 
-    defined_structs[defined_union_count].name = strndup(src + ast.data._union_def.name_start, ast.data._union_def.name_length)
-    defined_structs[defined_union_count].length = ast.data._union_def.name_length
+    defined_unions[defined_union_count].name = strndup(src + ast.data._union_def.name_start, ast.data._union_def.name_length)
+    defined_unions[defined_union_count].length = ast.data._union_def.name_length
     defined_union_count = defined_union_count + 1
 end
 
