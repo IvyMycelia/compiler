@@ -560,6 +560,9 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
     path: char[256]
     snprintf(path, sizeof(path), "%.*s", ast.data._import.path_length - 2, src + ast.data._import.path_start + 1)
 
+    original: @char = current_file
+    current_file = path
+
     alias: char[64] = ""
     if ast.data._import.has_alias:
         snprintf(alias, sizeof(alias), "%.*s", ast.data._import.alias_length, src + ast.data._import.alias_start )
@@ -596,7 +599,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
             break
         end
     end
-
+    
     // If not cached, read and parse
     if imported_ast == null:
         imported_src = file.read_file(path)
@@ -605,11 +608,13 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
             exit(1)
         end
 
+        set_current_file(path)
+
         printf("Importing: %s\n", path)
         ts: @TokenStream = new TokenStream
         lexer.init_token_stream(ts)
         lexer.lex(ts, imported_src)
-
+        
         if strcmp(path, "PATH") == 0:
             lexer.print_all_tokens(ts, imported_src)
         end
@@ -623,9 +628,8 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
             has_stdio = 1
         end
 
-        printf("Parsing: %s\n", path)
         p: Parser
-        parser.init_parser(&p, ts, imported_src)
+        parser.init_parser(&p, ts, imported_src, path)
         imported_ast = parser.parse(&p)
 
         // Store in cache
@@ -641,7 +645,6 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
     emitted_count = emitted_count + 1
 
     // Emit functions
-    printf("Generating: %s\n", path)
     curr: @AST = imported_ast
     while curr != null:
         if curr.kind == AST_IMPORT:
@@ -665,6 +668,8 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
         end
         curr = curr.next
     end
+
+    current_file = original
 
     // Remove from in_progress
     in_progress_count = in_progress_count - 1
@@ -828,7 +833,7 @@ void gen_statement(ast: @AST, out: @FILE, src: @char):
             gen_break(ast, out, src)
         else:
             base: @Token = ast.data._flow_ctrl.base
-            printf("Unexpected token: %s for control flow at line %d\n", token_kind_name(base.kind), get_line(src, base.start))
+            printf("%s:%d:%d: error: Unexpected token: %s\n", current_file, get_line(src, base.start), get_col(src, base.start), token_kind_name(base.kind))
             exit(1)
         end
 

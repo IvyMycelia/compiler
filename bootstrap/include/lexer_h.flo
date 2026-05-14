@@ -116,3 +116,12 @@ prop int get_line(src: @char, pos: int):
     end
     return line;
 end
+
+prop int get_col(src: @char, pos: int):
+    col: int = 1
+    while pos > 0 and src[pos - 1] != '\n':
+        col = col + 1
+        pos = pos - 1
+    end
+    return col
+end

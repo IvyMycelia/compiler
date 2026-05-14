@@ -3,11 +3,19 @@ import <string>
 import <ctype>
 import <stdlib>
 
+current_file: @char
+
+forward void set_current_file(f: @char)
+
 import "./bootstrap/src/lexer.flo" as lexer
 import "./bootstrap/src/ast.flo" as parser
 import "./bootstrap/src/parser.flo" as parser
 import "./bootstrap/src/file.flo" as file
 import "./bootstrap/src/codegen.flo" as codegen
+
+void set_current_file(f: @char):
+    current_file = f
+end
 
 int main(argc: int, argv: @char[]):
     if argc < 2:
@@ -61,6 +69,8 @@ int main(argc: int, argv: @char[]):
                 return -1
             end
 
+            set_current_file(argv[i])
+
             // Initialize token handling
             tokens: @TokenStream = new TokenStream
             lexer.init_token_stream(tokens)
@@ -77,7 +87,7 @@ int main(argc: int, argv: @char[]):
             // Parser
             print("Parsing...\n")
             tree: Parser;
-            parser.init_parser(&tree, tokens, file)
+            parser.init_parser(&tree, tokens, file, argv[i])
             ast: @AST = parser.parse(&tree)
 
             // Codegen

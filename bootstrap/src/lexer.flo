@@ -289,7 +289,7 @@ prop void lex(ts: @TokenStream, src: @char):
             add_token(ts, TOKEN_COMMA, i, 1)
             i = i + 1 continue
         else:
-            printf("Unknown char '%c' (%d) at i=%d, line %d\n", src[i], src[i], i, get_line(src, i))
+            printf("%s:%d:%d: error: Unknown char '%c' (%d)\n", current_file, get_line(src, i), get_col(src, i), src[i], src[i])
             exit(1)
         end
 

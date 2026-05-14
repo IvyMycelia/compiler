@@ -6,7 +6,8 @@ struct Parser {
     pos: int,
     alias_start: int[32],
     alias_lengths: int[32],
-    alias_count: int
+    alias_count: int,
+    filename: @char
 }
 
 
@@ -20,11 +21,12 @@ struct Parser {
     return node
 end
 
-prop void init_parser(ps: @Parser, ts: @TokenStream, src: @char):
+prop void init_parser(ps: @Parser, ts: @TokenStream, src: @char, filename: @char):
     ps.ts = ts
     ps.src = src
     ps.pos = 0
     ps.alias_count = 0
+    ps.filename = filename
 end
 
 
@@ -80,7 +82,7 @@ void parser_expect(ps: @Parser, kind: int):
     curr_tok: @Token = parser_peek(ps)
 
     if curr_tok.kind != kind:
-        printf("Expected token: %s but got `%.*s` (%s) at line %d\n", token_kind_name(kind), curr_tok.length, curr_tok.start + ps.src, token_kind_name(curr_tok.kind), get_line(ps.src, curr_tok.start))
+        printf("%s:%d:%d: error: Expected token: %s but got `%.*s` (%s)\n", current_file, get_line(ps.src, curr_tok.start), get_col(ps.src, curr_tok.start), token_kind_name(kind), curr_tok.length, curr_tok.start + ps.src, token_kind_name(curr_tok.kind))
         exit(1)
     end    
     parser_advance(ps)
@@ -416,7 +418,7 @@ end
                 return parse_dot_ass(ps)
             end
         else:
-            printf("parse_statement: unexpected token after identifier: %s on line %d\n", token_kind_name(peek(ps.ts, ps.pos + 1).kind), get_line(ps.src, parser_peek(ps).start))
+            printf("%s:%d:%d: error: parse_statement: unexpected token after identifier: %s\n", current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), token_kind_name(peek(ps.ts, ps.pos + 1).kind))
             exit(1)
         end
 
@@ -463,7 +465,7 @@ end
             return node
             
     else:
-        printf("parse_statement: unexpected token: %s at line %d\n", token_kind_name(parser_peek(ps).kind), get_line(ps.src, parser_peek(ps).start))
+        printf("%s:%d:%d: error: parse_statement: unexpected token: %s\n",current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), token_kind_name(parser_peek(ps).kind))
         exit(1)
     end
 end
@@ -650,7 +652,7 @@ end
         return node
 
     else:
-        printf("parse_primary: unexpected token kind: %s at line %d\n", token_kind_name(parser_peek(ps).kind), get_line(ps.src, parser_peek(ps).start))
+        printf("%s:%d:%d: error: parse_primary: unexpected token kind: %s\n", current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), token_kind_name(parser_peek(ps).kind))
         exit(1)
     end
 end
@@ -875,7 +877,7 @@ end
         else if expr.kind == AST_SUBSCRIPT:
             expr.data._subscript.value = val
         else:
-            printf("Invalid assignment target at line: %d\n", get_line(ps.src, parser_peek(ps).start))
+            printf("%s:%d:%d: error: Invalid assignment target\n", current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start),)
             exit(1)
         end
     end
