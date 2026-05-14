@@ -3,12 +3,12 @@ import <string>
 import <ctype>
 import <stdlib>
 
-import "./bootstrap/src/globals.flo" as globals
-import "./bootstrap/src/lexer.flo" as lexer
-import "./bootstrap/src/ast.flo" as parser
-import "./bootstrap/src/parser.flo" as parser
-import "./bootstrap/src/file.flo" as file
-import "./bootstrap/src/codegen.flo" as codegen
+import "./src/globals.flo" as globals
+import "./src/lexer.flo" as lexer
+import "./src/ast.flo" as parser
+import "./src/parser.flo" as parser
+import "./src/file.flo" as file
+import "./src/codegen.flo" as codegen
 
 int main(argc: int, argv: @char[]):
     if argc < 2:

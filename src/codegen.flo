@@ -1,6 +1,6 @@
-import "./bootstrap/src/lexer.flo" as lexer
-import "./bootstrap/src/parser.flo" as parser
-import "./bootstrap/src/file.flo" as file
+import "./src/lexer.flo" as lexer
+import "./src/parser.flo" as parser
+import "./src/file.flo" as file
 
 has_stdlib: int = 0
 has_stdio: int = 0

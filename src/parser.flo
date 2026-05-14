@@ -1,5 +1,3 @@
-import "./bootstrap/include/ast_h.flo" as ast
-
 struct Parser {
     ts: @TokenStream,
     src: @char,
