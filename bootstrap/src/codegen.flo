@@ -208,21 +208,16 @@ end
 void gen_for(ast: @AST, out: @FILE, src: @char):
     desc_op: @char
     asc_op: @char
-    add_op: @char
-    sub_op: @char
     if ast.data._for_loop.inclusive:
         desc_op = ">="
-        sub_op = "--"
-    else if ast.data._for_loop.inclusive:
-        desc_op = ">"
-        add_op = "++"
-    end
-
-    if ast.data._for_loop.inclusive:
         asc_op = "<="
-    else if ast.data._for_loop.inclusive:
+    else:
+        desc_op = ">"
         asc_op = "<"
     end
+
+    add_op: @char = "++"
+    sub_op: @char = "--"
 
     from: @AST = ast.data._for_loop.from
     to: @AST = ast.data._for_loop.to
@@ -234,7 +229,6 @@ void gen_for(ast: @AST, out: @FILE, src: @char):
             reverse = 0
         end
 
-
         op: @char
         math_op: @char
         if reverse:
@@ -244,8 +238,6 @@ void gen_for(ast: @AST, out: @FILE, src: @char):
             op = asc_op
             math_op = add_op
         end
-
-
 
         fprintf(out, "for (int %.*s = ", ast.data._for_loop.var_length, src + ast.data._for_loop.var_start)
         gen_expr(ast.data._for_loop.from, out, src)
