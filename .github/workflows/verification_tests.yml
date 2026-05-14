@@ -12,7 +12,7 @@ jobs:
         run: actions/checkout@v4
 
       - name: Create ./bin and ./output directories
-        uses: mkdir -p ./bin ./output
+        run: mkdir -p ./bin ./output
 
       - name: Build Flower
         run:  |
