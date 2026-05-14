@@ -17,9 +17,9 @@ BOLD:   @char   =   "\033[1m"
     if import_path[0] == '<': return null
     end
 
-    resolved: char[512]
+    resolved: char[1024]
     if (import_path[0] == '.' and import_path[1] == '/') or (import_path[0] == '.' and import_path[1] == '.' and import_path[2] == '/'):
-        dir: char[256]
+        dir: char[1024]
         strncpy(dir, importing_file, sizeof(dir) - 1)
         dir[sizeof(dir) - 1] = '\0'
 

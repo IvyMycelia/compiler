@@ -23,9 +23,9 @@ char* resolve_path(char* importing_file, char* import_path) {
 if (import_path[0] == '<') {
 return NULL;
 }
-char resolved[512];
+char resolved[1024];
 if (import_path[0] == '.'  &&  import_path[1] == '/'  ||  import_path[0] == '.'  &&  import_path[1] == '.'  &&  import_path[2] == '/') {
-char dir[256];
+char dir[1024];
 strncpy(dir, importing_file, sizeof(dir) - 1);
 dir[sizeof(dir) - 1] = '\0';
 char* last_slash = strrchr(dir, '/');
