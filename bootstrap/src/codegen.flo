@@ -833,7 +833,7 @@ void gen_statement(ast: @AST, out: @FILE, src: @char):
             gen_break(ast, out, src)
         else:
             base: @Token = ast.data._flow_ctrl.base
-            printf("%s:%d:%d: error: Unexpected token: %s\n", current_file, get_line(src, base.start), get_col(src, base.start), token_kind_name(base.kind))
+            printf("%s%s:%d:%d: error:%s Unexpected token: %s\n", RED, current_file, get_line(src, base.start), get_col(src, base.start), RESET, token_kind_name(base.kind))
             exit(1)
         end
 
