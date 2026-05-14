@@ -280,11 +280,11 @@ end
 void gen_return(ast: @AST, out: @FILE, src: @char):
     // Emit: return n
     if ast.data._flow_ctrl.value == null:
-        fprintf(out, "return")
+        fprintf(out, "return;")
     else:
         fprintf(out, "return ")
         gen_expr(ast.data._flow_ctrl.value, out, src)
-        fprintf(out, "\n")
+        fprintf(out, ";\n")
     end
 end
 
@@ -331,10 +331,10 @@ void gen_struct(ast: @AST, out: @FILE, src: @char):
             fprintf(out, "]")
         end
 
-        fprintf(out, "\n")
+        fprintf(out, ";\n")
         field = field.next
     end
-    fprintf(out, "} %.*s\n", ast.data._struct_def.name_length, src + ast.data._struct_def.name_start)
+    fprintf(out, "} %.*s;\n", ast.data._struct_def.name_length, src + ast.data._struct_def.name_start)
 
     defined_structs[defined_count].name = strndup(src + ast.data._struct_def.name_start, ast.data._struct_def.name_length)
     defined_structs[defined_count].length = ast.data._struct_def.name_length
@@ -487,13 +487,13 @@ void gen_var_decl(ast: @AST, out: @FILE, src: @char):
         fprintf(out, " = ")
         gen_expr(ast.data._var_decl.value, out, src)
     end
-    fprintf(out, "\n")
+    fprintf(out, ";\n")
 end
 
 void gen_var_ass(ast: @AST, out: @FILE, src: @char):
     fprintf(out, "%.*s = ", ast.data._var_ass.name_length, src + ast.data._var_ass.name_start)
     gen_expr(ast.data._var_ass.value, out, src)
-    fprintf(out, "\n")
+    fprintf(out, ";\n")
 end
 
 
@@ -850,24 +850,24 @@ void gen_statement(ast: @AST, out: @FILE, src: @char):
             if ast.data._dot_access.value != null:
                 fprintf(out, " = ")
                 gen_expr(ast.data._dot_access.value, out, src)
-                fprintf(out, "\n")
+                fprintf(out, ";\n")
             end
         end
 
     else if ast.kind == AST_PRINT:
         fprintf(out, "printf(")
         gen_expr(ast.data._print.value, out, src)
-        fprintf(out, ")\n")
+        fprintf(out, ");\n")
                 
     else if ast.kind == AST_PRUNE:
         fprintf(out, "free(")
         gen_expr(ast.data._prune_free.ptr, out, src)
-        fprintf(out, ")\n")
+        fprintf(out, ");\n")
         
     else if ast.kind == AST_DEREF_ASS:
         fprintf(out, "*%.*s = ", ast.data._deref_ass.name_length, src + ast.data._deref_ass.name_start)
         gen_expr(ast.data._deref_ass.value, out, src)
-        fprintf(out, "\n")
+        fprintf(out, ";\n")
         
     else if ast.kind == AST_SUBSCRIPT:
         gen_expr(ast.data._subscript.array, out, src)
@@ -879,11 +879,11 @@ void gen_statement(ast: @AST, out: @FILE, src: @char):
             fprintf(out, " = ")
             gen_expr(ast.data._subscript.value, out, src)
         end
-        fprintf(out, "\n")
+        fprintf(out, ";\n")
         
     else if ast.kind == AST_ALIAS_CALL:
         gen_expr(ast, out, src)
-        fprintf(out, "\n")
+        fprintf(out, ";\n")
 
     else:
         printf("Unknown statement kind: %d\n", ast.kind)
