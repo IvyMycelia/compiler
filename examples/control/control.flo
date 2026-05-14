@@ -1,12 +1,12 @@
 import <stdio>
 
-import "./examples/control/if_else.flo" as if_else
-import "./examples/control/while.flo" as while_test
-import "./examples/control/for.flo" as for_test
-import "./examples/control/not.flo" as not_test
-import "./examples/control/unary_neg.flo" as unary_neg
-import "./examples/control/binary_ops.flo" as binary_ops
-import "./examples/control/functions.flo" as functions_test
+import "examples/control/if_else.flo" as if_else
+import "examples/control/while.flo" as while_test
+import "examples/control/for.flo" as for_test
+import "examples/control/not.flo" as not_test
+import "examples/control/unary_neg.flo" as unary_neg
+import "examples/control/binary_ops.flo" as binary_ops
+import "examples/control/functions.flo" as functions_test
 
 prop int test():
     total: int = 0

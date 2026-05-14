@@ -1,7 +1,7 @@
 import <stdio>
 import <stdlib>
 
-import "./examples/import/math.flo" as math
+import "examples/import/math.flo" as math
 
 prop int test():    
     total: int = 0

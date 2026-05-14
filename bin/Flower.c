@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <stdlib.h>
+char project_root[512];
 char* current_file;
 
 
@@ -14,6 +17,31 @@ char* GREEN = "\033[0;32m";
 char* RESET = "\033[0m";
 char* BLUE = "\033[0;34m";
 char* BOLD = "\033[1m";
+
+
+char* resolve_path(char* importing_file, char* import_path) {
+if (import_path[0] == '<') {
+return NULL;
+}
+char resolved[512];
+if (import_path[0] == '.'  &&  import_path[1] == '/') {
+char dir[256];
+strncpy(dir, importing_file, sizeof(dir));
+char* last_slash = strrchr(dir, '/');
+last_slash = last_slash + 1;
+if (last_slash) {
+*last_slash = '\0';
+}
+else {
+strcpy(dir, "./");
+}
+snprintf(resolved, sizeof(resolved), "%s%s", dir, import_path + 2);
+}
+else {
+snprintf(resolved, sizeof(resolved), "%s/%s", project_root, import_path);
+}
+return strdup(resolved);
+}
 #include <stdlib.h>
 int TOKEN_INT = 1;
 int TOKEN_FLOAT = 2;
@@ -2525,9 +2553,10 @@ else if (strcmp(name, "stdio")  &&  strcmp(name, "stdlib")) {
 fprintf(out, "#include <%s.h>\n", name);
 }
 return;}
-char path[256];
-snprintf(path, sizeof(path), "%.*s", ast->data._import.path_length - 2, src + ast->data._import.path_start + 1);
+char raw_path[256];
+snprintf(raw_path, sizeof(raw_path), "%.*s", ast->data._import.path_length - 2, src + ast->data._import.path_start + 1);
 char* original = current_file;
+char* path = resolve_path(current_file, raw_path);
 current_file = path;
 char alias[64] = "";
 if (ast->data._import.has_alias) {
@@ -2876,6 +2905,7 @@ curr = curr->next;
 
 
 int main(int argc, char* argv[]) {
+getcwd(project_root, sizeof(project_root));
 if (argc < 2) {
 printf("%sMissing arguments! Use -help for usage instructions.%s\n", RED, RESET);
 return -1;
@@ -2916,7 +2946,9 @@ printf("%sUnrecognized flag argument! Use -help for more information.\n%s", RED,
 }
 else {
 printf("%sCompiling file: %s%s\n", BLUE, argv[i], RESET);
-set_current_file(argv[i]);
+char abs_path[512];
+realpath(argv[i], abs_path);
+set_current_file(abs_path);
 char* file = file_read_file(argv[i]);
 if (!(file)) {
 return -1;

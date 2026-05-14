@@ -1,15 +1,15 @@
 import <stdio>
 import <stdlib>
 
-import "./examples/types/int.flo" as int_test
-import "./examples/types/float.flo" as float_test
-import "./examples/types/double.flo" as double_test
-import "./examples/types/char.flo" as char_test
-import "./examples/types/null.flo" as null_test
-import "./examples/types/cast.flo" as cast_test
-import "./examples/types/string.flo" as string_test
-import "./examples/types/array.flo" as array_test
-import "./examples/types/struct.flo" as struct_test
+import "examples/types/int.flo" as int_test
+import "examples/types/float.flo" as float_test
+import "examples/types/double.flo" as double_test
+import "examples/types/char.flo" as char_test
+import "examples/types/null.flo" as null_test
+import "examples/types/cast.flo" as cast_test
+import "examples/types/string.flo" as string_test
+import "examples/types/array.flo" as array_test
+import "examples/types/struct.flo" as struct_test
 
 prop int test():
     total: int = 0

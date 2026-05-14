@@ -1,6 +1,6 @@
 import <stdio>
 
-import "./examples/io/print.flo" as prints
+import "examples/io/print.flo" as prints
 
 prop int test():
     total: int = 0

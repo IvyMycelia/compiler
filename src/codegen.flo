@@ -1,6 +1,6 @@
-import "./src/lexer.flo" as lexer
-import "./src/parser.flo" as parser
-import "./src/file.flo" as file
+import "src/lexer.flo" as lexer
+import "src/parser.flo" as parser
+import "src/file.flo" as file
 
 has_stdlib: int = 0
 has_stdio: int = 0
@@ -557,10 +557,11 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
         return
     end
 
-    path: char[256]
-    snprintf(path, sizeof(path), "%.*s", ast.data._import.path_length - 2, src + ast.data._import.path_start + 1)
-
+    raw_path: char[256]
+    snprintf(raw_path, sizeof(raw_path), "%.*s", ast.data._import.path_length - 2, src + ast.data._import.path_start + 1)
+    
     original: @char = current_file
+    path: @char = resolve_path(current_file, raw_path)
     current_file = path
 
     alias: char[64] = ""

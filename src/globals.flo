@@ -1,3 +1,5 @@
+project_root: char[512]
+
 current_file: @char
 
 void set_current_file(f: @char):
@@ -10,3 +12,24 @@ GREEN:  @char   =   "\033[0;32m"
 RESET:  @char   =   "\033[0m"
 BLUE:   @char   =   "\033[0;34m"
 BOLD:   @char   =   "\033[1m"
+
+@char resolve_path(importing_file: @char, import_path: @char):
+    if import_path[0] == '<': return null
+    end
+
+    resolved: char[512]
+    if import_path[0] == '.' and import_path[1] == '/':
+        dir: char[256]
+        strncpy(dir, importing_file, sizeof(dir))
+        last_slash: @char = strrchr(dir, '/')
+        last_slash = last_slash + 1
+        if last_slash: @last_slash = '\0'
+        else: strcpy(dir, "./")
+        end
+
+        snprintf(resolved, sizeof(resolved), "%s%s", dir, import_path + 2)
+    else:
+        snprintf(resolved, sizeof(resolved), "%s/%s", project_root, import_path)
+    end
+    return strdup(resolved)
+end

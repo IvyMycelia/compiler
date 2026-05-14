@@ -1,12 +1,12 @@
 import <stdio>
 import <stdlib>
 
-import "./examples/memory/pointer_deref.flo" as deref
-import "./examples/memory/pointer_math.flo" as pmath
-import "./examples/memory/ptr.flo" as ptr
-import "./examples/memory/new_prune.flo" as new_prune
-import "./examples/memory/sizeof.flo" as size_of
-import "./examples/memory/realloc.flo" as realloc_test
+import "examples/memory/pointer_deref.flo" as deref
+import "examples/memory/pointer_math.flo" as pmath
+import "examples/memory/ptr.flo" as ptr
+import "examples/memory/new_prune.flo" as new_prune
+import "examples/memory/sizeof.flo" as size_of
+import "examples/memory/realloc.flo" as realloc_test
 
 prop int test():
     total: int = 0

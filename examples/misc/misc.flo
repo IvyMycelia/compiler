@@ -1,6 +1,6 @@
 import <stdio>
 
-import "./examples/misc/fibonacci.flo" as fibonacci
+import "examples/misc/fibonacci.flo" as fibonacci
 
 prop int test():
     total: int = 0

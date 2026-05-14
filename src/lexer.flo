@@ -1,4 +1,4 @@
-import "./include/lexer_h.flo"
+import "include/lexer_h.flo"
 
 prop void init_token_stream(ts: @TokenStream):
     ts.data = null
