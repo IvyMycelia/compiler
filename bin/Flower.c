@@ -24,16 +24,21 @@ if (import_path[0] == '<') {
 return NULL;
 }
 char resolved[512];
-if (import_path[0] == '.'  &&  import_path[1] == '/') {
+if (import_path[0] == '.'  &&  import_path[1] == '/'  ||  import_path[0] == '.'  &&  import_path[1] == '.'  &&  import_path[2] == '/') {
 char dir[256];
-strncpy(dir, importing_file, sizeof(dir));
+strncpy(dir, importing_file, sizeof(dir) - 1);
+dir[sizeof(dir) - 1] = '\0';
 char* last_slash = strrchr(dir, '/');
-last_slash = last_slash + 1;
 if (last_slash) {
+last_slash = last_slash + 1;
 *last_slash = '\0';
 }
 else {
 strcpy(dir, "./");
+}
+if (strlen(dir) + strlen(import_path) >= sizeof(resolved)) {
+printf("%sPath too long: %s%s%s\n", RED, dir, import_path, RESET);
+return NULL;
 }
 snprintf(resolved, sizeof(resolved), "%s%s", dir, import_path + 2);
 }
