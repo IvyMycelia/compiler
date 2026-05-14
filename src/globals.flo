@@ -30,7 +30,7 @@ BOLD:   @char   =   "\033[1m"
         else: strcpy(dir, "./")
         end
 
-        if strlen(dir) + strlen(import_path) >= sizeof(resolved):
+        if strlen(dir) + strlen(import_path) + 1 > sizeof(resolved):
             printf("%sPath too long: %s%s%s\n", RED, dir, import_path, RESET)
             return null
         end

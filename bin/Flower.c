@@ -36,7 +36,7 @@ last_slash = last_slash + 1;
 else {
 strcpy(dir, "./");
 }
-if (strlen(dir) + strlen(import_path) >= sizeof(resolved)) {
+if (strlen(dir) + strlen(import_path) + 1 > sizeof(resolved)) {
 printf("%sPath too long: %s%s%s\n", RED, dir, import_path, RESET);
 return NULL;
 }
@@ -2652,6 +2652,7 @@ gen_var_decl(curr, out, imported_src);
 }
 curr = curr->next;
 }
+free(path);
 current_file = original;
 in_progress_count = in_progress_count - 1;
 free(in_progress[in_progress_count]);

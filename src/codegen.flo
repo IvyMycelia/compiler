@@ -670,6 +670,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
         curr = curr.next
     end
 
+    prune path
     current_file = original
 
     // Remove from in_progress
