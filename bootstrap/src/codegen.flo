@@ -295,7 +295,7 @@ end
 
 void gen_break(ast: @AST, out: @FILE, src: @char):
     // Emit: break
-    fprintf(out, "break\n")
+    fprintf(out, "break;\n")
 end
 
 
@@ -846,7 +846,7 @@ void gen_statement(ast: @AST, out: @FILE, src: @char):
         if obj_kind == AST_DOT_ACCESS or obj_kind == AST_SUBSCRIPT:
             fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
         else:
-            fprintf(out, ".%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
+            fprintf(out, "->%.*s", ast.data._dot_access.field_length, src + ast.data._dot_access.field_start)
         end
         if ast.data._dot_access.value != null:
             fprintf(out, " = ")
