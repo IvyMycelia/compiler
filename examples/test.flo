@@ -1,12 +1,12 @@
 import <stdio>
 import <stdlib>
 
-import "../memory/memory.flo" as memory
-import "../types/types.flo" as types
-import "../control/control.flo" as control
-import "../io/io.flo" as io
-import "../misc/misc.flo" as misc
-import "../import/import.flo" as imports
+import "./memory/memory.flo" as memory
+import "./types/types.flo" as types
+import "./control/control.flo" as control
+import "./io/io.flo" as io
+import "./misc/misc.flo" as misc
+import "./import/import.flo" as imports
 
 int main():
     total: int = 0
