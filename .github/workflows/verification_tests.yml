@@ -16,7 +16,7 @@ jobs:
 
       - name: Build Flower
         run:  |
-          gcc ./bin/Flower.c - O2 -o ./bin/Flower
+          gcc ./bin/Flower.c -O2 -o ./bin/Flower
 
       - name: Run Tests
         run:  ./bin/Flower ./examples/test.flo ./output/out
