@@ -17,6 +17,7 @@ jobs:
       - name: Build Flower
         working-directory: .
         run:  |
+          ls
           gcc ./bin/Flower.c -O2 -o ./bin/Flower
 
       - name: Run Tests
