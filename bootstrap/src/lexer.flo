@@ -157,7 +157,8 @@ prop void lex(ts: @TokenStream, src: @char):
                 add_token(ts, TOKEN_VOID, start, length)
             else if length == 4 and not strncmp(src + start, "prop", 4):
                 add_token(ts, TOKEN_PROP, start, length)
-
+            else if length == 5 and not strncmp(src + start, "union", 5):
+                add_token(ts, TOKEN_UNION, start, length)
             else if length == 5 and not strncmp(src + start, "while", 5):
                 add_token(ts, TOKEN_WHILE, start, length)
             else if length == 5 and not strncmp(src + start, "prune", 5):
@@ -180,7 +181,8 @@ prop void lex(ts: @TokenStream, src: @char):
                 add_token(ts, TOKEN_IMPORT, start, length)
             else if length == 6 and not strncmp(src + start, "double", 6):
                 add_token(ts, TOKEN_DOUBLE, start, length)
-
+            else if length == 7 and not strncmp(src + start, "forward", 7):
+                add_token(ts, TOKEN_FORWARD, start, length)
             else if length == 8 and not strncmp(src + start, "continue", 8):
                 add_token(ts, TOKEN_CONTINUE, start, length)
 
@@ -313,6 +315,7 @@ end
 
         // Identifiers 
     else if kind == TOKEN_STRUCT:       return "TOKEN_STRUCT"
+    else if kind == TOKEN_UNION:        return "TOKEN_UNION"
     else if kind == TOKEN_IDENTIFIER:   return "TOKEN_IDENTIFIER"
     else if kind == TOKEN_NUMBER:       return "TOKEN_NUMBER"
 

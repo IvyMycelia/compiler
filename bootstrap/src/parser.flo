@@ -995,12 +995,16 @@ prop @AST parse(ps: @Parser):
             node = parse_import(ps)
         else if parser_peek(ps).kind == TOKEN_STRUCT:
             node = parse_struct(ps)
+        else if parser_peek(ps).kind == TOKEN_UNION:
+            node = parse_union(ps)
         else if parser_peek(ps).kind == TOKEN_PROP:
             parser_advance(ps)
             func: @AST = parse_func_def(ps)
             prop_node: @AST = make_node(AST_PROP)
             prop_node.data._prop.func = func
             node = prop_node
+        else if parser_peek(ps).kind == TOKEN_FORWARD:
+            node = parse_forward(ps)
         else if parser_peek(ps).kind == TOKEN_IDENTIFIER and peek(ps.ts, ps.pos + 1).kind == TOKEN_COLON:
             node = parse_var_decl(ps)
         else: 
