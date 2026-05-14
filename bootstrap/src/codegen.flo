@@ -605,6 +605,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
             exit(1)
         end
 
+        printf("Importing: %s\n", path)
         ts: @TokenStream = new TokenStream
         lexer.init_token_stream(ts)
         lexer.lex(ts, imported_src)
@@ -622,6 +623,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
             has_stdio = 1
         end
 
+        printf("Parsing: %s\n", path)
         p: Parser
         parser.init_parser(&p, ts, imported_src)
         imported_ast = parser.parse(&p)
@@ -639,6 +641,7 @@ void gen_import(ast: @AST, out: @FILE, src: @char):
     emitted_count = emitted_count + 1
 
     // Emit functions
+    printf("Generating: %s\n", path)
     curr: @AST = imported_ast
     while curr != null:
         if curr.kind == AST_IMPORT:
@@ -703,8 +706,8 @@ void gen_expr(ast: @AST, out: @FILE, src: @char):
             gen_expr(elem, out, src)
             if elem.next != null:
                 fprintf(out, ", ")
-                elem = elem.next
             end
+            elem = elem.next
         end
         fprintf(out, "}")
         
