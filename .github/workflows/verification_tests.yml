@@ -15,6 +15,7 @@ jobs:
         run: mkdir -p ./bin ./output
 
       - name: Build Flower
+        working-directory: .
         run:  |
           gcc ./bin/Flower.c -O2 -o ./bin/Flower
 
