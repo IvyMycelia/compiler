@@ -1,7 +1,7 @@
 import <stdio>
 import <stdlib>
 
-import "examples/memory/memory.flo" as memory
+import "./examples/memory/memory.flo" as memory
 import "./examples/types/types.flo" as types
 import "./examples/control/control.flo" as control
 import "./examples/io/io.flo" as io

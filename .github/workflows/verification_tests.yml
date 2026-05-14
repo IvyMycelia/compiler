@@ -18,6 +18,7 @@ jobs:
         working-directory: .
         run:  |
           ls
+          ls ./examples
           gcc ./bin/Flower.c -O2 -o ./bin/Flower
 
       - name: Run Tests
