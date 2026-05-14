@@ -1,0 +1,22 @@
+name: Verify Tests
+
+on:
+  push:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create ./bin and ./output directories
+        uses: mkdir -p ./bin ./output
+
+      - name: Build Flower
+        run:  |
+          gcc ./bin/Flower.c - O2 -o ./bin/Flower
+
+      - name: Run Tests
+        run:  ./bin/Flower ./examples/test.flo ./output/out

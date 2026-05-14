@@ -1,8 +1,7 @@
 build
 fib
-bin
+bin/Flower
 output.c
-*.c
 output
 
 *.o
