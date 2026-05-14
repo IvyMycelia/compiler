@@ -59,12 +59,12 @@ int main(argc: int, argv: @char[]):
         else:
             printf("%sCompiling file: %s%s\n", BLUE, argv[i], RESET)
             
+            set_current_file(argv[i])
             file: @char = file.read_file(argv[i])
             if not file:
                 return -1
             end
 
-            set_current_file(argv[i])
 
             // Initialize token handling
             tokens: @TokenStream = new TokenStream

@@ -2916,11 +2916,11 @@ printf("%sUnrecognized flag argument! Use -help for more information.\n%s", RED,
 }
 else {
 printf("%sCompiling file: %s%s\n", BLUE, argv[i], RESET);
+set_current_file(argv[i]);
 char* file = file_read_file(argv[i]);
 if (!(file)) {
 return -1;
 }
-set_current_file(argv[i]);
 TokenStream* tokens = malloc(sizeof(TokenStream));
 lexer_init_token_stream(tokens);
 printf("Lexing...\n");
