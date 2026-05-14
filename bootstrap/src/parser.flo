@@ -408,7 +408,7 @@ end
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_LPAREN:
             return parse_func_call(ps)
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_LBRACK:
-            return parse_subscript_ass(ps)
+            return parse_dot_ass(ps)
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_DOT:
             if is_alias(ps, parser_peek(ps)):
                 return parse_alias_call(ps)
