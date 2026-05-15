@@ -1,7 +1,6 @@
 prop @char read_file(path: @char):
     f: @FILE = fopen(path, "r")
     if f == null:
-        printf("DEBUG: fopen failed for: %s\n", path)
         return null
     end
 

@@ -2563,9 +2563,6 @@ snprintf(raw_path, sizeof(raw_path), "%.*s", ast->data._import.path_length - 2, 
 char* original = current_file;
 char* path = resolve_path(current_file, raw_path);
 current_file = path;
-printf("DEBUG: project_root = %s\n", project_root);
-printf("DEBUG: import_path = %s\n", raw_path);
-printf("DEBUG: resolved = %s\n", path);
 char alias[64] = "";
 if (ast->data._import.has_alias) {
 snprintf(alias, sizeof(alias), "%.*s", ast->data._import.alias_length, src + ast->data._import.alias_start);
