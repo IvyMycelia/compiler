@@ -19,7 +19,7 @@ jobs:
         env:
           ASAN_OPTIONS: detect_leaks=0:abort_on_error=0:strict_string_checks=0
         run:  |
-          ls ./bin
+          pwd
           gcc \
             -fsanitize=address \
             -fno-omit-frame-pointer \
