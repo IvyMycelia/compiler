@@ -5,6 +5,7 @@ bin/Flower_*
 output.c
 output
 
+.vscode
 *.o
 .DS_Storebuild/
 output/

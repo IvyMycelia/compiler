@@ -1,30 +1,34 @@
 {
-  "name": "flower-language",
-  "displayName": "Flower Language Support",
-  "description": "Syntax highlighting for Flower programming language",
-  "version": "0.0.1",
-  "publisher": "you",
-  "engines": {
-    "vscode": "^1.60.0"
-  },
-  "categories": [
-    "Programming Languages"
-  ],
-  "contributes": {
-    "languages": [
-      {
-        "id": "flower",
-        "aliases": ["Flower", "flower"],
-        "extensions": [".flo"],
-        "configuration": "./language-configuration.json"
-      }
+    "name": "flower-language",
+    "displayName": "Flower Language Support",
+    "description": "Syntax highlighting for Flower",
+    "version": "1.0.0",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "activationEvents": [
+        "onLanguage:flower"
     ],
-    "grammars": [
-      {
-        "language": "flower",
-        "scopeName": "source.flower",
-        "path": "./syntaxes/flower.tmLanguage.json"
-      }
-    ]
-  }
+    "main": "./index.js",
+    "contributes": {
+        "languages": [
+        {
+            "id": "flower",
+            "aliases": [
+            "Flower"
+            ],
+            "extensions": [
+            ".flo"
+            ],
+            "configuration": "./language-configuration.json"
+        }
+        ],
+        "grammars": [
+        {
+            "language": "flower",
+            "scopeName": "source.flower",
+            "path": "./syntaxes/flower.tmLanguage.json"
+        }
+        ]
+    }
 }
