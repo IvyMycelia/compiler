@@ -10,7 +10,7 @@
     ],
 
     "indentationRules": {
-        "increaseIndentPattern": "(if|while|for|else|struct|union|:)",
+        "increaseIndentPattern": "(if|while|for|else|struct|union)\\s*:$)",
         "decreaseIndentPattern": "^\\s*end"
     }
 }
