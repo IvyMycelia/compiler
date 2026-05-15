@@ -36,4 +36,5 @@ echo "Bootstrap successful"
 echo "Previous version backed up to: $BACKUP"
 
 # Cleanup
+cp $NEW_C ./bin/Flower.c
 rm -f $NEW_C $NEW_BIN $TEST_C

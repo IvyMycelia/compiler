@@ -14,10 +14,12 @@ bin/Flower: src/*.flo
 	gcc ./bin/Flower.c -o bin/Flower.new
 	mv bin/Flower.new bin/Flower
 
-bootstrap: ./scripts/build.sh
+bootstrap:
+	./scripts/build.sh
 	@echo "Verified bootstrap build complete"
 
-rebuild: clean build
+rebuild: 
+	clean build
 	@echo "Clean rebuild complete"
 
 test:

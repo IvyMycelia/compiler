@@ -1,6 +1,7 @@
 build
 fib
 bin/Flower
+bin/Flower_*
 output.c
 output
 
