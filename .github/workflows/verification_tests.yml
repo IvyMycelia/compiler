@@ -19,8 +19,6 @@ jobs:
         env:
           ASAN_OPTIONS: detect_leaks=0:abort_on_error=0:strict_string_checks=0
         run:  |
-          pwd
-          ls -la /home/runner/work/flower/flower/examples/memory/memory.flo
           gcc \
             -fsanitize=address \
             -fno-omit-frame-pointer \
