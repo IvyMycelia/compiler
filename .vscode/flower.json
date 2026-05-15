@@ -1,7 +1,7 @@
 {
     "name": "Flower",
     "scopeName": "source.flo",
-    "fileTypes": ["flo"],
+    "fileTypes": [ "flo" ],
     "patterns": [
         {
             "include": "#comments"
@@ -28,7 +28,7 @@
             "patterns": [
                 {
                     "name": "comment.line.flower",
-                    "math": "//.*$"
+                    "match": "//.*$"
                 }
             ]
         },
@@ -36,11 +36,11 @@
             "patterns": [
                 {
                     "name": "keyword.control.flower",
-                    "math": "\\b(if|else|while|for|return|break|continue|end|in)\\b"
+                    "match": "\\b(if|else|while|for|return|break|continue|end|in)\\b"
                 },
                 {
                     "name": "keyword.other.flower",
-                    "math": "\\b(import|as|prop|new|prune|print|sizeof|struct|union|forward|null|not|and|or)\\b"
+                    "match": "\\b(import|as|prop|new|prune|print|sizeof|struct|union|forward|null|not|and|or)\\b"
                 }
             ]
         },
@@ -68,7 +68,7 @@
             "patterns": [
                 {
                     "name": "constant.numeric.flower",
-                    "math": "\\b\\d+(\\.\\d+)?\\b"
+                    "match": "\\b\\d+(\\.\\d+)?\\b"
                 }
             ]
         },
@@ -76,7 +76,7 @@
             "patterns": [
                 {
                     "name": "keyword.operator.flower",
-                    "math": "(\\+|-|\\*|/|@|&|=|==|!=|!|<|>|<=|>=)"
+                    "match": "(\\+|-|\\*|/|@|&|=|==|!=|!|<|>|<=|>=)"
                 }
             ]
         },
@@ -84,7 +84,7 @@
             "patterns": [
                 {
                     "name": "support.type.flower",
-                    "math": "\\b(int|float|double|char|void|string|bool)\\b"
+                    "match": "\\b(int|float|double|char|void|string|bool)\\b"
                 }
             ]
         }
