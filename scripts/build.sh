@@ -15,7 +15,7 @@ gcc $NEW_C -o $NEW_BIN -fsanitize=address -fno-omit-frame-pointer
 echo "=== Testing new compiler ==="
 $NEW_BIN ./src/main.flo ${NEW_C}.test
 
-if [ $? ne 0 ]; then
+if [ $? -ne 0 ]; then
     echo "ERROR: New compiler failed self-test!"
     rm $NEW_C $NEW_BIN
     exit 1
@@ -35,4 +35,4 @@ echo "Bootstrap successful"
 echo "Previous version backed up to: $BACKUP"
 
 # Cleanup
-rm -f $NEW_C ${NEW_C}.c $NEW_BIN
+rm -f $NEW_C ${NEW_C}.test $NEW_BIN
