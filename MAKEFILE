@@ -1,0 +1,29 @@
+.PHONY: build bootstrap test clean help
+
+help:
+	@echo "Flower Compiler	- Build Commands"
+	@echo "	make build		- Build compiler from source"
+	@echo "	make bootstrap	- Build compiler with verification"
+	@echo " make test		- Run test suite"
+	@echo " make clean		- Remove build artifacts"
+
+build:
+	@mkdir -p bin build
+	gcc -Wall -Wextra -g src/*.c -o bin/Flower -fsanitize=address -fno-omit-frame-pointer
+	@echo "Built FloC from source"
+
+bootstrap: ./scripts/bootstrap.sh
+	@echo "Verified bootstrap build complete"
+
+rebuild: clean build
+	@echo "Clean rebuild complete"
+
+test:
+	./bin/Flower ./examples/test.flo ./output/out
+
+clean:
+	rm -rf build/ output/
+	rm -f bin/Flower_* bin/Flower.c
+	@echo "Removed artifacts"
+
+all: build test

@@ -5,4 +5,7 @@ output.c
 output
 
 *.o
+.DS_Storebuild/
+output/
+bin/Flower_backup
 .DS_Store
