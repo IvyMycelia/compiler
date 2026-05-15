@@ -1,0 +1,69 @@
+struct FormatterConfig {
+    indent_size: int,
+    use_tabls: int
+}
+
+void format_file(input_path: @char, output_path: @char, config: FormatterConfig):
+    src: @char = file.read_file(input_path)
+    if src == null:
+        printf("%sError:%s could not read file %s\n", RED, RESET, input_path)
+        return
+    end
+
+    ts: @TokenStream = new TokenStream
+    lexer.init_token_stream(ts)
+    lexer.lex(ts, src)
+
+    out: @FILE = fopen(output_path, "w")
+    if out == null:
+        printf("%sError:%s could not open output file %s\n", RED, RESET, output_path)
+        return
+    end
+
+    indent_level: int = 0
+    current_line_empty: int = 0
+    
+    for i in 0..ts.count:
+        tok: @Token = ts.data + i
+        kind: int = tok.kind
+        text: @char = src + tok.start
+        length: int = tok.length
+
+        if kind == TOKEN_NEWLINE:
+            fprintf(out, "\n")
+            current_line_empty = 1
+        else:
+            if current_line_empty:
+                for j in 0..indent_level:
+                    if config.use_tabs:
+                        fprintf(out, "\t")
+                    else:
+                        for k in 0..config.indent_size:
+                            fprintf(out, " ")
+                        end
+                    end
+                end
+                current_line_empty = 0
+            end
+
+            fprintf(out, "%.*s", length, text)
+
+            if kind == TOKEN_COMMA or kind == TOKEN_COLON:
+                fprintf(out, " ")
+            end
+
+            if kind == TOKEN_COLON:
+                indent_level = indent_level + 1
+            else if kind == TOKEN_END:
+                indent_level = indent_level - 1
+            end
+        end
+    end
+
+    fclose(out)
+    prune src
+    free_token_stream(ts)
+    prune ts
+
+    printf("Formatted %s → %s\n", input_path, output_path)
+end

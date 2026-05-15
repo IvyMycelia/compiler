@@ -5,11 +5,14 @@ import <stdlib>
 import <unistd>
 
 import "src/globals.flo" as globals
+
 import "src/lexer.flo" as lexer
 import "src/ast.flo" as parser
 import "src/parser.flo" as parser
 import "src/file.flo" as file
 import "src/codegen.flo" as codegen
+
+import "src/formatter.flo" as formatter
 
 int main(argc: int, argv: @char[]):
     getcwd(project_root, sizeof(project_root));
