@@ -18,6 +18,7 @@ BOLD:   @char   =   "\033[1m"
     end
 
     resolved: char[1024]
+    
     if (import_path[0] == '.' and import_path[1] == '/') or (import_path[0] == '.' and import_path[1] == '.' and import_path[2] == '/'):
         dir: char[1024]
         strncpy(dir, importing_file, sizeof(dir) - 1)
