@@ -1,18 +1,20 @@
 .PHONY: build bootstrap test clean help
 
 help:
-	@echo "Flower Compiler	- Build Commands"
-	@echo "	make build		- Build compiler from source"
-	@echo "	make bootstrap	- Build compiler with verification"
-	@echo " make test		- Run test suite"
-	@echo " make clean		- Remove build artifacts"
+	@echo "Flower Compiler\t\t:   Build Commands"
+	@echo "\tmake build\t:   Build compiler from source"
+	@echo "\tmake bootstrap\t:   Build compiler with verification"
+	@echo "\tmake test\t:   Run test suite"
+	@echo "\tmake clean\t:   Remove build artifacts"
 
-build:
-	@mkdir -p bin build
-	gcc -Wall -Wextra -g src/*.c -o bin/Flower -fsanitize=address -fno-omit-frame-pointer
-	@echo "Built FloC from source"
+build: bin/Flower
 
-bootstrap: ./scripts/bootstrap.sh
+bin/Flower: src/*.flo
+	./bin/Flower ./src/main.flo ./bin/Flower.c
+	gcc ./bin/Flower.c -o bin/Flower.new
+	mv bin/Flower.new bin/Flower
+
+bootstrap: ./scripts/build.sh
 	@echo "Verified bootstrap build complete"
 
 rebuild: clean build
