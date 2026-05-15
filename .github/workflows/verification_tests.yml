@@ -33,4 +33,7 @@ jobs:
           ./bin/Flower ./src/main.flo ./bin/Flower
 
       - name: Run Tests
-        run:  ./bin/Flower ./examples/test.flo ./output/out
+        run: |
+          pwd
+          ls -la examples/memory/memory.flo
+          ./bin/Flower ./examples/test.flo ./output/out
