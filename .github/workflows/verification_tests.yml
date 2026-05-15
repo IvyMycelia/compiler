@@ -33,5 +33,7 @@ jobs:
       - name: Run Tests
         run: |
           pwd
+          ls -la ./
+          ls -la ./examples/
           ls -la examples/memory/memory.flo
           ./bin/Flower ./examples/test.flo ./output/out
