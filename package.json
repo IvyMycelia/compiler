@@ -1,0 +1,28 @@
+{
+    "name": "flower",
+    "version": "1.0.0",
+    "description": "Flower Programming Language",
+
+    "contributes": {
+        "languages": [
+            {
+                "id": "flower",
+                "aliases": [
+                    "Flower"
+                ],
+                "extensions": [
+                    ".flo"
+                ],
+                "configuration": "./.vscode/flower-config.json"
+            }
+        ],
+
+        "grammars": [
+            {
+                "language": "flower",
+                "scopeName": "source.flo",
+                "path": "./.vscode/flower.json"
+            }
+        ]
+    }
+}
