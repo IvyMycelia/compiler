@@ -130,7 +130,7 @@ Current experiments welcome. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) fo
 - Performance optimizations
 - Proper compilation (not just C transpiling)
 
-See [docs/](docs/) for more
+See [docs/ROADMAP.md](docs/ROADMAP.md) for more
 
 ## Why Flower?
 
