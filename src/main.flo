@@ -64,7 +64,7 @@ int main(argc: int, argv: @char[]):
                     return -1
                 end
 
-                config: @FormatterConfig
+                config: @FormatterConfig = new FormatterConfig
                 config.indent_size = 4
                 config.use_tabs = 0
 

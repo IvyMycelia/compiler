@@ -17,6 +17,10 @@ void format_file(input_path: @char, output_path: @char, config: @FormatterConfig
     lexer.init_token_stream(ts)
     lexer.lex(ts, src)
 
+    cmd: char[512]
+    snprintf(cmd, sizeof(cmd), "mkdir -p $(dirname %s)", output_path)
+    system(cmd)
+
     out: @FILE = fopen(output_path, "w")
     if out == null:
         printf("%sError:%s could not open output file %s\n", RED, RESET, output_path)

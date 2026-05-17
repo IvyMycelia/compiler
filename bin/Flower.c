@@ -2925,6 +2925,9 @@ return;}
 TokenStream* ts = malloc(sizeof(TokenStream));
 lexer_init_token_stream(ts);
 lexer_lex(ts, src);
+char cmd[512];
+snprintf(cmd, sizeof(cmd), "mkdir -p $(dirname %s)", output_path);
+system(cmd);
 FILE* out = fopen(output_path, "w");
 if (out == NULL) {
 printf("%sError:%s could not open output file %s\n", RED, RESET, output_path);
@@ -3015,7 +3018,7 @@ if (i + 2 >= argc) {
 printf("%sformat requires input and output files%s\n", RED, RESET);
 return -1;
 }
-FormatterConfig* config;
+FormatterConfig* config = malloc(sizeof(FormatterConfig));
 config->indent_size = 4;
 config->use_tabs = 0;
 format_file(argv[i + 1], argv[i + 2], config);
