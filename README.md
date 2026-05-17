@@ -101,7 +101,7 @@ Flower generates C code, compiles it with Clang, and produces a binary. It will 
 - **Memory**: `new` allocates, `prune` frees
 - **Imports**: Load other files, aliases, organize code into modules (TO BE IMPROVED)
 
-## Experimentation
+## Experimentation & Contribution
 
 Flower is a platform for compiler research and language design. The whole premise of this project was to see what was possible, and Flower derives its magic from its ability to "branch-off" and be experimented with.
 
@@ -113,7 +113,7 @@ git checkout -b experiment/optimization-x
 # Does it help? Submit a Pull Request! Doesn't? Learn and continue
 ```
 
-Current experiments welcome. See [docs/](docs/).
+Current experiments welcome. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for specific details on how to contribute.
 
 ## Project Status
 
