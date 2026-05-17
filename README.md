@@ -125,12 +125,12 @@ Current experiments welcome. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) fo
 ## Next
 
 - Error Recovery (better compiler feedback, non-terminating parser)
-- String type (proper, not just char*)
+- String operations
 - Standard library creation / expansion
 - Performance optimizations
 - Proper compilation (not just C transpiling)
 
-See [docs/](docs/) for more
+See [docs/ROADMAP.md](docs/ROADMAP.md) for more
 
 ## Why Flower?
 
