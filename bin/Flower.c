@@ -2908,6 +2908,70 @@ gen_var_decl(curr, out, src);
 curr = curr->next;
 }
 }
+#include <stdlib.h>
+
+
+typedef struct FormatterConfig {
+int indent_size;
+int use_tabs;
+} FormatterConfig;
+
+
+void format_file(char* input_path, char* output_path, FormatterConfig* config) {
+char* src = file_read_file(input_path);
+if (src == NULL) {
+printf("%sError:%s could not read file %s\n", RED, RESET, input_path);
+return;}
+TokenStream* ts = malloc(sizeof(TokenStream));
+lexer_init_token_stream(ts);
+lexer_lex(ts, src);
+FILE* out = fopen(output_path, "w");
+if (out == NULL) {
+printf("%sError:%s could not open output file %s\n", RED, RESET, output_path);
+return;}
+int indent_level = 0;
+int current_line_empty = 0;
+for (int i = 0; ((0) > (ts->count)) ? i > (ts->count) : i < (ts->count); ((0) > (ts->count)) ? i-- : i++) {
+Token* tok = ts->data + i;
+int kind = tok->kind;
+char* text = src + tok->start;
+int length = tok->length;
+if (kind == TOKEN_NEWLINE) {
+fprintf(out, "\n");
+current_line_empty = 1;
+}
+else {
+if (current_line_empty) {
+for (int j = 0; ((0) > (indent_level)) ? j > (indent_level) : j < (indent_level); ((0) > (indent_level)) ? j-- : j++) {
+if (config->use_tabs) {
+fprintf(out, "\t");
+}
+else {
+for (int k = 0; ((0) > (config->indent_size)) ? k > (config->indent_size) : k < (config->indent_size); ((0) > (config->indent_size)) ? k-- : k++) {
+fprintf(out, " ");
+}
+}
+}
+current_line_empty = 0;
+}
+fprintf(out, "%.*s", length, text);
+if (kind == TOKEN_COMMA  ||  kind == TOKEN_COLON) {
+fprintf(out, " ");
+}
+if (kind == TOKEN_COLON) {
+indent_level = indent_level + 1;
+}
+else if (kind == TOKEN_END) {
+indent_level = indent_level - 1;
+}
+}
+}
+fclose(out);
+free(src);
+free_token_stream(ts);
+free(ts);
+printf("Formatted %s → %s\n", input_path, output_path);
+}
 
 
 int main(int argc, char* argv[]) {
@@ -2945,6 +3009,17 @@ continue;
 else if (!(strcmp(arg, "version"))  ||  !(strcmp(arg, "v"))) {
 printf("Version: 0.0.4\n");
 continue;
+}
+else if (!(strcmp(arg, "format"))  ||  !(strcmp(arg, "f"))) {
+if (i + 2 >= argc) {
+printf("%sformat requires input and output files%s\n", RED, RESET);
+return -1;
+}
+FormatterConfig* config;
+config->indent_size = 4;
+config->use_tabs = 0;
+format_file(argv[i + 1], argv[i + 2], config);
+return 0;
 }
 else {
 printf("%sUnrecognized flag argument! Use -help for more information.\n%s", RED, RESET);

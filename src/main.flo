@@ -58,6 +58,18 @@ int main(argc: int, argv: @char[]):
             else if not strcmp(arg, "version") or not strcmp(arg, "v"):
                 print("Version: 0.0.4\n")
                 continue
+            else if not strcmp(arg, "format") or not strcmp(arg, "f"):
+                if i + 2 >= argc:
+                    printf("%sformat requires input and output files%s\n", RED, RESET)
+                    return -1
+                end
+
+                config: @FormatterConfig
+                config.indent_size = 4
+                config.use_tabs = 0
+
+                format_file(argv[i + 1], argv[i + 2], config)
+                return 0
             else:
                 printf("%sUnrecognized flag argument! Use -help for more information.\n%s", RED, RESET)
             end

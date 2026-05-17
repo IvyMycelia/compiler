@@ -1,9 +1,12 @@
+import "src/file.flo" as file
+import "src/lexer.flo" as lexer
+
 struct FormatterConfig {
     indent_size: int,
-    use_tabls: int
+    use_tabs: int
 }
 
-void format_file(input_path: @char, output_path: @char, config: FormatterConfig):
+void format_file(input_path: @char, output_path: @char, config: @FormatterConfig):
     src: @char = file.read_file(input_path)
     if src == null:
         printf("%sError:%s could not read file %s\n", RED, RESET, input_path)
