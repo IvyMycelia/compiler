@@ -27,12 +27,12 @@ When it comes to contributing to Flower, it's important for development purposes
 
 When you make a branch, there's six different **prefixes**  you can use:
 
-- `feature/name`    — New language feature or capability
-- `fix/name`        — Bug fix
-- `experiment/name` — Experimental optimization, syntax, or feature (something that uses a different implementation than currently applied)
-- `docs/name`       — Documentation
-- `refactor/name`   — Code restructuring
-- `chore/name`      — Maintence, tooling, cleanup, CI, build scripts, etc (anything that doesn't fit above or doesn't have to do with docs or code)
+- `feature/`    — New language feature or capability
+- `fix/`        — Bug fix
+- `experiment/` — Experimental optimization, syntax, or feature (something that uses a different implementation than currently applied)
+- `docs/`       — Documentation
+- `refactor/`   — Code restructuring
+- `chore/`      — Maintence, tooling, cleanup, CI, build scripts, etc (anything that doesn't fit above or doesn't have to do with docs or code)
 
 For example, if you wanted to make a **feature** contribution that implements **booleans**, you could do:
 
@@ -45,7 +45,7 @@ NOTE: If you are contributing an 'experiment,' please include a `synopsis.md` th
 1. Create a branch from `main`:
 
 ```bash
-`git checkout -b [prefix]-[your-idea]`
+`git checkout -b <prefix>/<your-idea>`
 ```
 
 2. Make changes, test frequently:
@@ -68,7 +68,7 @@ feature: add boolean type to language
 4. Push and create a **Pull Request**:
 
 ```bash
-git push origin [prefix]/[your-idea]
+git push origin <prefix>/<your-idea>
 ```
 
 5. After review, your contribution will either be **merged** or **closed** with feedback regarding the decision
@@ -128,7 +128,7 @@ Changes to any party needs testing through the full pipeline.
 Have an optimization idea? A change in syntax? Try it:
 
 ```bash
-git checkout -b experiment/[your-idea]
+git checkout -b experiment/<your-idea>
 # modify parser, codegen, etc
 make bootstrap
 make test
