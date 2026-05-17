@@ -9,7 +9,8 @@ help:
 
 build: bin/Flower
 
-bin/Flower: src/*.flo
+bin/Flower: 
+	src/*.flo
 	./bin/Flower ./src/main.flo ./bin/Flower.c
 	gcc ./bin/Flower.c -o bin/Flower.new
 	mv bin/Flower.new bin/Flower
