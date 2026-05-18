@@ -1875,12 +1875,20 @@ return node;
 
 
 AST* parse_union(Parser* ps) {
-parser_expect(ps, TOKEN_UNION);
+if (!(parser_expect(ps, TOKEN_UNION))) {
+return NULL;
+}
 AST* node = make_node(AST_UNION_DEF);
 Token* name = parser_advance(ps);
+if (name->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected union name");
+return NULL;
+}
 node->data._struct_def.name_start = name->start;
 node->data._struct_def.name_length = name->length;
-parser_expect(ps, TOKEN_LBRACE);
+if (!(parser_expect(ps, TOKEN_LBRACE))) {
+return NULL;
+}
 AST* field_head = NULL;
 AST* field_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RBRACE) {
@@ -1890,11 +1898,24 @@ parser_advance(ps);
 if (parser_peek(ps)->kind == TOKEN_RBRACE) {
 break;
 }
+if (parser_peek(ps)->kind == TOKEN_RBRACE) {
+break;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in union body");
+return node;
+}
 AST* field = make_node(AST_STRUCT_FIELD);
 Token* fname = parser_advance(ps);
+if (fname->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected field name");
+continue;
+}
 field->data._struct_field.name_start = fname->start;
 field->data._struct_field.name_length = fname->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+continue;
+}
 field->data._struct_field.type = *(parse_type(ps));
 if (field_head == NULL) {
 field_head = field;
@@ -1922,8 +1943,7 @@ else if (expr->kind == AST_SUBSCRIPT) {
 expr->data._subscript.value = val;
 }
 else {
-printf("%s%s:%d:%d: error:%s Invalid assignment target\n", RED, current_file, get_line(ps->src, parser_peek(ps)->start), get_col(ps->src, parser_peek(ps)->start), RESET);
-exit(1);
+parser_error(ps, "Invalid assignment target");
 }
 }
 return expr;

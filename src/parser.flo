@@ -861,7 +861,7 @@ end
 
         field.data._struct_field.type = @parse_type(ps)
 
-        if field_head == NULL:
+        if field_head == null:
             field_head = field
         else:
             field_tail.next = field
@@ -878,15 +878,25 @@ end
 end
 
 @AST parse_union(ps: @Parser):
-    parser_expect(ps, TOKEN_UNION)
+    if !parser_expect(ps, TOKEN_UNION):
+        return null
+    end
 
     node: @AST = make_node(AST_UNION_DEF)
 
     name: @Token = parser_advance(ps)
+
+    if name.kind != TOKEN_IDENTIFIER:
+        parser_error(ps, "Expected union name")
+        return null
+    end
+
     node.data._struct_def.name_start = name.start
     node.data._struct_def.name_length = name.length
 
-    parser_expect(ps, TOKEN_LBRACE)
+    if !parser_expect(ps, TOKEN_LBRACE):
+        return null
+    end
 
     field_head: @AST = NULL
     field_tail: @AST = NULL
@@ -897,20 +907,45 @@ end
         if parser_peek(ps).kind == TOKEN_RBRACE:
             break
         end
+
+        if parser_peek(ps).kind == TOKEN_RBRACE:
+            break
+        end
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in union body")
+            return node
+        end
+
         field: @AST = make_node(AST_STRUCT_FIELD)
+
         fname: @Token = parser_advance(ps)
+
+        if fname.kind != TOKEN_IDENTIFIER:
+            parser_error(ps, "Expected field name")
+            continue
+        end
+
         field.data._struct_field.name_start = fname.start
         field.data._struct_field.name_length = fname.length
-        parser_expect(ps, TOKEN_COLON)
+
+        if !parser_expect(ps, TOKEN_COLON):
+            continue
+        end
+
         field.data._struct_field.type = @parse_type(ps)
-        if field_head == NULL:
+
+        if field_head == null:
             field_head = field
         else:
             field_tail.next = field
         end
+
         field_tail = field
     end
+
     parser_expect(ps, TOKEN_RBRACE)
+
     node.data._struct_def.fields = field_head
 
     return node
@@ -927,8 +962,7 @@ end
         else if expr.kind == AST_SUBSCRIPT:
             expr.data._subscript.value = val
         else:
-            printf("%s%s:%d:%d: error:%s Invalid assignment target\n", RED, current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), RESET)
-            exit(1)
+            parser_error(ps, "Invalid assignment target")
         end
     end
     return expr
