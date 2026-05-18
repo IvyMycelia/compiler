@@ -568,49 +568,97 @@ end
 // === EXECUTIVE ===
 
 @AST parse_expr(ps: @Parser, min_prec: int):
+    if parser_peek(ps).kind == TOKEN_EOF:
+        parser_error(ps, "Unexpected end of file in expression")
+        return null
+    end
+
     left: @AST = parse_primary(ps)
+
+    if left == null:
+        return null
+    end
 
     if parser_peek(ps).kind == TOKEN_AS:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in cast expression")
+            return null
+        end
+
         cast: @AST = make_node(AST_CAST)
+
         cast.data._cast.value = left
         cast.data._cast.type = @parse_type(ps)
+
         left = cast
     end
 
     while get_precedence(parser_peek(ps).kind) > min_prec:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            break
+        end
+
         op: @Token = parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file after binary operator")
+            return left
+        end
+
         right: @AST = parse_expr(ps, get_precedence(op.kind))
+
+        if right == null:
+            return left
+        end
+
         bin: @AST = make_node(AST_BINARY_OP)
+
         bin.data._binary.left = left
         bin.data._binary.right = right
         bin.data._binary.op = op.kind
+
         left = bin
     end
+
     return left
 end
 
 @AST parse_statement(ps: @Parser):
     parser_skip_newline(ps)
+
+    if parser_peek(ps).kind == TOKEN_EOF:
+        parser_error(ps, "Unexpected end of file while parsing statement")
+        return null
+    end
+
     // printf("parse_statement: token kind %d\n", parser_peek(ps).kind)
     if parser_peek(ps).kind == TOKEN_IDENTIFIER:
         if peek(ps.ts, ps.pos + 1).kind == TOKEN_COLON:
             return parse_var_decl(ps)
+
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_ASSIGN:
             return parse_var_ass(ps)
+
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_LPAREN:
             return parse_func_call(ps)
+
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_LBRACK:
             return parse_dot_ass(ps)
+
         else if peek(ps.ts, ps.pos + 1).kind == TOKEN_DOT:
             if is_alias(ps, parser_peek(ps)):
                 return parse_alias_call(ps)
             else:
                 return parse_dot_ass(ps)
             end
+
         else:
-            printf("%s%s:%d:%d: error:%s parse_statement: unexpected token after identifier: %s\n", RED, current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), RESET, token_kind_name(peek(ps.ts, ps.pos + 1).kind))
-            exit(1)
+            message: char[128]
+            snprintf(message, sizeof(message), "Unexpected token while parsing statement after identifier: %s", token_kind_name(peek(ps.ts, ps.pos + 1).kind))
+            parser_error(ps, message)
+            return null
         end
 
     else if parser_peek(ps).kind == TOKEN_WHILE:
@@ -633,84 +681,190 @@ end
 
     else if parser_peek(ps).kind ==  TOKEN_PRINT:
         parser_advance(ps)
+
         node: @AST = make_node(AST_PRINT)
-        parser_expect(ps, TOKEN_LPAREN)
+
+        if !parser_expect(ps, TOKEN_LPAREN):
+            return node
+        end
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in print statement")
+            return node
+        end
+
         node.data._print.value = parse_expr(ps, 0)
+
         parser_expect(ps, TOKEN_RPAREN)
+
         return node
 
     else if parser_peek(ps).kind ==  TOKEN_PRUNE:
-            parser_advance(ps)
-            node: @AST = make_node(AST_PRUNE)
-            node.data._prune_free.ptr = parse_expr(ps, 0)
+        parser_advance(ps)
+
+        node: @AST = make_node(AST_PRUNE)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in prune statement")
             return node
+        end
+
+        node.data._prune_free.ptr = parse_expr(ps, 0)
+
+        return node
 
     else if parser_peek(ps).kind ==  TOKEN_AT:
-            parser_advance(ps)
-            node: @AST = make_node(AST_DEREF_ASS)
-            name: @Token = parser_advance(ps)
-            node.data._deref_ass.name_length = name.length
-            node.data._deref_ass.name_start = name.start
-            parser_expect(ps, TOKEN_ASSIGN)
-            node.data._deref_ass.value = parse_expr(ps, 0)
+        parser_advance(ps)
+
+        node: @AST = make_node(AST_DEREF_ASS)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in dereference statement")
             return node
-            
+        end
+
+        name: @Token = parser_advance(ps)
+
+        if name.kind != TOKEN_IDENTIFIER:
+            parser_error(ps, "Expected identifier after '@'")
+            return node
+        end
+
+        node.data._deref_ass.name_length = name.length
+        node.data._deref_ass.name_start = name.start
+        
+        if !parser_expect(ps, TOKEN_ASSIGN):
+            return node
+        end
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in dereference assignment")
+            return node
+        end
+
+        node.data._deref_ass.value = parse_expr(ps, 0)
+
+        return node
+        
     else:
-        printf("%s%s:%d:%d: error:%s parse_statement: unexpected token: %s\n", RED, current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), RESET, token_kind_name(parser_peek(ps).kind))
-        exit(1)
+        message: char[128]
+        snprintf(message, sizeof(message), "Unexpected token while parsing statement: %s", token_kind_name(parser_peek(ps).kind))
+        parser_error(ps, message)
+        return null
     end
 end
 
 @AST parse_primary(ps: @Parser):
+    if parser_peek(ps).kind == TOKEN_EOF:
+        parser_error(ps, "Unexpected end of file while parsing primary")
+        return null
+    end
+
     if parser_peek(ps).kind == TOKEN_IDENTIFIER:
         if peek(ps.ts, ps.pos + 1).kind == TOKEN_LPAREN:
             node: @AST = parse_func_call(ps)
 
             if parser_peek(ps).kind == TOKEN_DOT:
                 parser_advance(ps)
+
+                if parser_peek(ps).kind == TOKEN_EOF:
+                    parser_error(ps, "Unexpected end of file after '.'")
+                    return null
+                end
+
                 field: @Token = parser_advance(ps)
+
+                if field.kind != TOKEN_IDENTIFIER:
+                    parser_error(ps, "Expected identifier name after '.'")
+                    return node
+                end
+
                 dot: @AST = make_node(AST_DOT_ACCESS)
+
                 dot.data._dot_access.object = node
                 dot.data._dot_access.field_length = field.length
                 dot.data._dot_access.field_start = field.start
+
                 return dot
             end
+
             return node
         end
+
         if peek(ps.ts, ps.pos + 1).kind == TOKEN_DOT and is_alias(ps, parser_peek(ps)):
             return parse_alias_call(ps)
         end
+
         tok: @Token = parser_peek(ps)
         parser_advance(ps)
+
         node: @AST = make_node(AST_VAR_REF)
+
         node.data._var_ref.name_start = tok.start
         node.data._var_ref.name_length = tok.length
 
         if parser_peek(ps).kind == TOKEN_AT:
             parser_advance(ps)
+
+            if parser_peek(ps).kind == TOKEN_EOF:
+                parser_error(ps, "Unexpected end of file after '@'")
+                return node
+            end
+
             operand: @AST = parse_primary(ps)
+
             drf: @AST = make_node(AST_DEREF)
             drf.data._unary.operand = operand
+
             return drf
         end
 
         while parser_peek(ps).kind == TOKEN_DOT or parser_peek(ps).kind == TOKEN_LBRACK:
             if parser_peek(ps).kind == TOKEN_DOT:
                 parser_advance(ps)
+
+                if parser_peek(ps).kind == TOKEN_EOF:
+                    parser_error(ps, "Unexpected end of file after '.'")
+                    return node
+                end
+
                 field: @Token = parser_advance(ps)
+
+                if field.kind != TOKEN_IDENTIFIER:
+                    parser_error(ps, "Expected identifier name after '.'")
+                    return node
+                end
+
                 dot: @AST = make_node(AST_DOT_ACCESS)
+
                 dot.data._dot_access.object = node
                 dot.data._dot_access.field_start = field.start
                 dot.data._dot_access.field_length = field.length
+
                 node = dot
+
             else if parser_peek(ps).kind == TOKEN_LBRACK:
                 parser_advance(ps)
+
+                if parser_peek(ps).kind == TOKEN_EOF:
+                    parser_error(ps, "Unexpected end of file in subscript")
+                    return node
+                end
+
                 idx: @AST = parse_expr(ps, 0)
-                parser_expect(ps, TOKEN_RBRACK)
+
+                if !parser_expect(ps, TOKEN_RBRACK):
+                    return node
+                end
+
                 sub: @AST = make_node(AST_SUBSCRIPT)
+
                 sub.data._subscript.array = node
                 sub.data._subscript.index = idx
+
                 node = sub
+            else:
+                break
             end
         end
 
@@ -718,133 +872,225 @@ end
 
     else if parser_peek(ps).kind == TOKEN_NUMBER:
         lit: @AST = make_node(AST_LITERAL)
+
         lit.value = atoi(ps.src + parser_peek(ps).start)
+
         parser_advance(ps)
+
         return lit
 
     else if parser_peek(ps).kind == TOKEN_FLOAT_LIT:
         lit: @AST = make_node(AST_FLOAT_LIT)
+
         lit.data._float_lit.start = parser_peek(ps).start
         lit.data._float_lit.length = parser_peek(ps).length
+
         parser_advance(ps)
+
         return lit
 
     else if parser_peek(ps).kind == TOKEN_NULL:
         nll: @AST = make_node(AST_NULL)
+
         parser_advance(ps)
+
         return nll
 
     else if parser_peek(ps).kind == TOKEN_STRING_LIT:
         str: @AST = make_node(AST_STRING_LIT)
+
         str.data._string.str_start = parser_peek(ps).start
         str.data._string.str_length = parser_peek(ps).length
+
         parser_advance(ps)
+
         return str
 
     else if parser_peek(ps).kind == TOKEN_LBRACK:
         parser_advance(ps)
+
         arr: @AST = make_node(AST_ARRAY_LIT)
-        elem_head: @AST = NULL
-        elem_tail: @AST = NULL
+
+        elem_head: @AST = null
+        elem_tail: @AST = null
             
         while parser_peek(ps).kind != TOKEN_RBRACK:
+            if parser_peek(ps).kind == TOKEN_EOF:
+                parser_error(ps, "Unexpected end of file in array literal")
+                return arr
+            end
+
             elem: @AST = parse_expr(ps, 0)
-            if elem_head == NULL:
+
+            if elem_head == null:
                 elem_head = elem
             else:
                 elem_tail.next = elem
             end
             elem_tail = elem
+
             if parser_peek(ps).kind == TOKEN_COMMA:
                 parser_advance(ps)
             end
         end
 
         parser_expect(ps, TOKEN_RBRACK)
+
         arr.data._array.elements = elem_head
+
         return arr
 
     else if parser_peek(ps).kind == TOKEN_LBRACE:
         parser_advance(ps)
+
         strct_lit: @AST = make_node(AST_STRUCT_LIT)
-        struct_head: @AST = NULL
-        struct_tail: @AST = NULL
+
+        struct_head: @AST = null
+        struct_tail: @AST = null
 
         while parser_peek(ps).kind != TOKEN_RBRACE:
+            if parser_peek(ps).kind == TOKEN_EOF:
+                parser_error(ps, "Unexpected end of file in struct literal")
+                return strct_lit
+            end
+
             elem: @AST = parse_expr(ps, 0)
-            if struct_head == NULL:
+
+            if struct_head == null:
                 struct_head = elem
             else:
                 struct_tail.next = elem
             end
             struct_tail = elem
+
             if parser_peek(ps).kind == TOKEN_COMMA:
                 parser_advance(ps)
             end
         end
 
         parser_expect(ps, TOKEN_RBRACE)
+
         strct_lit.data._struct_lit.elements = struct_head
+
         return strct_lit
 
     else if parser_peek(ps).kind == TOKEN_LPAREN:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in parenthesized expression")
+            return null
+        end
+
         expr: @AST = parse_expr(ps, 0)
+
         parser_expect(ps, TOKEN_RPAREN)
+
         return expr
 
     else if parser_peek(ps).kind == TOKEN_NEW:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file after 'new'")
+            return null
+        end
+
         new_node: @AST = make_node(AST_NEW)
+
         new_node.data._new_alloc.type = @parse_type(ps)
+
         return new_node
 
     else if parser_peek(ps).kind == TOKEN_NOT:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file after 'not'")
+            return null
+        end
+
         operand: @AST = parse_primary(ps)
+
         unry: @AST = make_node(AST_UNARY_NOT)
         unry.data._unary.operand = operand
+
         return unry
 
     else if parser_peek(ps).kind == TOKEN_MINUS:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file after unary '-' operator")
+            return null
+        end
+
         operand: @AST = parse_primary(ps)
+
         unry: @AST = make_node(AST_UNARY_NEG)
         unry.data._unary.operand = operand
+
         return unry
 
     else if parser_peek(ps).kind == TOKEN_AT:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file after '@'")
+            return null
+        end
+
         operand: @AST = parse_primary(ps)
+
         deref: @AST = make_node(AST_DEREF)
         deref.data._deref.operand = operand
+
         return deref
 
     else if parser_peek(ps).kind == TOKEN_AMPERSAND:
         parser_advance(ps)
+
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file after '&'")
+            return null
+        end
+
         operand: @AST = parse_primary(ps)
+
         get: @AST = make_node(AST_GET_ADDR)
         get.data._get_addr.operand = operand
+
         return get
 
     else if parser_peek(ps).kind == TOKEN_SIZEOF:
         parser_advance(ps)
-        parser_expect(ps, TOKEN_LPAREN)
+
+        if !parser_expect(ps, TOKEN_LPAREN):
+            return null
+        end
+
         node: @AST = make_node(AST_SIZEOF)
+
         node.data._size_of.type = @parse_type(ps)
+
         parser_expect(ps, TOKEN_RPAREN)
+
         return node
 
     else if parser_peek(ps).kind == TOKEN_CHAR_LIT:
         node: @AST = make_node(AST_CHAR_LIT)
+
         node.data._char_lit.start = parser_peek(ps).start
         node.data._char_lit.length = parser_peek(ps).length
+
         parser_advance(ps)
+
         return node
 
     else:
-        printf("%s%s:%d:%d: error:%s parse_primary: unexpected token kind: %s\n", RED, current_file, get_line(ps.src, parser_peek(ps).start), get_col(ps.src, parser_peek(ps).start), RESET, token_kind_name(parser_peek(ps).kind))
-        exit(1)
+        message: char[128]
+        snprintf(message, sizeof(message), "parse_primary: unexpected token kind: %s", token_kind_name(parser_peek(ps).kind))
+        return null
     end
 end
 
