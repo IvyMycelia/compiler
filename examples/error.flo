@@ -1,13 +1,167 @@
-import <stdio>
+// ========================
+// Struct errors
+// ========================
 
-int add(a: int b: int):  // Missing comma - error
-    return a + b
+struct MissingBrace
+
+struct BadField {
+    field
+}
+
+struct BadField2 {
+    :
+}
+
+struct EOFField {
+    name:
+}
+
+// ========================
+// Function definition errors
+// ========================
+
+void badFunc1(
+    
+void badFunc2(a: int, b: int
+
+void badFunc3():
+    x: int = 5
+
+void badFunc4():
+    x =
 end
 
-int broken(:  // Missing param name - error
-    return 0
+void badFunc5():
+    return 1 +
 end
 
-int working(x: int):
-    return x
+// ========================
+// Variable declaration / assignment
+// ========================
+
+x:
+y: int =
+z =
+
+// ========================
+// Function call errors
+// ========================
+
+print(
+print(1,
+foo(
+foo(1, 2,
+
+// ========================
+// Array literal errors
+// ========================
+
+arr: int[] = [
+arr2: int[] = [1,
+arr3: int[] = [1, 2,
+
+// ========================
+// Struct literal errors
+// ========================
+
+s: Test = {
+s2: Test = {1,
+s3: Test = {1, 2,
+
+// ========================
+// Parenthesized expression errors
+// ========================
+
+x: int = (
+x: int = (1 +
+x: int = (1 + 2
+
+// ========================
+// Unary operator EOF errors
+// ========================
+
+x: int = !
+x: int = -
+x: int = @
+x: int = &
+
+// ========================
+// Cast errors
+// ========================
+
+x: int = 5 as
+x: int = 5 as @
+
+// ========================
+// Binary operator EOF errors
+// ========================
+
+x: int = 1 +
+x: int = 1 *
+x: int = 1 ==
+x: int = 1 &&
+
+// ========================
+// Subscript errors
+// ========================
+
+arr[
+
+arr[1
+
+arr[1] =
+
+arr[] = 5
+
+// ========================
+// Dot access errors
+// ========================
+
+obj.
+foo().
+
+// ========================
+// sizeof errors
+// ========================
+
+x: int = sizeof(
+x: int = sizeof(int
+x: int = sizeof()
+
+// ========================
+// new errors
+// ========================
+
+x: @int = new
+x: @int = new @
+
+// ========================
+// Dereference assignment errors
+// ========================
+
+@ = 5
+@x =
+@x = 1 +
+
+// ========================
+// Flow control errors
+// ========================
+
+void test():
+    return 1 +
 end
+
+void test2():
+    break
+    continue
+    return (
+end
+
+// ========================
+// Invalid statements
+// ========================
+
+lll
+.
+]
+)
