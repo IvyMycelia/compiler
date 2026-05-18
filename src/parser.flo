@@ -230,22 +230,27 @@ end
 
 @AST parse_return(ps: @Parser):
     node: @AST = make_node(AST_FLOW_CONTROL)
+
     node.data._flow_ctrl.base = parser_peek(ps)
+
     parser_advance(ps)
 
     if parser_peek(ps).kind == TOKEN_NEWLINE or parser_peek(ps).kind == TOKEN_SEMI or parser_peek(ps).kind == TOKEN_EOF:
-        node.data._flow_ctrl.value = NULL
+        node.data._flow_ctrl.value = null
         return node
     end
 
     node.data._flow_ctrl.value = parse_expr(ps, 0)
+
     return node
 end
 
 @AST parse_continue(ps: @Parser):
     node: @AST = make_node(AST_FLOW_CONTROL)
-    node.data._flow_ctrl.value = NULL
+
+    node.data._flow_ctrl.value = null
     node.data._flow_ctrl.base = parser_peek(ps)
+
     parser_advance(ps)
 
     return node
@@ -253,8 +258,10 @@ end
 
 @AST parse_break(ps: @Parser):
     node: @AST = make_node(AST_FLOW_CONTROL)
-    node.data._flow_ctrl.value = NULL
+
+    node.data._flow_ctrl.value = null
     node.data._flow_ctrl.base = parser_peek(ps)
+
     parser_advance(ps)
 
     return node
