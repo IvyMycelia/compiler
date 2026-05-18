@@ -1295,12 +1295,20 @@ return node;
 
 AST* parse_while(Parser* ps) {
 AST* node = make_node(AST_WHILE);
-parser_expect(ps, TOKEN_WHILE);
+if (!(parser_expect(ps, TOKEN_WHILE))) {
+return node;
+}
 node->data._while_loop.condition = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in if statement body");
+return node;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END) {
 break;
@@ -1322,12 +1330,20 @@ return node;
 
 AST* parse_if(Parser* ps, int is_elf_if) {
 AST* node = make_node(AST_IF);
-parser_expect(ps, TOKEN_IF);
+if (!(parser_expect(ps, TOKEN_IF))) {
+return node;
+}
 node->data._if_condition.condition = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END  &&  parser_peek(ps)->kind != TOKEN_ELSE) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in if statement body");
+return node;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END  ||  parser_peek(ps)->kind == TOKEN_ELSE) {
 break;
@@ -1350,10 +1366,16 @@ node->data._if_condition.else_branch = parse_if(ps, 1);
 else {
 AST* else_node = make_node(AST_IF);
 else_node->data._if_condition.condition = NULL;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* else_body_head = NULL;
 AST* else_body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END  &&  parser_peek(ps)->kind != TOKEN_ELSE) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in if statement body");
+return node;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END  ||  parser_peek(ps)->kind == TOKEN_ELSE) {
 break;
@@ -1372,7 +1394,9 @@ node->data._if_condition.else_branch = else_node;
 }
 }
 if (!(is_elf_if)) {
-parser_expect(ps, TOKEN_END);
+if (!(parser_expect(ps, TOKEN_END))) {
+return node;
+}
 }
 return node;
 }
@@ -1380,29 +1404,42 @@ return node;
 
 AST* parse_for(Parser* ps) {
 AST* node = make_node(AST_FOR);
-parser_expect(ps, TOKEN_FOR);
+if (!(parser_expect(ps, TOKEN_FOR))) {
+return node;
+}
 Token* var = parser_advance(ps);
 if (var->kind != TOKEN_IDENTIFIER) {
-printf("Expected loop variable after for, got %s\n", token_kind_name(var->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Expected loop variable after for, got %s\n", token_kind_name(var->kind));
+parser_error(ps, message);
+return node;
 }
 node->data._for_loop.var_start = var->start;
 node->data._for_loop.var_length = var->length;
-parser_expect(ps, TOKEN_IN);
+if (!(parser_expect(ps, TOKEN_IN))) {
+return node;
+}
 AST* from = parse_expr(ps, 0);
 node->data._for_loop.from = from;
 Token* op_range = parser_advance(ps);
 if (op_range->kind != TOKEN_DOTDOT  &&  op_range->kind != TOKEN_DOTDOTEQ) {
-printf("Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range->kind));
+parser_error(ps, message);
+return node;
 }
 node->data._for_loop.inclusive = op_range->kind == TOKEN_DOTDOTEQ;
 AST* to = parse_expr(ps, 0);
 node->data._for_loop.to = to;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in for loop body");
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END) {
 break;
@@ -1717,7 +1754,7 @@ AST* param_head = NULL;
 AST* param_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
 if (parser_peek(ps)->kind == TOKEN_EOF) {
-parser_error(ps, "Unexpected end of file in function definition parameter list");
+parser_error(ps, "Unexpected end of file in function definition parameters");
 break;
 }
 AST* param = parse_param(ps);
@@ -1768,10 +1805,16 @@ AST* node = make_node(AST_FUNC_CALL);
 Token* name = parser_advance(ps);
 node->data._func_call.name_start = name->start;
 node->data._func_call.name_length = name->length;
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
 AST* arg_head = NULL;
 AST* arg_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function call arguments");
+return node;
+}
 AST* param = parse_expr(ps, 0);
 if (arg_head == NULL) {
 arg_head = param;
@@ -1795,14 +1838,22 @@ AST* node = make_node(AST_ALIAS_CALL);
 Token* alias = parser_advance(ps);
 node->data._alias_call.alias_start = alias->start;
 node->data._alias_call.alias_length = alias->length;
-parser_expect(ps, TOKEN_DOT);
+if (!(parser_expect(ps, TOKEN_DOT))) {
+return node;
+}
 Token* func = parser_advance(ps);
 node->data._alias_call.func_start = func->start;
 node->data._alias_call.func_length = func->length;
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
 AST* arg_head = NULL;
 AST* arg_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function alias arguments");
+return node;
+}
 AST* arg = parse_expr(ps, 0);
 if (arg_head == NULL) {
 arg_head = arg;
@@ -1826,7 +1877,9 @@ AST* node = make_node(AST_PARAM);
 Token* name = parser_advance(ps);
 node->data._func_params.name_start = name->start;
 node->data._func_params.name_length = name->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 node->data._func_params.type = *(parse_type(ps));
 return node;
 }

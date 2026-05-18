@@ -262,25 +262,42 @@ end
 
 @AST parse_while(ps: @Parser):
     node: @AST = make_node(AST_WHILE)
-    parser_expect(ps, TOKEN_WHILE)
+
+    if !parser_expect(ps, TOKEN_WHILE):
+        return node
+    end
+
     node.data._while_loop.condition = parse_expr(ps, 0)
-    parser_expect(ps, TOKEN_COLON)
-    body_head: @AST = NULL
-    body_tail: @AST = NULL
+
+    if !parser_expect(ps, TOKEN_COLON):
+        return node
+    end
+
+    body_head: @AST = null
+    body_tail: @AST = null
     while parser_peek(ps).kind != TOKEN_END:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in if statement body")
+            return node
+        end
+
         parser_skip_newline(ps)
+
         if parser_peek(ps).kind == TOKEN_END:
             break
         end
+
         statement: @AST = parse_statement(ps)
-        if body_head == NULL:
+        if body_head == null:
             body_head = statement
         else:
             body_tail.next = statement
         end
         body_tail = statement
     end
+
     parser_expect(ps, TOKEN_END)
+
     node.data._while_loop.body = body_head
 
     return node
@@ -288,103 +305,158 @@ end
 
 @AST parse_if(ps: @Parser, is_elf_if: int):
     node: @AST = make_node(AST_IF)
-    parser_expect(ps, TOKEN_IF)
-    node.data._if_condition.condition = parse_expr(ps, 0)
-    parser_expect(ps, TOKEN_COLON)
 
-    body_head: @AST = NULL
-    body_tail: @AST = NULL
+    if !parser_expect(ps, TOKEN_IF):
+        return node
+    end
+
+    node.data._if_condition.condition = parse_expr(ps, 0)
+
+    if !parser_expect(ps, TOKEN_COLON):
+        return node
+    end
+
+    body_head: @AST = null
+    body_tail: @AST = null
     while parser_peek(ps).kind != TOKEN_END and parser_peek(ps).kind != TOKEN_ELSE:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in if statement body")
+            return node
+        end
+
         parser_skip_newline(ps)
+
         if parser_peek(ps).kind == TOKEN_END or parser_peek(ps).kind == TOKEN_ELSE:
             break
         end
+
         statement: @AST = parse_statement(ps)
-        if body_head == NULL:
+        if body_head == null:
             body_head = statement
         else:
             body_tail.next = statement
         end
         body_tail = statement
     end
+
     node.data._if_condition.body = body_head
+
     if parser_peek(ps).kind == TOKEN_ELSE:
         parser_advance(ps)
+
         if parser_peek(ps).kind == TOKEN_IF:
             node.data._if_condition.else_branch = parse_if(ps, 1)
         else:
             else_node: @AST = make_node(AST_IF)
-            else_node.data._if_condition.condition = NULL
-            parser_expect(ps, TOKEN_COLON)
-            else_body_head: @AST = NULL
-            else_body_tail: @AST = NULL
+            else_node.data._if_condition.condition = null
+
+            if !parser_expect(ps, TOKEN_COLON):
+                return node
+            end
+
+            else_body_head: @AST = null
+            else_body_tail: @AST = null
             while parser_peek(ps).kind != TOKEN_END and parser_peek(ps).kind != TOKEN_ELSE:
+                if parser_peek(ps).kind == TOKEN_EOF:
+                    parser_error(ps, "Unexpected end of file in if statement body")
+                    return node
+                end
+
                 parser_skip_newline(ps)
+
                 if parser_peek(ps).kind == TOKEN_END or parser_peek(ps).kind == TOKEN_ELSE:
                     break
                 end
+
                 statement: @AST = parse_statement(ps)
-                if else_body_head == NULL:
+                if else_body_head == null:
                     else_body_head = statement
                 else:
                     else_body_tail.next = statement
                 end
                 else_body_tail = statement
             end
+
             else_node.data._if_condition.body = else_body_head
+
             node.data._if_condition.else_branch = else_node
         end
     end
+
     if not is_elf_if:
-        parser_expect(ps, TOKEN_END)
+        if !parser_expect(ps, TOKEN_END):
+            return node
+        end
     end
+
     return node
 end
 
 @AST parse_for(ps: @Parser):
     node: @AST = make_node(AST_FOR)
-    parser_expect(ps, TOKEN_FOR)
+
+    if !parser_expect(ps, TOKEN_FOR):
+        return node
+    end
 
     var: @Token = parser_advance(ps)
     if var.kind != TOKEN_IDENTIFIER:
-        printf("Expected loop variable after for, got %s\n", token_kind_name(var.kind))
-        exit(1)
+        message: char[128]
+        snprintf(message, sizeof(message), "Expected loop variable after for, got %s\n", token_kind_name(var.kind))
+        parser_error(ps, message)
+        return node
     end
+
     node.data._for_loop.var_start = var.start
     node.data._for_loop.var_length = var.length
 
-    parser_expect(ps, TOKEN_IN)
+    if !parser_expect(ps, TOKEN_IN):
+        return node
+    end
+
     from: @AST = parse_expr(ps, 0)
     node.data._for_loop.from = from
 
     op_range: @Token = parser_advance(ps)
     if op_range.kind != TOKEN_DOTDOT and op_range.kind != TOKEN_DOTDOTEQ:
-        printf("Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range.kind))
-        exit(1)
+        message: char[128]
+        snprintf(message, sizeof(message), "Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range.kind))
+        parser_error(ps, message)
+        return node
     end
     node.data._for_loop.inclusive = op_range.kind == TOKEN_DOTDOTEQ
 
     to: @AST = parse_expr(ps, 0)
     node.data._for_loop.to = to
 
-    parser_expect(ps, TOKEN_COLON)
+    if !parser_expect(ps, TOKEN_COLON):
+        return node
+    end
 
-    body_head: @AST = NULL
-    body_tail: @AST = NULL
+    body_head: @AST = null
+    body_tail: @AST = null
     while parser_peek(ps).kind != TOKEN_END:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in for loop body")
+        end
+
         parser_skip_newline(ps)
+
         if parser_peek(ps).kind == TOKEN_END:
             break
         end
+
         statement: @AST = parse_statement(ps)
-        if body_head == NULL:
+        if body_head == null:
             body_head = statement
         else:
             body_tail.next = statement
         end
         body_tail = statement
     end
+
     parser_expect(ps, TOKEN_END)
+
     node.data._for_loop.body = body_head
     
     return node
