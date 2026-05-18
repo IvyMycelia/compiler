@@ -87,7 +87,7 @@ int parser_expect(ps: @Parser, kind: int):
 
     if curr_tok.kind != kind:
         message: char[128]
-        snprintf(message, sizeof(message), "Expected token: %s but got '%.*s' (%s)", token_kind_name(kind), curr_tok.length, curr_tok.start + ps.src, token_kind_name(curr_tok.kind))
+        snprintf(message, sizeof(message), "Expected token: %s but got %s", token_kind_name(kind), token_kind_name(curr_tok.kind))
         parser_error(ps, message)
 
         parser_advance(ps)
@@ -688,13 +688,22 @@ end
     node.data._func_def.name_length = name.length
 
     // Set parameters of function
-    parser_expect(ps, TOKEN_LPAREN)
+    if !parser_expect(ps, TOKEN_LPAREN):
+        return node
+    end
 
-    param_head: @AST = NULL
-    param_tail: @AST = NULL
+    param_head: @AST = null
+    param_tail: @AST = null
+
     while parser_peek(ps).kind != TOKEN_RPAREN:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in function definition parameters")
+            break
+        end
+
         param: @AST = parse_param(ps)
-        if param_head == NULL:
+
+        if param_head == null:
             param_head = param
         else:
             param_tail.next = param
@@ -710,24 +719,37 @@ end
     node.data._func_def.params = param_head
     
     // Function body
-    parser_expect(ps, TOKEN_COLON)
+    if !parser_expect(ps, TOKEN_COLON):
+        return node
+    end
 
-    body_head: @AST = NULL
-    body_tail: @AST = NULL
+    body_head: @AST = null
+    body_tail: @AST = null
+
     while parser_peek(ps).kind != TOKEN_END:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in function body")
+            break
+        end
+
         parser_skip_newline(ps)
+
         if parser_peek(ps).kind == TOKEN_END:
             break
         end
+
         statement: @AST = parse_statement(ps)
-        if body_head == NULL:
+
+        if body_head == null:
             body_head = statement
         else:
             body_tail.next = statement
         end
         body_tail = statement
     end
+
     parser_expect(ps, TOKEN_END)
+
     node.data._func_def.body = body_head
 
     return node
@@ -735,16 +757,27 @@ end
 
 @AST parse_func_call(ps: @Parser):
     node: @AST = make_node(AST_FUNC_CALL)
+
     name: @Token = parser_advance(ps)
     node.data._func_call.name_start = name.start
     node.data._func_call.name_length = name.length
-    parser_expect(ps, TOKEN_LPAREN)
 
-    arg_head: @AST = NULL
-    arg_tail: @AST = NULL
+    if !parser_expect(ps, TOKEN_LPAREN):
+        return node
+    end
+
+    arg_head: @AST = null
+    arg_tail: @AST = null
+
     while parser_peek(ps).kind != TOKEN_RPAREN:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in function call arguments")
+            return node
+        end
+
         param: @AST = parse_expr(ps, 0)
-        if arg_head == NULL:
+
+        if arg_head == null:
             arg_head = param
         else:
             arg_tail.next = param
@@ -755,50 +788,75 @@ end
             parser_advance(ps)
         end
     end
+
     parser_expect(ps, TOKEN_RPAREN)
+
     node.data._func_call.args = arg_head
+
     return node
 end
 
 @AST parse_alias_call(ps: @Parser):
     node: @AST = make_node(AST_ALIAS_CALL)
+
     alias: @Token = parser_advance(ps)
     node.data._alias_call.alias_start = alias.start
     node.data._alias_call.alias_length = alias.length
-    parser_expect(ps, TOKEN_DOT)
+
+    if !parser_expect(ps, TOKEN_DOT):
+        return node
+    end
 
     func: @Token = parser_advance(ps)
     node.data._alias_call.func_start = func.start
     node.data._alias_call.func_length = func.length
-    parser_expect(ps, TOKEN_LPAREN)
 
-    arg_head: @AST = NULL
-    arg_tail: @AST = NULL
+    if !parser_expect(ps, TOKEN_LPAREN):
+        return node
+    end
+
+    arg_head: @AST = null
+    arg_tail: @AST = null
+
     while parser_peek(ps).kind != TOKEN_RPAREN:
+        if parser_peek(ps).kind == TOKEN_EOF:
+            parser_error(ps, "Unexpected end of file in function alias arguments")
+            return node
+        end
+
         arg: @AST = parse_expr(ps, 0)
-        if arg_head == NULL:
+        if arg_head == null:
             arg_head = arg
         else:
             arg_tail.next = arg
         end
         arg_tail = arg
+
         if parser_peek(ps).kind == TOKEN_COMMA:
             parser_advance(ps)
         end
     end
+
     parser_expect(ps, TOKEN_RPAREN)
 
     node.data._alias_call.args = arg_head
+
     return node
 end
 
 @AST parse_param(ps: @Parser):
     node: @AST = make_node(AST_PARAM)
+
     name: @Token = parser_advance(ps)
     node.data._func_params.name_start = name.start
     node.data._func_params.name_length = name.length
-    parser_expect(ps, TOKEN_COLON)
+
+    if !parser_expect(ps, TOKEN_COLON):
+        return node
+    end
+
     node.data._func_params.type = @parse_type(ps)
+    
     return node
 end
 

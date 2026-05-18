@@ -1,9 +1,13 @@
-struct test 
+import <stdio>
 
-struct Test {
-    :
-}
+int add(a: int b: int):  // Missing comma - error
+    return a + b
+end
 
-struct Test {
-    field
-}
+int broken(:  // Missing param name - error
+    return 0
+end
+
+int working(x: int):
+    return x
+end

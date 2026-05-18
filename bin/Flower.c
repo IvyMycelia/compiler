@@ -1123,7 +1123,7 @@ int parser_expect(Parser* ps, int kind) {
 Token* curr_tok = parser_peek(ps);
 if (curr_tok->kind != kind) {
 char message[128];
-snprintf(message, sizeof(message), "Expected token: %s but got '%.*s' (%s)", token_kind_name(kind), curr_tok->length, curr_tok->start + ps->src, token_kind_name(curr_tok->kind));
+snprintf(message, sizeof(message), "Expected token: %s but got %s", token_kind_name(kind), token_kind_name(curr_tok->kind));
 parser_error(ps, message);
 parser_advance(ps);
 return 0;
@@ -1710,10 +1710,16 @@ node->data._func_def.return_type = *(parse_type(ps));
 Token* name = parser_advance(ps);
 node->data._func_def.name_start = name->start;
 node->data._func_def.name_length = name->length;
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
 AST* param_head = NULL;
 AST* param_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function definition parameter list");
+break;
+}
 AST* param = parse_param(ps);
 if (param_head == NULL) {
 param_head = param;
@@ -1728,10 +1734,16 @@ parser_advance(ps);
 }
 parser_expect(ps, TOKEN_RPAREN);
 node->data._func_def.params = param_head;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function body");
+break;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END) {
 break;
