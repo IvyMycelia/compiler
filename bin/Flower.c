@@ -1221,12 +1221,26 @@ ps->error_count = ps->error_count + 1;
 AST* parse_var_decl(Parser* ps) {
 AST* node = make_node(AST_VAR_DECL);
 Token* tok = parser_advance(ps);
+if (tok->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected variable name");
+return node;
+}
 node->data._var_decl.name_start = tok->start;
 node->data._var_decl.name_length = tok->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in variable declaration");
+return node;
+}
 node->data._var_decl.type = *(parse_type(ps));
 if (parser_peek(ps)->kind == TOKEN_ASSIGN) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in variable initializer");
+return node;
+}
 node->data._var_decl.value = parse_expr(ps, 0);
 }
 return node;
@@ -1236,9 +1250,19 @@ return node;
 AST* parse_var_ass(Parser* ps) {
 AST* node = make_node(AST_VAR_ASS);
 Token* tok = parser_advance(ps);
+if (tok->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected variable name");
+return node;
+}
 node->data._var_ass.name_start = tok->start;
 node->data._var_ass.name_length = tok->length;
-parser_expect(ps, TOKEN_ASSIGN);
+if (!(parser_expect(ps, TOKEN_ASSIGN))) {
+return node;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in variable assignment");
+return node;
+}
 node->data._var_ass.value = parse_expr(ps, 0);
 return node;
 }
@@ -1249,10 +1273,24 @@ Token* name = parser_advance(ps);
 AST* arr_ref = make_node(AST_VAR_REF);
 arr_ref->data._var_ref.name_start = name->start;
 arr_ref->data._var_ref.name_length = name->length;
-parser_expect(ps, TOKEN_LBRACK);
+if (!(parser_expect(ps, TOKEN_LBRACK))) {
+return arr_ref;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in subscript expression");
+return arr_ref;
+}
 AST* idx = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_RBRACK);
-parser_expect(ps, TOKEN_ASSIGN);
+if (!(parser_expect(ps, TOKEN_RBRACK))) {
+return arr_ref;
+}
+if (!(parser_expect(ps, TOKEN_ASSIGN))) {
+return arr_ref;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in subscript expression");
+return arr_ref;
+}
 AST* val = parse_expr(ps, 0);
 AST* sub = make_node(AST_SUBSCRIPT);
 sub->data._subscript.array = arr_ref;
