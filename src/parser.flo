@@ -316,6 +316,10 @@ end
     node.data._flow_ctrl.value = null
     node.data._flow_ctrl.base = parser_peek(ps)
 
+    if parser_peek(ps).kind == TOKEN_EOF:
+        parser_error(ps, "Unexpected end of file after continue")
+    end
+
     parser_advance(ps)
 
     return node
@@ -326,6 +330,10 @@ end
 
     node.data._flow_ctrl.value = null
     node.data._flow_ctrl.base = parser_peek(ps)
+
+    if parser_peek(ps).kind == TOKEN_EOF:
+        parser_error(ps, "Unexpected end of file after break")
+    end
 
     parser_advance(ps)
 
