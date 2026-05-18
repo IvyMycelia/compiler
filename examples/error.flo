@@ -1,6 +1,9 @@
-?
+struct test 
 
-struct h {
-    sixSeven
-    s
+struct Test {
+    :
+}
+
+struct Test {
+    field
 }

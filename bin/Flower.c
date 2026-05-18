@@ -1055,6 +1055,7 @@ int alias_start[32];
 int alias_lengths[32];
 int alias_count;
 char* filename;
+int error_count;
 } Parser;
 
 
@@ -1072,7 +1073,9 @@ ps->src = src;
 ps->pos = 0;
 ps->alias_count = 0;
 ps->filename = filename;
+ps->error_count = 0;
 }
+void parser_error(Parser* ps, char* message);
 AST* parse_var_decl(Parser* ps);
 AST* parse_var_ass(Parser* ps);
 AST* parse_subscript_ass(Parser* ps);
@@ -1102,7 +1105,9 @@ return peek(ps->ts, ps->pos);
 
 Token* parser_advance(Parser* ps) {
 Token* token = parser_peek(ps);
+if (token->kind != TOKEN_EOF) {
 ps->pos = ps->pos + 1;
+}
 return token;
 }
 
@@ -1114,13 +1119,17 @@ parser_advance(ps);
 }
 
 
-void parser_expect(Parser* ps, int kind) {
+int parser_expect(Parser* ps, int kind) {
 Token* curr_tok = parser_peek(ps);
 if (curr_tok->kind != kind) {
-printf("%s%s:%d:%d: error:%s Expected token: %s but got `%.*s` (%s)\n", RED, current_file, get_line(ps->src, curr_tok->start), get_col(ps->src, curr_tok->start), RESET, token_kind_name(kind), curr_tok->length, curr_tok->start + ps->src, token_kind_name(curr_tok->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Expected token: %s but got '%.*s' (%s)", token_kind_name(kind), curr_tok->length, curr_tok->start + ps->src, token_kind_name(curr_tok->kind));
+parser_error(ps, message);
+parser_advance(ps);
+return 0;
 }
 parser_advance(ps);
+return 1;
 }
 
 
@@ -1197,6 +1206,15 @@ return 1;
 }
 }
 return 0;
+}
+
+
+void parser_error(Parser* ps, char* message) {
+Token* token = parser_peek(ps);
+int line = get_line(ps->src, token->start);
+int col = get_col(ps->src, token->start);
+printf("%s%s:%d:%d: error:%s %s\n", RED, ps->filename, line, col, RESET, message);
+ps->error_count = ps->error_count + 1;
 }
 
 
@@ -1803,12 +1821,20 @@ return node;
 
 
 AST* parse_struct(Parser* ps) {
-parser_expect(ps, TOKEN_STRUCT);
+if (!(parser_expect(ps, TOKEN_STRUCT))) {
+return NULL;
+}
 AST* node = make_node(AST_STRUCT_DEF);
 Token* name = parser_advance(ps);
+if (name->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected struct name");
+return NULL;
+}
 node->data._struct_def.name_start = name->start;
 node->data._struct_def.name_length = name->length;
-parser_expect(ps, TOKEN_LBRACE);
+if (!(parser_expect(ps, TOKEN_LBRACE))) {
+return NULL;
+}
 AST* field_head = NULL;
 AST* field_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RBRACE) {
@@ -1818,11 +1844,21 @@ parser_advance(ps);
 if (parser_peek(ps)->kind == TOKEN_RBRACE) {
 break;
 }
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in struct body");
+return node;
+}
 AST* field = make_node(AST_STRUCT_FIELD);
 Token* fname = parser_advance(ps);
+if (fname->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected field name");
+continue;
+}
 field->data._struct_field.name_start = fname->start;
 field->data._struct_field.name_length = fname->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+continue;
+}
 field->data._struct_field.type = *(parse_type(ps));
 if (field_head == NULL) {
 field_head = field;
@@ -1984,6 +2020,10 @@ AST* parser_parse(Parser* ps) {
 AST* head = NULL;
 AST* tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_EOF) {
+if (ps->error_count >= 10) {
+printf("%sToo many errors, exiting.%s\n", RED, RESET);
+break;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_EOF) {
 break;
