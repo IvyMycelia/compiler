@@ -6,8 +6,8 @@ Where Flower is going. Subject to change based on feedback, experiments, and pro
 
 Focus: Polish the working compiler.
 
-- [ ] Error Recovery            : Continue parsing after first error
-- [ ] Better Error Messages     : Context, suggestions, etc
+- [x] Error Recovery            : Continue parsing after first error
+- [x] Better Error Messages     : Context, suggestions, etc
 - [ ] Standard Library Basics   : More stdio, string operations
 - [ ] Documentation             : Complete language spec examples
 

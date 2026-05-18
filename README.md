@@ -124,7 +124,7 @@ Current experiments welcome. See [Docs/CONTRIBUTING.md](Docs/CONTRIBUTING.md) fo
 
 ## Next
 
-- Error Recovery (better compiler feedback, non-terminating parser)
+- ~~Error Recovery (better compiler feedback, non-terminating parser)~~
 - String operations
 - Standard library creation / expansion
 - Performance optimizations
