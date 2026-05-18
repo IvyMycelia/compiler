@@ -1055,6 +1055,7 @@ int alias_start[32];
 int alias_lengths[32];
 int alias_count;
 char* filename;
+int error_count;
 } Parser;
 
 
@@ -1072,7 +1073,9 @@ ps->src = src;
 ps->pos = 0;
 ps->alias_count = 0;
 ps->filename = filename;
+ps->error_count = 0;
 }
+void parser_error(Parser* ps, char* message);
 AST* parse_var_decl(Parser* ps);
 AST* parse_var_ass(Parser* ps);
 AST* parse_subscript_ass(Parser* ps);
@@ -1102,7 +1105,9 @@ return peek(ps->ts, ps->pos);
 
 Token* parser_advance(Parser* ps) {
 Token* token = parser_peek(ps);
+if (token->kind != TOKEN_EOF) {
 ps->pos = ps->pos + 1;
+}
 return token;
 }
 
@@ -1114,13 +1119,17 @@ parser_advance(ps);
 }
 
 
-void parser_expect(Parser* ps, int kind) {
+int parser_expect(Parser* ps, int kind) {
 Token* curr_tok = parser_peek(ps);
 if (curr_tok->kind != kind) {
-printf("%s%s:%d:%d: error:%s Expected token: %s but got `%.*s` (%s)\n", RED, current_file, get_line(ps->src, curr_tok->start), get_col(ps->src, curr_tok->start), RESET, token_kind_name(kind), curr_tok->length, curr_tok->start + ps->src, token_kind_name(curr_tok->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Expected token: %s but got %s", token_kind_name(kind), token_kind_name(curr_tok->kind));
+parser_error(ps, message);
+parser_advance(ps);
+return 0;
 }
 parser_advance(ps);
+return 1;
 }
 
 
@@ -1132,6 +1141,14 @@ type->arr_size_expr = NULL;
 while (parser_peek(ps)->kind == TOKEN_AT) {
 type->pointer_depth = type->pointer_depth + 1;
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in type");
+return type;
+}
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file while parsing type");
+return type;
 }
 Token* base = parser_advance(ps);
 type->base = base->kind;
@@ -1141,6 +1158,10 @@ type->name_length = base->length;
 }
 if (parser_peek(ps)->kind == TOKEN_LBRACK) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in array type");
+return type;
+}
 if (parser_peek(ps)->kind == TOKEN_RBRACK) {
 type->array_size = -1;
 }
@@ -1151,7 +1172,9 @@ parser_advance(ps);
 else {
 type->arr_size_expr = parse_expr(ps, 0);
 }
-parser_expect(ps, TOKEN_RBRACK);
+if (!(parser_expect(ps, TOKEN_RBRACK))) {
+return type;
+}
 }
 return type;
 }
@@ -1200,15 +1223,38 @@ return 0;
 }
 
 
+void parser_error(Parser* ps, char* message) {
+Token* token = parser_peek(ps);
+int line = get_line(ps->src, token->start);
+int col = get_col(ps->src, token->start);
+printf("%s%s:%d:%d: error:%s %s\n", RED, ps->filename, line, col, RESET, message);
+ps->error_count = ps->error_count + 1;
+}
+
+
 AST* parse_var_decl(Parser* ps) {
 AST* node = make_node(AST_VAR_DECL);
 Token* tok = parser_advance(ps);
+if (tok->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected variable name");
+return node;
+}
 node->data._var_decl.name_start = tok->start;
 node->data._var_decl.name_length = tok->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in variable declaration");
+return node;
+}
 node->data._var_decl.type = *(parse_type(ps));
 if (parser_peek(ps)->kind == TOKEN_ASSIGN) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in variable initializer");
+return node;
+}
 node->data._var_decl.value = parse_expr(ps, 0);
 }
 return node;
@@ -1218,9 +1264,19 @@ return node;
 AST* parse_var_ass(Parser* ps) {
 AST* node = make_node(AST_VAR_ASS);
 Token* tok = parser_advance(ps);
+if (tok->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected variable name");
+return node;
+}
 node->data._var_ass.name_start = tok->start;
 node->data._var_ass.name_length = tok->length;
-parser_expect(ps, TOKEN_ASSIGN);
+if (!(parser_expect(ps, TOKEN_ASSIGN))) {
+return node;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in variable assignment");
+return node;
+}
 node->data._var_ass.value = parse_expr(ps, 0);
 return node;
 }
@@ -1231,10 +1287,24 @@ Token* name = parser_advance(ps);
 AST* arr_ref = make_node(AST_VAR_REF);
 arr_ref->data._var_ref.name_start = name->start;
 arr_ref->data._var_ref.name_length = name->length;
-parser_expect(ps, TOKEN_LBRACK);
+if (!(parser_expect(ps, TOKEN_LBRACK))) {
+return arr_ref;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in subscript expression");
+return arr_ref;
+}
 AST* idx = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_RBRACK);
-parser_expect(ps, TOKEN_ASSIGN);
+if (!(parser_expect(ps, TOKEN_RBRACK))) {
+return arr_ref;
+}
+if (!(parser_expect(ps, TOKEN_ASSIGN))) {
+return arr_ref;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in subscript expression");
+return arr_ref;
+}
 AST* val = parse_expr(ps, 0);
 AST* sub = make_node(AST_SUBSCRIPT);
 sub->data._subscript.array = arr_ref;
@@ -1261,6 +1331,9 @@ AST* parse_continue(Parser* ps) {
 AST* node = make_node(AST_FLOW_CONTROL);
 node->data._flow_ctrl.value = NULL;
 node->data._flow_ctrl.base = parser_peek(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after continue");
+}
 parser_advance(ps);
 return node;
 }
@@ -1270,6 +1343,9 @@ AST* parse_break(Parser* ps) {
 AST* node = make_node(AST_FLOW_CONTROL);
 node->data._flow_ctrl.value = NULL;
 node->data._flow_ctrl.base = parser_peek(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after break");
+}
 parser_advance(ps);
 return node;
 }
@@ -1277,12 +1353,20 @@ return node;
 
 AST* parse_while(Parser* ps) {
 AST* node = make_node(AST_WHILE);
-parser_expect(ps, TOKEN_WHILE);
+if (!(parser_expect(ps, TOKEN_WHILE))) {
+return node;
+}
 node->data._while_loop.condition = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in if statement body");
+return node;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END) {
 break;
@@ -1304,12 +1388,20 @@ return node;
 
 AST* parse_if(Parser* ps, int is_elf_if) {
 AST* node = make_node(AST_IF);
-parser_expect(ps, TOKEN_IF);
+if (!(parser_expect(ps, TOKEN_IF))) {
+return node;
+}
 node->data._if_condition.condition = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END  &&  parser_peek(ps)->kind != TOKEN_ELSE) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in if statement body");
+return node;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END  ||  parser_peek(ps)->kind == TOKEN_ELSE) {
 break;
@@ -1332,10 +1424,16 @@ node->data._if_condition.else_branch = parse_if(ps, 1);
 else {
 AST* else_node = make_node(AST_IF);
 else_node->data._if_condition.condition = NULL;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* else_body_head = NULL;
 AST* else_body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END  &&  parser_peek(ps)->kind != TOKEN_ELSE) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in if statement body");
+return node;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END  ||  parser_peek(ps)->kind == TOKEN_ELSE) {
 break;
@@ -1354,7 +1452,9 @@ node->data._if_condition.else_branch = else_node;
 }
 }
 if (!(is_elf_if)) {
-parser_expect(ps, TOKEN_END);
+if (!(parser_expect(ps, TOKEN_END))) {
+return node;
+}
 }
 return node;
 }
@@ -1362,29 +1462,42 @@ return node;
 
 AST* parse_for(Parser* ps) {
 AST* node = make_node(AST_FOR);
-parser_expect(ps, TOKEN_FOR);
+if (!(parser_expect(ps, TOKEN_FOR))) {
+return node;
+}
 Token* var = parser_advance(ps);
 if (var->kind != TOKEN_IDENTIFIER) {
-printf("Expected loop variable after for, got %s\n", token_kind_name(var->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Expected loop variable after for, got %s\n", token_kind_name(var->kind));
+parser_error(ps, message);
+return node;
 }
 node->data._for_loop.var_start = var->start;
 node->data._for_loop.var_length = var->length;
-parser_expect(ps, TOKEN_IN);
+if (!(parser_expect(ps, TOKEN_IN))) {
+return node;
+}
 AST* from = parse_expr(ps, 0);
 node->data._for_loop.from = from;
 Token* op_range = parser_advance(ps);
 if (op_range->kind != TOKEN_DOTDOT  &&  op_range->kind != TOKEN_DOTDOTEQ) {
-printf("Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Expected range operator `..` OR `..=`, got %s\n", token_kind_name(op_range->kind));
+parser_error(ps, message);
+return node;
 }
 node->data._for_loop.inclusive = op_range->kind == TOKEN_DOTDOTEQ;
 AST* to = parse_expr(ps, 0);
 node->data._for_loop.to = to;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in for loop body");
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END) {
 break;
@@ -1405,17 +1518,38 @@ return node;
 
 
 AST* parse_expr(Parser* ps, int min_prec) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in expression");
+return NULL;
+}
 AST* left = parse_primary(ps);
+if (left == NULL) {
+return NULL;
+}
 if (parser_peek(ps)->kind == TOKEN_AS) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in cast expression");
+return NULL;
+}
 AST* cast = make_node(AST_CAST);
 cast->data._cast.value = left;
 cast->data._cast.type = *(parse_type(ps));
 left = cast;
 }
 while (get_precedence(parser_peek(ps)->kind) > min_prec) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+break;
+}
 Token* op = parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after binary operator");
+return left;
+}
 AST* right = parse_expr(ps, get_precedence(op->kind));
+if (right == NULL) {
+return left;
+}
 AST* bin = make_node(AST_BINARY_OP);
 bin->data._binary.left = left;
 bin->data._binary.right = right;
@@ -1428,6 +1562,10 @@ return left;
 
 AST* parse_statement(Parser* ps) {
 parser_skip_newline(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file while parsing statement");
+return NULL;
+}
 if (parser_peek(ps)->kind == TOKEN_IDENTIFIER) {
 if (peek(ps->ts, ps->pos + 1)->kind == TOKEN_COLON) {
 return parse_var_decl(ps);
@@ -1450,8 +1588,10 @@ return parse_dot_ass(ps);
 }
 }
 else {
-printf("%s%s:%d:%d: error:%s parse_statement: unexpected token after identifier: %s\n", RED, current_file, get_line(ps->src, parser_peek(ps)->start), get_col(ps->src, parser_peek(ps)->start), RESET, token_kind_name(peek(ps->ts, ps->pos + 1)->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Unexpected token while parsing statement after identifier: %s", token_kind_name(peek(ps->ts, ps->pos + 1)->kind));
+parser_error(ps, message);
+return NULL;
 }
 }
 else if (parser_peek(ps)->kind == TOKEN_WHILE) {
@@ -1475,7 +1615,13 @@ return parse_for(ps);
 else if (parser_peek(ps)->kind == TOKEN_PRINT) {
 parser_advance(ps);
 AST* node = make_node(AST_PRINT);
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in print statement");
+return node;
+}
 node->data._print.value = parse_expr(ps, 0);
 parser_expect(ps, TOKEN_RPAREN);
 return node;
@@ -1483,33 +1629,65 @@ return node;
 else if (parser_peek(ps)->kind == TOKEN_PRUNE) {
 parser_advance(ps);
 AST* node = make_node(AST_PRUNE);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in prune statement");
+return node;
+}
 node->data._prune_free.ptr = parse_expr(ps, 0);
 return node;
 }
 else if (parser_peek(ps)->kind == TOKEN_AT) {
 parser_advance(ps);
 AST* node = make_node(AST_DEREF_ASS);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in dereference statement");
+return node;
+}
 Token* name = parser_advance(ps);
+if (name->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected identifier after '@'");
+return node;
+}
 node->data._deref_ass.name_length = name->length;
 node->data._deref_ass.name_start = name->start;
-parser_expect(ps, TOKEN_ASSIGN);
+if (!(parser_expect(ps, TOKEN_ASSIGN))) {
+return node;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in dereference assignment");
+return node;
+}
 node->data._deref_ass.value = parse_expr(ps, 0);
 return node;
 }
 else {
-printf("%s%s:%d:%d: error:%s parse_statement: unexpected token: %s\n", RED, current_file, get_line(ps->src, parser_peek(ps)->start), get_col(ps->src, parser_peek(ps)->start), RESET, token_kind_name(parser_peek(ps)->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "Unexpected token while parsing statement: %s", token_kind_name(parser_peek(ps)->kind));
+parser_error(ps, message);
+return NULL;
 }
 }
 
 
 AST* parse_primary(Parser* ps) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file while parsing primary");
+return NULL;
+}
 if (parser_peek(ps)->kind == TOKEN_IDENTIFIER) {
 if (peek(ps->ts, ps->pos + 1)->kind == TOKEN_LPAREN) {
 AST* node = parse_func_call(ps);
 if (parser_peek(ps)->kind == TOKEN_DOT) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after '.'");
+return NULL;
+}
 Token* field = parser_advance(ps);
+if (field->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected identifier name after '.'");
+return node;
+}
 AST* dot = make_node(AST_DOT_ACCESS);
 dot->data._dot_access.object = node;
 dot->data._dot_access.field_length = field->length;
@@ -1528,6 +1706,10 @@ node->data._var_ref.name_start = tok->start;
 node->data._var_ref.name_length = tok->length;
 if (parser_peek(ps)->kind == TOKEN_AT) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after '@'");
+return node;
+}
 AST* operand = parse_primary(ps);
 AST* drf = make_node(AST_DEREF);
 drf->data._unary.operand = operand;
@@ -1536,7 +1718,15 @@ return drf;
 while (parser_peek(ps)->kind == TOKEN_DOT  ||  parser_peek(ps)->kind == TOKEN_LBRACK) {
 if (parser_peek(ps)->kind == TOKEN_DOT) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after '.'");
+return node;
+}
 Token* field = parser_advance(ps);
+if (field->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected identifier name after '.'");
+return node;
+}
 AST* dot = make_node(AST_DOT_ACCESS);
 dot->data._dot_access.object = node;
 dot->data._dot_access.field_start = field->start;
@@ -1545,12 +1735,21 @@ node = dot;
 }
 else if (parser_peek(ps)->kind == TOKEN_LBRACK) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in subscript");
+return node;
+}
 AST* idx = parse_expr(ps, 0);
-parser_expect(ps, TOKEN_RBRACK);
+if (!(parser_expect(ps, TOKEN_RBRACK))) {
+return node;
+}
 AST* sub = make_node(AST_SUBSCRIPT);
 sub->data._subscript.array = node;
 sub->data._subscript.index = idx;
 node = sub;
+}
+else {
+break;
 }
 }
 return node;
@@ -1586,6 +1785,10 @@ AST* arr = make_node(AST_ARRAY_LIT);
 AST* elem_head = NULL;
 AST* elem_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RBRACK) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in array literal");
+return arr;
+}
 AST* elem = parse_expr(ps, 0);
 if (elem_head == NULL) {
 elem_head = elem;
@@ -1608,6 +1811,10 @@ AST* strct_lit = make_node(AST_STRUCT_LIT);
 AST* struct_head = NULL;
 AST* struct_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RBRACE) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in struct literal");
+return strct_lit;
+}
 AST* elem = parse_expr(ps, 0);
 if (struct_head == NULL) {
 struct_head = elem;
@@ -1626,18 +1833,30 @@ return strct_lit;
 }
 else if (parser_peek(ps)->kind == TOKEN_LPAREN) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in parenthesized expression");
+return NULL;
+}
 AST* expr = parse_expr(ps, 0);
 parser_expect(ps, TOKEN_RPAREN);
 return expr;
 }
 else if (parser_peek(ps)->kind == TOKEN_NEW) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after 'new'");
+return NULL;
+}
 AST* new_node = make_node(AST_NEW);
 new_node->data._new_alloc.type = *(parse_type(ps));
 return new_node;
 }
 else if (parser_peek(ps)->kind == TOKEN_NOT) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after 'not'");
+return NULL;
+}
 AST* operand = parse_primary(ps);
 AST* unry = make_node(AST_UNARY_NOT);
 unry->data._unary.operand = operand;
@@ -1645,6 +1864,10 @@ return unry;
 }
 else if (parser_peek(ps)->kind == TOKEN_MINUS) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after unary '-' operator");
+return NULL;
+}
 AST* operand = parse_primary(ps);
 AST* unry = make_node(AST_UNARY_NEG);
 unry->data._unary.operand = operand;
@@ -1652,6 +1875,10 @@ return unry;
 }
 else if (parser_peek(ps)->kind == TOKEN_AT) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after '@'");
+return NULL;
+}
 AST* operand = parse_primary(ps);
 AST* deref = make_node(AST_DEREF);
 deref->data._deref.operand = operand;
@@ -1659,6 +1886,10 @@ return deref;
 }
 else if (parser_peek(ps)->kind == TOKEN_AMPERSAND) {
 parser_advance(ps);
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file after '&'");
+return NULL;
+}
 AST* operand = parse_primary(ps);
 AST* get = make_node(AST_GET_ADDR);
 get->data._get_addr.operand = operand;
@@ -1666,7 +1897,9 @@ return get;
 }
 else if (parser_peek(ps)->kind == TOKEN_SIZEOF) {
 parser_advance(ps);
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return NULL;
+}
 AST* node = make_node(AST_SIZEOF);
 node->data._size_of.type = *(parse_type(ps));
 parser_expect(ps, TOKEN_RPAREN);
@@ -1680,8 +1913,9 @@ parser_advance(ps);
 return node;
 }
 else {
-printf("%s%s:%d:%d: error:%s parse_primary: unexpected token kind: %s\n", RED, current_file, get_line(ps->src, parser_peek(ps)->start), get_col(ps->src, parser_peek(ps)->start), RESET, token_kind_name(parser_peek(ps)->kind));
-exit(1);
+char message[128];
+snprintf(message, sizeof(message), "parse_primary: unexpected token kind: %s", token_kind_name(parser_peek(ps)->kind));
+return NULL;
 }
 }
 
@@ -1692,10 +1926,16 @@ node->data._func_def.return_type = *(parse_type(ps));
 Token* name = parser_advance(ps);
 node->data._func_def.name_start = name->start;
 node->data._func_def.name_length = name->length;
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
 AST* param_head = NULL;
 AST* param_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function definition parameters");
+break;
+}
 AST* param = parse_param(ps);
 if (param_head == NULL) {
 param_head = param;
@@ -1710,10 +1950,16 @@ parser_advance(ps);
 }
 parser_expect(ps, TOKEN_RPAREN);
 node->data._func_def.params = param_head;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 AST* body_head = NULL;
 AST* body_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_END) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function body");
+break;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_END) {
 break;
@@ -1738,10 +1984,16 @@ AST* node = make_node(AST_FUNC_CALL);
 Token* name = parser_advance(ps);
 node->data._func_call.name_start = name->start;
 node->data._func_call.name_length = name->length;
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
 AST* arg_head = NULL;
 AST* arg_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function call arguments");
+return node;
+}
 AST* param = parse_expr(ps, 0);
 if (arg_head == NULL) {
 arg_head = param;
@@ -1765,14 +2017,22 @@ AST* node = make_node(AST_ALIAS_CALL);
 Token* alias = parser_advance(ps);
 node->data._alias_call.alias_start = alias->start;
 node->data._alias_call.alias_length = alias->length;
-parser_expect(ps, TOKEN_DOT);
+if (!(parser_expect(ps, TOKEN_DOT))) {
+return node;
+}
 Token* func = parser_advance(ps);
 node->data._alias_call.func_start = func->start;
 node->data._alias_call.func_length = func->length;
-parser_expect(ps, TOKEN_LPAREN);
+if (!(parser_expect(ps, TOKEN_LPAREN))) {
+return node;
+}
 AST* arg_head = NULL;
 AST* arg_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RPAREN) {
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in function alias arguments");
+return node;
+}
 AST* arg = parse_expr(ps, 0);
 if (arg_head == NULL) {
 arg_head = arg;
@@ -1796,19 +2056,29 @@ AST* node = make_node(AST_PARAM);
 Token* name = parser_advance(ps);
 node->data._func_params.name_start = name->start;
 node->data._func_params.name_length = name->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+return node;
+}
 node->data._func_params.type = *(parse_type(ps));
 return node;
 }
 
 
 AST* parse_struct(Parser* ps) {
-parser_expect(ps, TOKEN_STRUCT);
+if (!(parser_expect(ps, TOKEN_STRUCT))) {
+return NULL;
+}
 AST* node = make_node(AST_STRUCT_DEF);
 Token* name = parser_advance(ps);
+if (name->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected struct name");
+return NULL;
+}
 node->data._struct_def.name_start = name->start;
 node->data._struct_def.name_length = name->length;
-parser_expect(ps, TOKEN_LBRACE);
+if (!(parser_expect(ps, TOKEN_LBRACE))) {
+return NULL;
+}
 AST* field_head = NULL;
 AST* field_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RBRACE) {
@@ -1818,11 +2088,21 @@ parser_advance(ps);
 if (parser_peek(ps)->kind == TOKEN_RBRACE) {
 break;
 }
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in struct body");
+return node;
+}
 AST* field = make_node(AST_STRUCT_FIELD);
 Token* fname = parser_advance(ps);
+if (fname->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected field name");
+continue;
+}
 field->data._struct_field.name_start = fname->start;
 field->data._struct_field.name_length = fname->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+continue;
+}
 field->data._struct_field.type = *(parse_type(ps));
 if (field_head == NULL) {
 field_head = field;
@@ -1839,12 +2119,20 @@ return node;
 
 
 AST* parse_union(Parser* ps) {
-parser_expect(ps, TOKEN_UNION);
+if (!(parser_expect(ps, TOKEN_UNION))) {
+return NULL;
+}
 AST* node = make_node(AST_UNION_DEF);
 Token* name = parser_advance(ps);
+if (name->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected union name");
+return NULL;
+}
 node->data._struct_def.name_start = name->start;
 node->data._struct_def.name_length = name->length;
-parser_expect(ps, TOKEN_LBRACE);
+if (!(parser_expect(ps, TOKEN_LBRACE))) {
+return NULL;
+}
 AST* field_head = NULL;
 AST* field_tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_RBRACE) {
@@ -1854,11 +2142,24 @@ parser_advance(ps);
 if (parser_peek(ps)->kind == TOKEN_RBRACE) {
 break;
 }
+if (parser_peek(ps)->kind == TOKEN_RBRACE) {
+break;
+}
+if (parser_peek(ps)->kind == TOKEN_EOF) {
+parser_error(ps, "Unexpected end of file in union body");
+return node;
+}
 AST* field = make_node(AST_STRUCT_FIELD);
 Token* fname = parser_advance(ps);
+if (fname->kind != TOKEN_IDENTIFIER) {
+parser_error(ps, "Expected field name");
+continue;
+}
 field->data._struct_field.name_start = fname->start;
 field->data._struct_field.name_length = fname->length;
-parser_expect(ps, TOKEN_COLON);
+if (!(parser_expect(ps, TOKEN_COLON))) {
+continue;
+}
 field->data._struct_field.type = *(parse_type(ps));
 if (field_head == NULL) {
 field_head = field;
@@ -1886,8 +2187,7 @@ else if (expr->kind == AST_SUBSCRIPT) {
 expr->data._subscript.value = val;
 }
 else {
-printf("%s%s:%d:%d: error:%s Invalid assignment target\n", RED, current_file, get_line(ps->src, parser_peek(ps)->start), get_col(ps->src, parser_peek(ps)->start), RESET);
-exit(1);
+parser_error(ps, "Invalid assignment target");
 }
 }
 return expr;
@@ -1984,6 +2284,10 @@ AST* parser_parse(Parser* ps) {
 AST* head = NULL;
 AST* tail = NULL;
 while (parser_peek(ps)->kind != TOKEN_EOF) {
+if (ps->error_count >= 10) {
+printf("%sToo many errors, exiting.%s\n", RED, RESET);
+break;
+}
 parser_skip_newline(ps);
 if (parser_peek(ps)->kind == TOKEN_EOF) {
 break;
