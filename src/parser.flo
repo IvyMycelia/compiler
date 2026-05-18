@@ -110,13 +110,13 @@ end
         parser_advance(ps)
 
         if parser_peek(ps).kind == TOKEN_EOF:
-            parser_error(ps, "unexpected end of file in type")
+            parser_error(ps, "Unexpected end of file in type")
             return type
         end
     end
 
     if parser_peek(ps).kind == TOKEN_EOF:
-        parser_error(ps, "unexpected end of file while parsing type")
+        parser_error(ps, "Unexpected end of file while parsing type")
         return type
     end
 
@@ -132,7 +132,7 @@ end
         parser_advance(ps)
 
         if parser_peek(ps).kind == TOKEN_EOF:
-            parser_error(ps, "unexpected end of file in array type")
+            parser_error(ps, "Unexpected end of file in array type")
             return type
         end
 
