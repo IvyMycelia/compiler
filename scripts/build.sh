@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+#set -e
 
 WORKING="./bin/Flower"
 BACKUP="./bin/Flower_backup"
@@ -23,9 +23,11 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "=== Idempotency check ==="
-diff $NEW_C $TEST_C > /dev/null
-if [ $? -ne 0 ]; then
-    echo "WARNING: Generated code differs (may be ok)"
+if ! diff $NEW_C $TEST_C > /dev/null 2>&1; then
+    echo "ERROR: Generated code differs between runs!"
+    echo "This indicates non-deterministic compilation."
+    rm -f $NEW_C $NEW_BIN $TEST_C
+    exit 1
 fi
 
 echo "=== Accepting new version ==="
