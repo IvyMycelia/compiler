@@ -1,11 +1,6 @@
-struct MyString {
-    data: @char,
-    len: int,
-    capacity: int
-}
-
-int main():
-
-m: @MyString
-m.data = "e"
+string from_cstr(value: @char, len: int):
+    s: @string = new string
+    s.value = value
+    s.length = len
+    return @s
 end
