@@ -18,7 +18,7 @@ $NEW_BIN ./src/main.flo ./bin/Flower_test
 
 if [ $? -ne 0 ]; then
     echo "ERROR: New compiler failed self-test!"
-    rm -f $NEW_C $NEW_BIN $TEST_C
+    rm -f $NEW_BIN
     exit 1
 fi
 
@@ -26,7 +26,7 @@ echo "=== Idempotency check ==="
 if ! diff $NEW_C $TEST_C > /dev/null 2>&1; then
     echo "ERROR: Generated code differs between runs!"
     echo "This indicates non-deterministic compilation."
-    rm -f $NEW_C $NEW_BIN $TEST_C
+    rm -f $NEW_BIN
     exit 1
 fi
 
