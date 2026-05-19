@@ -16,7 +16,6 @@ void emit_includes(ast: @AST, out: @FILE, src: @char, ts: @TokenStream):
     if not has_stdio and token_stream_contains(ts, TOKEN_PRINT):
         fprintf(out, "#include <stdio.h>\n")
         has_stdio = 1
-
     end
 end
 
@@ -37,7 +36,7 @@ end
         return "char"
 
     else if kind == TOKEN_STRING:
-        return "char*"
+        return "string"
 
     else if kind == TOKEN_VOID:
         return "void"

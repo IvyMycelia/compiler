@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+typedef struct { char* value; int length; } string;
+
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -2379,7 +2381,7 @@ else if (kind == TOKEN_CHAR) {
 return "char";
 }
 else if (kind == TOKEN_STRING) {
-return "char*";
+return "string";
 }
 else if (kind == TOKEN_VOID) {
 return "void";
@@ -3292,6 +3294,7 @@ has_output = 1;
 printf("Codegen...\n");
 fflush(stdout);
 emit_includes(ast, output, file, tokens);
+fprintf(output, "typedef struct { char* value; int length; } string;\n\n");
 codegen(ast, output, file);
 free_token_stream(tokens);
 free(tokens);

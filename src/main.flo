@@ -111,6 +111,7 @@ int main(argc: int, argv: @char[]):
 
             print("Codegen...\n"); fflush(stdout)
             emit_includes(ast, output, file, tokens)
+            fprintf(output, "typedef struct { char* value; int length; } string;\n\n")
             codegen(ast, output, file)
 
             free_token_stream(tokens)

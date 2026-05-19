@@ -1,0 +1,11 @@
+struct MyString {
+    data: @char,
+    len: int,
+    capacity: int
+}
+
+int main():
+
+m: @MyString
+m.data = "e"
+end
